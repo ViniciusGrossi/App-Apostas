@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BetTracker - Pro Analytics</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons via CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Tom Select -->
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <style>
+        /* Estilização personalizada para os selects */
+        .ts-control {
+            background-color: rgb(55, 65, 81) !important;
+            border-color: rgb(75, 85, 99) !important;
+            color: white !important;
+            border-radius: 0.5rem !important;
+        }
+        .ts-dropdown {
+            background-color: rgb(55, 65, 81) !important;
+            border-color: rgb(75, 85, 99) !important;
+            color: white !important;
+            border-radius: 0.5rem !important;
+        }
+        .ts-dropdown .option {
+            padding: 0.5rem 1rem !important;
+        }
+        .ts-dropdown .active {
+            background-color: rgb(37, 99, 235) !important;
+            color: white !important;
+        }
+        .ts-dropdown .option:hover {
+            background-color: rgb(55, 85, 99) !important;
+        }
+        .ts-control input {
+            color: white !important;
+        }
+        .ts-control .item {
+            background-color: rgb(37, 99, 235) !important;
+            color: white !important;
+            border-radius: 0.25rem !important;
+        }
+        /* Estilização dos inputs numéricos */
+        input[type="number"] {
+            appearance: none;
+            -moz-appearance: textfield;
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        /* Estilização do calendário */
+        input[type="date"] {
+            position: relative;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            background-color: transparent;
+            color: transparent;
+            cursor: pointer;
+            height: 100%;
+            left: 0;
+            position: absolute;
+            right: 0;
+            width: 100%;
+        }
+        /* Animações suaves */
+        .ts-control, .ts-dropdown, input, select, textarea {
+            transition: all 0.2s ease-in-out !important;
+        }
+        input:focus, select:focus, textarea:focus {
+            box-shadow: 0 0 0 2px rgb(37, 99, 235) !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 bg-gray-800 border-r border-gray-700">
+            <div class="p-6">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
+                        <i data-lucide="target" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold">BetTracker</h1>
+                        <p class="text-sm text-gray-400">Pro Analytics</p>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="px-4 pb-4">
+          <a href="teste.html"
+            class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 text-gray-300 hover:bg-gray-700 hover:text-white"
+          >
+            <i data-lucide="home" class="w-5 h-5"></i>
+            <span class="font-medium">Início</span>
+          </a>
+          <a href="Apostas.html"
+            class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-lg"
+          >
+            <i data-lucide="target" class="w-5 h-5"></i>
+            <span class="font-medium">Apostas</span>
+          </a>
+          <a href="resultados.html"
+            class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 text-gray-300 hover:bg-gray-700 hover:text-white"
+          >
+            <i data-lucide="check-circle" class="w-5 h-5"></i>
+            <span class="font-medium">Resultados</span>
+          </a>
+          <a href="#"
+            class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 text-gray-300 hover:bg-gray-700 hover:text-white"
+          >
+            <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+            <span class="font-medium">Análises</span>
+          </a>
+          <a href="#"
+            class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 text-gray-300 hover:bg-gray-700 hover:text-white"
+          >
+            <i data-lucide="message-circle" class="w-5 h-5"></i>
+            <span class="font-medium">IA Insights</span>
+          </a>
+          <a href="banca.html"
+            class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 text-gray-300 hover:bg-gray-700 hover:text-white"
+          >
+            <i data-lucide="wallet" class="w-5 h-5"></i>
+            <span class="font-medium">Gestão de Banca</span>
+          </a>
+          <a href="#"
+            class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 text-gray-300 hover:bg-gray-700 hover:text-white"
+          >
+            <i data-lucide="settings" class="w-5 h-5"></i>
+            <span class="font-medium">Configurações</span>
+          </a>
+        </nav>
+        </div>
+
+        <!-- Modal de Nova Aposta -->
+    <div id="new-bet-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center overflow-y-auto">
+        <div class="bg-gray-800 rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-white">Nova Aposta</h3>
+                <button onclick="closeNewBetModal()" class="text-gray-400 hover:text-white">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <form id="newBetForm" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Data -->
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Data</label>
+                        <div class="relative flex items-center">
+                            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                                <i data-lucide="calendar" class="w-4 h-4 text-gray-400"></i>
+                            </div>
+                            <input type="date" id="bet-date" 
+                                   class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none hover:border-gray-500">
+                        </div>
+                    </div>
+
+                    <!-- Casa de Apostas -->
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Casa de Apostas</label>
+                        <select id="bet-house" placeholder="Selecione uma casa...">
+                            <option value="">Selecione uma casa</option>
+                            <option value="Bet 365">Bet 365</option>
+                            <option value="Betano">Betano</option>
+                            <option value="Betfair">Betfair</option>
+                            <option value="Superbet">Superbet</option>
+                            <option value="Estrela Bet">Estrela Bet</option>
+                            <option value="PixBet">PixBet</option>
+                            <option value="Sporting Bet">Sporting Bet</option>
+                        </select>
+                    </div>
+
+                    <!-- Tipo de Aposta -->
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Tipo de Aposta</label>
+                        <select id="bet-type" placeholder="Selecione o tipo...">
+                            <option value="Simples">Simples</option>
+                            <option value="Dupla">Dupla</option>
+                            <option value="Tripla">Tripla</option>
+                            <option value="Múltipla">Múltipla</option>
+                            <option value="Super Odd">Super Odd</option>
+                        </select>
+                    </div>
+
+                    <!-- Valor Apostado -->
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Valor Apostado (R$)</label>
+                        <div class="relative">
+                            <i data-lucide="dollar-sign" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
+                            <input type="number" id="bet-amount" step="0.01" min="0" 
+                                   class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none hover:border-gray-500">
+                        </div>
+                    </div>
+
+                    <!-- Odd -->
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Odd</label>
+                        <div class="relative">
+                            <i data-lucide="trending-up" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
+                            <input type="number" id="bet-odd" step="0.01" min="1" 
+                                   class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none hover:border-gray-500">
+                        </div>
+                    </div>
+
+                    <!-- Categoria (Multiselect) -->
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Categoria</label>
+                        <select id="bet-categories" multiple placeholder="Selecione as categorias...">
+                            <option value="Resultado">Resultado</option>
+                            <option value="Finalizações">Finalizações</option>
+                            <option value="Escanteios">Escanteios</option>
+                            <option value="HT">HT</option>
+                            <option value="FT">FT</option>
+                            <option value="Gols">Gols</option>
+                            <option value="Chutes ao Gol">Chutes ao Gol</option>
+                            <option value="Ambas Equipes">Ambas Equipes</option>
+                            <option value="Faltas cometidas">Faltas cometidas</option>
+                            <option value="Faltas Sofridas">Faltas Sofridas</option>
+                            <option value="Cartões">Cartões</option>
+                            <option value="Defesas">Defesas</option>
+                            <option value="Desarmes">Desarmes</option>
+                            <option value="Handicap">Handicap</option>
+                            <option value="Tiro de Linha">Tiro de Linha</option>
+                            <option value="Impedimentos">Impedimentos</option>
+                            <option value="Desempenho">Desempenho</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+
+                    <!-- Torneio (Multiselect) -->
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Torneio</label>
+                        <select id="bet-tournaments" multiple placeholder="Selecione os torneios...">
+                            <option value="Brasileirão A">Brasileirão A</option>
+                            <option value="Champions League">Champions League</option>
+                            <option value="Europa League">Europa League</option>
+                            <option value="Conference League">Conference League</option>
+                            <option value="Premier League">Premier League</option>
+                            <option value="FA Cup">FA Cup</option>
+                            <option value="Carabao Cup">Carabao Cup</option>
+                            <option value="La Liga">La Liga</option>
+                            <option value="Copa do Rei">Copa do Rei</option>
+                            <option value="Bundesliga">Bundesliga</option>
+                            <option value="Copa da Alemanha">Copa da Alemanha</option>
+                            <option value="Serie A">Serie A</option>
+                            <option value="Coppa Italia">Coppa Italia</option>
+                            <option value="Copa da França">Copa da França</option>
+                            <option value="Ligue 1">Ligue 1</option>
+                            <option value="Mundial de Clubes">Mundial de Clubes</option>
+                            <option value="Copa do Brasil">Copa do Brasil</option>
+                            <option value="Serie B Italia">Serie B Italia</option>
+                            <option value="Brasileirão B">Brasileirão B</option>
+                            <option value="Championship">Championship</option>
+                            <option value="Pro Saudi League">Pro Saudi League</option>
+                            <option value="Torneo Betano">Torneo Betano</option>
+                            <option value="Libertadores">Libertadores</option>
+                            <option value="Sul-Americana">Sul-Americana</option>
+                            <option value="Liga Portugal">Liga Portugal</option>
+                            <option value="Taça de Portugal">Taça de Portugal</option>
+                            <option value="Super Lig">Super Lig</option>
+                            <option value="Estaduais">Estaduais</option>
+                            <option value="Data Fifa">Data Fifa</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <!-- Partida -->
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Partida</label>
+                    <div class="relative">
+                        <i data-lucide="trophy" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
+                        <input type="text" id="bet-match" 
+                               placeholder="Ex: Manchester City vs Arsenal"
+                               class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none hover:border-gray-500">
+                    </div>
+                </div>
+
+                <!-- Detalhes -->
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Detalhes</label>
+                    <div class="relative">
+                        <textarea id="bet-details" rows="4" 
+                                  placeholder="Ex: 
+Manchester City - Over 2.5 Gols
+Arsenal - Under 4.5 Cartões
+Ambas marcam - Sim"
+                                  class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-4 pr-4 py-2 text-white focus:outline-none hover:border-gray-500 resize-none"></textarea>
+                        <div class="absolute right-2 bottom-2 text-gray-400">
+                            <i data-lucide="edit-3" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bônus -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-3">Aposta com Bônus?</label>
+                    <div class="flex items-center space-x-4">
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="bonus" value="1" class="form-radio text-blue-600">
+                            <span class="ml-2 text-white">Sim</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="bonus" value="0" class="form-radio text-blue-600" checked>
+                            <span class="ml-2 text-white">Não</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" 
+                        class="w-full bg-gradient-to-r from-blue-600 to-green-600 text-white py-2 px-4 rounded-lg hover:from-blue-700 hover:to-green-700 transition-all flex items-center justify-center space-x-2">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    <span>Salvar Aposta</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header -->
+            <header class="bg-gray-800 border-b border-gray-700 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold">Apostas</h2>
+                        <p class="text-gray-400">Gerencie todas as suas apostas</p>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <button onclick="openNewBetModal()" class="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-green-600 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-green-700 transition-all">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span>Nova Aposta</span>
+                        </button>
+                        
+                        <button class="flex items-center space-x-2 bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            <span>Exportar</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="flex-1 overflow-y-auto p-6">
+                <!-- Stats Cards -->
+                <div id="stats-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <!-- Preenchido via JavaScript -->
+                </div>
+
+                <!-- Filters -->
+                <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 mb-6">
+                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                        <div id="filter-buttons" class="flex flex-wrap gap-2">
+                            <!-- Preenchido via JavaScript -->
+                        </div>
+
+                        <div class="flex items-center space-x-4">
+                            <div class="relative">
+                                <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
+                                <input 
+                                    type="text"
+                                    id="search-input"
+                                    placeholder="Buscar apostas..."
+                                    class="bg-gray-700 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-sm 
+                                           focus:outline-none focus:ring-2 focus:ring-blue-500 
+                                           transition-all duration-300 w-40 focus:w-64"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-700">
+                                <tr>
+                                    <th class="px-6 py-4 text-left">Partida</th>
+                                    <th class="px-6 py-4 text-left">Aposta</th>
+                                    <th class="px-6 py-4 text-left">Data/Hora</th>
+                                    <th class="px-6 py-4 text-left">Odd</th>
+                                    <th class="px-6 py-4 text-left">Stake</th>
+                                    <th class="px-6 py-4 text-left">Retorno</th>
+                                    <th class="px-6 py-4 text-left">Status</th>
+                                    <th class="px-6 py-4 text-left">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bets-table-body" class="divide-y divide-gray-700">
+                                <!-- Preenchido via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div class="mt-6 flex items-center justify-between">
+                    <p class="text-sm text-gray-400" id="pagination-info">
+                        <!-- Preenchido via JavaScript -->
+                    </p>
+                    <div class="flex items-center space-x-2">
+                        <button class="px-3 py-2 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50">
+                            Anterior
+                        </button>
+                        <div class="flex space-x-1">
+                            <button class="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg">1</button>
+                            <button class="px-3 py-2 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors">2</button>
+                            <button class="px-3 py-2 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors">3</button>
+                        </div>
+                        <button class="px-3 py-2 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors">
+                            Próximo
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Dados
+        const betsData = [
+    {
+        id: 1,
+        match: 'Flamengo vs Palmeiras',
+        league: 'Brasileirão Série A',
+        date: '2024-03-15',
+        time: '16:00',
+        bet: 'Flamengo Vitória',
+        odds: 2.15,
+        stake: 500,
+        potentialWin: 1075,
+        status: 'won',
+        house: 'Bet365',
+        units: 1.0
+    },
+    {
+        id: 2,
+        match: 'Manchester City vs Arsenal',
+        league: 'Premier League',
+        date: '2024-03-16',
+        time: '14:30',
+        bet: 'Over 2.5 Gols',
+        odds: 1.85,
+        stake: 1000,
+        potentialWin: 1850,
+        status: 'pending',
+        house: 'Betfair',
+        units: 2.0
+    },
+    {
+        id: 3,
+        match: 'PSG vs Lyon',
+        league: 'Ligue 1',
+        date: '2024-03-14',
+        time: '17:00',
+        bet: 'Ambas Marcam',
+        odds: 1.95,
+        stake: 750,
+        potentialWin: 1462.50,
+        status: 'lost',
+        house: 'SportingBet',
+        units: 1.5
+    },
+    {
+        id: 4,
+        match: 'Real Madrid vs Barcelona',
+        league: 'La Liga',
+        date: '2024-03-17',
+        time: '16:00',
+        bet: 'Real Madrid ou Empate',
+        odds: 1.65,
+        stake: 1200,
+        potentialWin: 1980,
+        status: 'won',
+        house: 'Bet365',
+        units: 2.4
+    },
+    {
+        id: 5,
+        match: 'Inter vs Milan',
+        league: 'Serie A',
+        date: '2024-03-18',
+        time: '15:45',
+        bet: 'Milan +1.5',
+        odds: 1.75,
+        stake: 600,
+        potentialWin: 1050,
+        status: 'cancelled',
+        house: 'Betano',
+        units: 1.2
+    },
+    {
+        id: 6,
+        match: 'Liverpool vs Chelsea',
+        league: 'Premier League',
+        date: '2024-03-19',
+        time: '16:15',
+        bet: 'Over 1.5 Gols',
+        odds: 1.45,
+        stake: 800,
+        potentialWin: 1160,
+        status: 'pending',
+        house: '1xBet',
+        units: 1.6
+    }
+];
+
+        const filterOptions = [
+            { id: 'todas', label: 'Todas', count: 156 },
+            { id: 'pendentes', label: 'Pendentes', count: 12 },
+            { id: 'ganhas', label: 'Ganhas', count: 89 },
+            { id: 'perdidas', label: 'Perdidas', count: 45 },
+            { id: 'canceladas', label: 'Canceladas', count: 10 }
+        ];
+
+        // Estado da aplicação
+        let currentFilter = 'todas';
+        let searchTerm = '';
+
+        // Funções auxiliares
+        function getStatusColor(status) {
+            const colors = {
+                won: 'bg-green-900 text-green-300 border-green-500',
+                lost: 'bg-red-900 text-red-300 border-red-500',
+                pending: 'bg-yellow-900 text-yellow-300 border-yellow-500',
+                cancelled: 'bg-gray-900 text-gray-300 border-gray-500'
+            };
+            return colors[status] || colors.cancelled;
+        }
+
+        function getStatusText(status) {
+            const texts = {
+                won: 'Vencida',
+                lost: 'Perdida',
+                pending: 'Pendente',
+                cancelled: 'Cancelada'
+            };
+            return texts[status] || 'Desconhecido';
+        }
+
+        // Renderização
+        function renderFilters() {
+            const container = document.getElementById('filter-buttons');
+            container.innerHTML = filterOptions.map(filter => `
+                <button
+                    data-filter="${filter.id}"
+                    class="flex items-center space-x-2 px-4 py-2 rounded-lg text-sm transition-all ${
+                        currentFilter === filter.id
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }"
+                >
+                    <span>${filter.label}</span>
+                    <span class="bg-gray-600 text-xs px-2 py-1 rounded-full">
+                        ${filter.count}
+                    </span>
+                </button>
+            `).join('');
+
+            // Adiciona eventos aos botões
+            container.querySelectorAll('button').forEach(button => {
+                button.addEventListener('click', () => {
+                    currentFilter = button.dataset.filter;
+                    renderFilters();
+                    renderBets();
+                });
+            });
+        }
+
+        function renderBets() {
+            const tbody = document.getElementById('bets-table-body');
+            const filteredBets = betsData.filter(bet => {
+                const matchesFilter = currentFilter === 'todas' || 
+                    (currentFilter === 'pendentes' && bet.status === 'pending') ||
+                    (currentFilter === 'ganhas' && bet.status === 'won') ||
+                    (currentFilter === 'perdidas' && bet.status === 'lost') ||
+                    (currentFilter === 'canceladas' && bet.status === 'cancelled');
+                
+                const matchesSearch = searchTerm === '' || 
+                    bet.match.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    bet.league.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    bet.bet.toLowerCase().includes(searchTerm.toLowerCase());
+                
+                return matchesFilter && matchesSearch;
+            });
+
+            tbody.innerHTML = filteredBets.map(bet => `
+                <tr class="hover:bg-gray-700 transition-colors">
+                    <td class="px-6 py-4">
+                        <div>
+                            <p class="text-white font-medium">${bet.match}</p>
+                            <p class="text-gray-400 text-sm">${bet.league}</p>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div>
+                            <p class="text-white text-sm">${bet.bet}</p>
+                            <p class="text-gray-400 text-xs">${bet.units}u • ${bet.house}</p>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div>
+                            <p class="text-white text-sm">${bet.date}</p>
+                            <p class="text-gray-400 text-xs">${bet.time}</p>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-blue-400 font-medium">${bet.odds}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-white font-medium">R$ ${bet.stake}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-green-400 font-medium">R$ ${bet.potentialWin}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="inline-flex items-center space-x-1 px-3 py-1 rounded-full border text-xs font-medium ${getStatusColor(bet.status)}">
+                            <span>${getStatusText(bet.status)}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center space-x-2">
+                            <button class="p-1 text-gray-400 hover:text-blue-400 transition-colors">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </button>
+                            <button class="p-1 text-gray-400 hover:text-green-400 transition-colors">
+                                <i data-lucide="edit" class="w-4 h-4"></i>
+                            </button>
+                            <button class="p-1 text-gray-400 hover:text-red-400 transition-colors">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Atualiza informação de paginação
+            document.getElementById('pagination-info').textContent = 
+                `Mostrando ${filteredBets.length} de ${betsData.length} apostas`;
+
+            // Reinicializa os ícones
+            lucide.createIcons();
+        }
+
+        // Funções do Modal de Nova Aposta
+        function openNewBetModal() {
+            document.getElementById('new-bet-modal').classList.remove('hidden');
+            // Set default date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('bet-date').value = today;
+        }
+
+        function closeNewBetModal() {
+            document.getElementById('new-bet-modal').classList.add('hidden');
+            document.getElementById('newBetForm').reset();
+        }
+
+        // Inicialização do formulário de nova aposta
+        document.getElementById('newBetForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = {
+                date: document.getElementById('bet-date').value,
+                house: document.getElementById('bet-house').value,
+                type: document.getElementById('bet-type').value,
+                categories: Array.from(document.getElementById('bet-categories').selectedOptions).map(opt => opt.value),
+                amount: parseFloat(document.getElementById('bet-amount').value),
+                odd: parseFloat(document.getElementById('bet-odd').value),
+                tournaments: Array.from(document.getElementById('bet-tournaments').selectedOptions).map(opt => opt.value),
+                match: document.getElementById('bet-match').value,
+                details: document.getElementById('bet-details').value,
+                bonus: document.querySelector('input[name="bonus"]:checked').value === '1'
+            };
+
+            try {
+                const response = await fetch('/api/bets', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erro ao salvar aposta');
+                }
+
+                // Mostrar mensagem de sucesso
+                alert('Aposta salva com sucesso!');
+                
+                // Fechar o modal e recarregar os dados
+                closeNewBetModal();
+                loadBets();
+            } catch (error) {
+                alert('Erro ao salvar aposta: ' + error.message);
+            }
+        });
+
+        // Inicialização dos selects personalizados
+        function initializeSelects() {
+            // Select simples
+            new TomSelect('#bet-house', {
+                create: false,
+                sortField: {field: 'text', direction: 'asc'}
+            });
+
+            new TomSelect('#bet-type', {
+                create: false,
+                sortField: {field: 'text', direction: 'asc'}
+            });
+
+            // Multiselects
+            new TomSelect('#bet-categories', {
+                plugins: ['remove_button'],
+                persist: false,
+                createOnBlur: false,
+                create: false,
+                maxItems: null
+            });
+
+            new TomSelect('#bet-tournaments', {
+                plugins: ['remove_button'],
+                persist: false,
+                createOnBlur: false,
+                create: false,
+                maxItems: null
+            });
+
+            // Input de busca
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            // Inicializa os ícones
+            lucide.createIcons();
+
+            // Inicializa os selects personalizados
+            initializeSelects();
+
+            // Renderiza os filtros e apostas
+            renderFilters();
+            renderBets();
+
+            // Configura busca
+            document.getElementById('search-input').addEventListener('input', (e) => {
+                searchTerm = e.target.value;
+                renderBets();
+            });
+        });
+    </script>
+</body>
+</html>

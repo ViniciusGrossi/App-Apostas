@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BetTracker - Gestão de Banca</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-gray-900 text-white">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <nav class="w-64 bg-gray-800 border-r border-gray-700">
+            <div class="p-6">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
+                        <i data-lucide="target" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold">BetTracker</h1>
+                        <p class="text-sm text-gray-400">Pro Analytics</p>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="px-4 pb-4">
+                <a href="teste.html" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 text-gray-300 hover:bg-gray-700 hover:text-white">
+                    <i data-lucide="home" class="w-5 h-5"></i>
+                    <span class="font-medium">Início</span>
+                </a>
+                <a href="Apostas.html" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 text-gray-300 hover:bg-gray-700 hover:text-white">
+                    <i data-lucide="target" class="w-5 h-5"></i>
+                    <span class="font-medium">Apostas</span>
+                </a>
+                <a href="#" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 text-gray-300 hover:bg-gray-700 hover:text-white">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                    <span class="font-medium">Análises</span>
+                </a>
+                <a href="#" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 text-gray-300 hover:bg-gray-700 hover:text-white">
+                    <i data-lucide="message-circle" class="w-5 h-5"></i>
+                    <span class="font-medium">IA Insights</span>
+                </a>
+                <a href="banca.html" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-lg">
+                    <i data-lucide="wallet" class="w-5 h-5"></i>
+                    <span class="font-medium">Gestão de Banca</span>
+                </a>
+                <a href="#" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 text-gray-300 hover:bg-gray-700 hover:text-white">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                    <span class="font-medium">Configurações</span>
+                </a>
+            </nav>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header -->
+            <header class="bg-gray-800 border-b border-gray-700 px-6 py-4">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex-1">
+                        <h2 class="text-2xl font-bold">Gestão de Banca</h2>
+                        <p class="text-gray-400">Controle sua banca e casas de apostas</p>
+                    </div>
+                    
+                    <div class="flex-none">
+                        <button onclick="showAddBookieModal()" 
+                                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-green-600 text-white px-6 py-2.5 rounded-lg hover:from-blue-700 hover:to-green-700 transition-all font-medium">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span>Nova Casa de Apostas</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main content -->
+            <main class="flex-1 overflow-y-auto p-6 space-y-6">
+                <!-- Resumo da Banca -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-2 rounded-lg bg-gray-700 text-green-400">
+                                <i data-lucide="wallet" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold mb-1" id="totalBankroll">R$ 5.000,00</p>
+                        <p class="text-gray-400 text-sm">Banca Total</p>
+                    </div>
+
+                    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-2 rounded-lg bg-gray-700 text-blue-400">
+                                <i data-lucide="trending-up" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold mb-1" id="roiValue">+15.8%</p>
+                        <p class="text-gray-400 text-sm">ROI (Retorno)</p>
+                    </div>
+
+                    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-2 rounded-lg bg-gray-700 text-yellow-400">
+                                <i data-lucide="badge-dollar-sign" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold mb-1" id="profitValue">R$ 750,00</p>
+                        <p class="text-gray-400 text-sm">Lucro/Prejuízo</p>
+                    </div>
+
+                    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-2 rounded-lg bg-gray-700 text-purple-400">
+                                <i data-lucide="building" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold mb-1" id="bookieCount">6</p>
+                        <p class="text-gray-400 text-sm">Casas de Apostas</p>
+                    </div>
+                </div>
+
+                <!-- Unidades (Quartis) -->
+                <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                    <h3 class="text-lg font-semibold mb-4">Distribuição de Unidades</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="bg-gray-700 p-4 rounded-lg hover:bg-gray-600 transition-all duration-200">
+                            <p class="text-sm text-gray-400 mb-2">0.25u</p>
+                            <p class="text-xl font-bold text-green-400" id="quarterUnit">R$ 25,00</p>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded-lg hover:bg-gray-600 transition-all duration-200">
+                            <p class="text-sm text-gray-400 mb-2">0.5u</p>
+                            <p class="text-xl font-bold text-blue-400" id="halfUnit">R$ 50,00</p>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded-lg hover:bg-gray-600 transition-all duration-200">
+                            <p class="text-sm text-gray-400 mb-2">0.75u</p>
+                            <p class="text-xl font-bold text-yellow-400" id="threeQuarterUnit">R$ 75,00</p>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded-lg hover:bg-gray-600 transition-all duration-200">
+                            <p class="text-sm text-gray-400 mb-2">1u</p>
+                            <p class="text-xl font-bold text-red-400" id="fullUnit">R$ 100,00</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de Casas de Apostas -->
+                <div id="bookiesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+                    <!-- Preenchido via JavaScript -->
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar Casa -->
+    <div id="addBookieModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="bg-gray-800 rounded-xl p-6 w-96">
+            <h3 class="text-lg font-semibold mb-4">Nova Casa de Apostas</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Nome da Casa</label>
+                    <input type="text" id="bookieName" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Saldo Inicial</label>
+                    <input type="number" id="bookieInitialBalance" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button onclick="closeAddBookieModal()" class="px-4 py-2 text-gray-400 hover:text-white">Cancelar</button>
+                    <button onclick="addNewBookie()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Adicionar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Transação -->
+    <div id="transactionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="bg-gray-800 rounded-xl p-6 w-96">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold" id="transactionBookieName">Casa de Apostas</h3>
+                <button onclick="closeTransactionModal()" class="text-gray-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <p class="text-sm text-gray-400 mb-2 text-center">Selecione o tipo de transação:</p>
+            <div class="grid grid-cols-2 gap-4 mb-2">
+                <button id="depositButton" onclick="setTransactionType('deposit')" 
+                        class="flex flex-col items-center p-4 rounded-lg bg-gray-700 hover:bg-gray-600 transition-all duration-200 border-2 border-transparent">
+                    <i data-lucide="plus-circle" class="w-8 h-8 text-green-400 mb-2"></i>
+                    <span>Depositar</span>
+                </button>
+                <button id="withdrawButton" onclick="setTransactionType('withdraw')"
+                        class="flex flex-col items-center p-4 rounded-lg bg-gray-700 hover:bg-gray-600 transition-all duration-200 border-2 border-transparent">
+                    <i data-lucide="minus-circle" class="w-8 h-8 text-red-400 mb-2"></i>
+                    <span>Sacar</span>
+                </button>
+            </div>
+            <p id="transactionTypeMessage" class="text-sm text-yellow-400 mb-4 text-center hidden">
+                Selecione um tipo de transação antes de continuar
+            </p>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Valor</label>
+                    <input type="number" id="transactionAmount" 
+                           class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button onclick="processTransaction()" 
+                        class="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all">
+                    Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let bookies = [
+            {
+                id: 1,
+                name: 'Bet365',
+                balance: 1500.00,
+                lastDeposit: '2024-03-01',
+                lastWithdraw: '2024-02-15'
+            },
+            {
+                id: 2,
+                name: 'Betfair',
+                balance: 1000.00,
+                lastDeposit: '2024-03-05',
+                lastWithdraw: '2024-02-20'
+            }
+        ];
+
+        let currentBookieId = null;
+        let currentTransactionType = null;
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(value);
+        }
+
+        function updateBankrollInfo() {
+            const totalBankroll = bookies.reduce((sum, bookie) => sum + bookie.balance, 0);
+            const initialBankroll = 5000; // Valor inicial da banca para cálculo de ROI
+            const profit = totalBankroll - initialBankroll;
+            const roi = (profit / initialBankroll) * 100;
+            const unitValue = totalBankroll * 0.02;
+
+            document.getElementById('totalBankroll').textContent = formatCurrency(totalBankroll);
+            document.getElementById('roiValue').textContent = `${roi >= 0 ? '+' : ''}${roi.toFixed(1)}%`;
+            document.getElementById('roiValue').className = `text-2xl font-bold mb-1 ${roi >= 0 ? 'text-green-400' : 'text-red-400'}`;
+            document.getElementById('profitValue').textContent = formatCurrency(profit);
+            document.getElementById('profitValue').className = `text-2xl font-bold mb-1 ${profit >= 0 ? 'text-green-400' : 'text-red-400'}`;
+            document.getElementById('quarterUnit').textContent = formatCurrency(unitValue * 0.25);
+            document.getElementById('halfUnit').textContent = formatCurrency(unitValue * 0.5);
+            document.getElementById('threeQuarterUnit').textContent = formatCurrency(unitValue * 0.75);
+            document.getElementById('fullUnit').textContent = formatCurrency(unitValue);
+            document.getElementById('bookieCount').textContent = bookies.length;
+        }
+
+        function renderBookies() {
+            const container = document.getElementById('bookiesContainer');
+            // Ordena as casas de apostas por saldo (ordem decrescente)
+            const sortedBookies = [...bookies].sort((a, b) => b.balance - a.balance);
+            container.innerHTML = sortedBookies.map(bookie => `
+                <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 hover:border-blue-500 transition-all duration-200 cursor-pointer"
+                     onclick="showTransactionModal(${bookie.id})">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="p-2 rounded-lg bg-gray-700">
+                                <i data-lucide="building" class="w-6 h-6 text-blue-400"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold">${bookie.name}</h3>
+                        </div>
+                        <button onclick="deleteBookie(${bookie.id}); event.stopPropagation();" 
+                                class="p-2 text-gray-400 hover:text-red-400 transition-colors rounded-lg hover:bg-gray-700">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-2xl font-bold text-green-400">${formatCurrency(bookie.balance)}</p>
+                            <p class="text-sm text-gray-400">Saldo Atual</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 pt-4 border-t border-gray-700">
+                            <div>
+                                <p class="text-sm text-gray-400">Último Depósito</p>
+                                <p class="text-white">${bookie.lastDeposit}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-400">Último Saque</p>
+                                <p class="text-white">${bookie.lastWithdraw}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        function showAddBookieModal() {
+            document.getElementById('addBookieModal').classList.remove('hidden');
+        }
+
+        function closeAddBookieModal() {
+            document.getElementById('addBookieModal').classList.add('hidden');
+            document.getElementById('bookieName').value = '';
+            document.getElementById('bookieInitialBalance').value = '';
+        }
+
+        function showTransactionModal(bookieId) {
+            currentBookieId = bookieId;
+            const bookie = bookies.find(b => b.id === bookieId);
+            document.getElementById('transactionBookieName').textContent = bookie.name;
+            document.getElementById('transactionModal').classList.remove('hidden');
+            document.getElementById('transactionAmount').value = '';
+        }
+
+        function closeTransactionModal() {
+            currentBookieId = null;
+            currentTransactionType = null;
+            document.getElementById('transactionModal').classList.add('hidden');
+            document.getElementById('transactionTypeMessage').classList.add('hidden');
+            document.getElementById('depositButton').classList.remove('border-green-400', 'bg-gray-600');
+            document.getElementById('withdrawButton').classList.remove('border-red-400', 'bg-gray-600');
+        }
+
+        function setTransactionType(type) {
+            currentTransactionType = type;
+            
+            // Reset both buttons
+            document.getElementById('depositButton').classList.remove('border-green-400', 'bg-gray-600');
+            document.getElementById('withdrawButton').classList.remove('border-red-400', 'bg-gray-600');
+            
+            // Style selected button
+            if (type === 'deposit') {
+                document.getElementById('depositButton').classList.add('border-green-400', 'bg-gray-600');
+            } else {
+                document.getElementById('withdrawButton').classList.add('border-red-400', 'bg-gray-600');
+            }
+
+            // Hide message when a type is selected
+            document.getElementById('transactionTypeMessage').classList.add('hidden');
+            document.getElementById('transactionAmount').focus();
+        }
+
+        function addNewBookie() {
+            const name = document.getElementById('bookieName').value;
+            const balance = parseFloat(document.getElementById('bookieInitialBalance').value);
+
+            if (!name || isNaN(balance)) {
+                alert('Por favor, preencha todos os campos corretamente.');
+                return;
+            }
+
+            const newBookie = {
+                id: bookies.length + 1,
+                name,
+                balance,
+                lastDeposit: new Date().toISOString().split('T')[0],
+                lastWithdraw: '-'
+            };
+
+            bookies.push(newBookie);
+            updateBankrollInfo();
+            renderBookies();
+            closeAddBookieModal();
+        }
+
+        function processTransaction() {
+            if (!currentTransactionType) {
+                document.getElementById('transactionTypeMessage').classList.remove('hidden');
+                return;
+            }
+
+            const amount = parseFloat(document.getElementById('transactionAmount').value);
+
+            if (isNaN(amount) || amount <= 0) {
+                alert('Por favor, insira um valor válido.');
+                return;
+            }
+
+            const bookie = bookies.find(b => b.id === currentBookieId);
+            if (!bookie) return;
+
+            if (currentTransactionType === 'deposit') {
+                bookie.balance += amount;
+                bookie.lastDeposit = new Date().toISOString().split('T')[0];
+            } else {
+                if (amount > bookie.balance) {
+                    alert('Saldo insuficiente para saque.');
+                    return;
+                }
+                bookie.balance -= amount;
+                bookie.lastWithdraw = new Date().toISOString().split('T')[0];
+            }
+
+            updateBankrollInfo();
+            renderBookies();
+            closeTransactionModal();
+        }
+
+        function deleteBookie(bookieId) {
+            if (!confirm('Tem certeza que deseja excluir esta casa de apostas?')) return;
+            
+            bookies = bookies.filter(b => b.id !== bookieId);
+            updateBankrollInfo();
+            renderBookies();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            updateBankrollInfo();
+            renderBookies();
+        });
+    </script>
+</body>
+</html>
