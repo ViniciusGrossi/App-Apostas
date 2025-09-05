@@ -4,11 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BetTracker - Resultados</title>
+    <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons via CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tom Select -->
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    
+    <!-- Inicialização do Supabase -->
+    <script>
+        const SUPABASE_URL = 'https://cjlvcjfuntfbdrrkigwh.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqbHZjamZ1bnRmYmRycmtpZ3doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAyMzYyMDIsImV4cCI6MjA1NTgxMjIwMn0.FBSsXa2vVmrv78_XeLWZcpMKMUIeRe0mS9hBO7Cn45Y';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    </script>
     <style>
         /* Estilização personalizada para os selects */
         .ts-control {
@@ -105,20 +116,50 @@
     </div>
 
     <!-- Modal de Cashout -->
-    <div id="cashout-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-        <div class="bg-gray-800 rounded-xl p-6 w-96">
-            <h3 class="text-xl font-bold mb-4">Realizar Cashout</h3>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-1">Valor do Cashout</label>
-                    <input type="number" id="cashout-value" step="0.01" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <div id="cashout-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 w-full max-w-md mx-4 border border-gray-700 shadow-2xl">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center">
+                        <i data-lucide="receipt" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white">Realizar Cashout</h3>
                 </div>
-                <div class="flex justify-end space-x-3">
-                    <button onclick="closeCashoutModal()" class="px-4 py-2 text-sm text-gray-300 hover:text-white">
+                <button onclick="closeCashoutModal()" class="text-gray-400 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-6">
+                <div class="bg-gray-700/30 rounded-xl p-4 border border-gray-600">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <i data-lucide="info" class="w-4 h-4 text-blue-400"></i>
+                        <span class="text-gray-300 text-sm font-medium">Informações da Aposta</span>
+                    </div>
+                    <div id="cashout-bet-info" class="text-white text-sm">
+                        <!-- Informações da aposta serão inseridas aqui -->
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Valor do Cashout (R$)</label>
+                    <div class="relative">
+                        <i data-lucide="dollar-sign" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
+                        <input type="number" id="cashout-value" step="0.01" min="0" 
+                               placeholder="Digite o valor do cashout"
+                               class="w-full bg-gray-700 border border-gray-600 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                    </div>
+                    <p class="text-gray-400 text-xs mt-2">Digite o valor que você recebeu pelo cashout</p>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button onclick="closeCashoutModal()" 
+                            class="flex-1 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-xl transition-all duration-200 font-medium">
                         Cancelar
                     </button>
-                    <button onclick="confirmCashout()" class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                        Confirmar
+                    <button onclick="confirmCashout()" 
+                            class="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl transition-all duration-200 font-medium shadow-lg hover:shadow-blue-500/25">
+                        Confirmar Cashout
                     </button>
                 </div>
             </div>
@@ -257,6 +298,41 @@
                             <option value="Outros">Outros</option>
                         </select>
                     </div>
+
+                    <!-- Aposta Turbinada -->
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Aposta Turbinada</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <label class="relative cursor-pointer">
+                                <input type="radio" name="turbo" value="0" class="sr-only peer" checked>
+                                <div class="flex items-center justify-center p-3 bg-gray-700 border border-gray-600 rounded-lg peer-checked:bg-purple-600 peer-checked:border-purple-500 hover:bg-gray-600 transition-all duration-200">
+                                    <div class="text-center">
+                                        <i data-lucide="minus" class="w-4 h-4 mx-auto mb-1 text-gray-300 peer-checked:text-white"></i>
+                                        <span class="text-sm font-medium text-gray-300 peer-checked:text-white">Não</span>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="relative cursor-pointer">
+                                <input type="radio" name="turbo" value="25" class="sr-only peer">
+                                <div class="flex items-center justify-center p-3 bg-gray-700 border border-gray-600 rounded-lg peer-checked:bg-purple-600 peer-checked:border-purple-500 hover:bg-gray-600 transition-all duration-200">
+                                    <div class="text-center">
+                                        <i data-lucide="zap" class="w-4 h-4 mx-auto mb-1 text-gray-300 peer-checked:text-white"></i>
+                                        <span class="text-sm font-medium text-gray-300 peer-checked:text-white">25%</span>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="relative cursor-pointer">
+                                <input type="radio" name="turbo" value="50" class="sr-only peer">
+                                <div class="flex items-center justify-center p-3 bg-gray-700 border border-gray-600 rounded-lg peer-checked:bg-purple-600 peer-checked:border-purple-500 hover:bg-gray-600 transition-all duration-200">
+                                    <div class="text-center">
+                                        <i data-lucide="zap" class="w-4 h-4 mx-auto mb-1 text-gray-300 peer-checked:text-white"></i>
+                                        <span class="text-sm font-medium text-gray-300 peer-checked:text-white">50%</span>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                        <p class="text-gray-400 text-xs mt-2">Aumenta o lucro em caso de vitória</p>
+                    </div>
                 </div>
 
                 <!-- Partida -->
@@ -299,6 +375,7 @@ Ambas marcam - Sim"
                             <span class="ml-2 text-white">Não</span>
                         </label>
                     </div>
+                    <p class="text-gray-400 text-xs mt-1">Bônus: valor não é descontado da casa, apenas lucro é creditado</p>
                 </div>
 
                 <button type="submit" 
@@ -319,107 +396,354 @@ Ambas marcam - Sim"
 
         let selectedBetForCashout = null;
 
-        function loadPendingBets() {
-            const bets = JSON.parse(localStorage.getItem('bets') || '[]');
-            const pendingBets = bets.filter(bet => bet.status === 'pending');
-            const container = document.getElementById('pending-bets');
+        // Funções de gerenciamento de saldo das casas de apostas
+        async function updateBookieBalance(casaDeApostas, amount, operation = 'subtract') {
+            try {
+                // Buscar saldo atual da casa de apostas
+                const { data: bookie, error: fetchError } = await supabase
+                    .from('bookies')
+                    .select('balance')
+                    .eq('name', casaDeApostas)
+                    .single();
 
-            if (pendingBets.length === 0) {
-                container.innerHTML = `
-                    <div class="flex flex-col items-center justify-center bg-gray-800 rounded-xl p-12 border border-gray-700">
-                        <i data-lucide="check-circle" class="w-16 h-16 text-gray-600 mb-4"></i>
-                        <h3 class="text-xl font-bold text-gray-400">Nenhuma aposta pendente</h3>
-                        <p class="text-gray-500 mt-2">Todas as suas apostas já foram atualizadas</p>
-                        <button onclick="openNewBetModal()" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                            Registrar Nova Aposta
-                        </button>
+                if (fetchError && fetchError.code !== 'PGRST116') {
+                    console.error('Erro ao buscar casa de apostas:', fetchError);
+                    return false;
+                }
+
+                let newBalance;
+                if (bookie) {
+                    // Casa existe, atualizar saldo
+                    newBalance = operation === 'subtract' 
+                        ? parseFloat(bookie.balance) - parseFloat(amount)
+                        : parseFloat(bookie.balance) + parseFloat(amount);
+                    
+                    const { error: updateError } = await supabase
+                        .from('bookies')
+                        .update({ balance: newBalance })
+                        .eq('name', casaDeApostas);
+
+                    if (updateError) {
+                        console.error('Erro ao atualizar saldo da casa:', updateError);
+                        return false;
+                    }
+                } else {
+                    // Casa não existe, criar com saldo inicial
+                    newBalance = operation === 'subtract' 
+                        ? 1000 - parseFloat(amount) // Saldo inicial de R$ 1000
+                        : 1000 + parseFloat(amount);
+                    
+                    const { error: insertError } = await supabase
+                        .from('bookies')
+                        .insert([{
+                            name: casaDeApostas,
+                            balance: newBalance
+                        }]);
+
+                    if (insertError) {
+                        console.error('Erro ao criar casa de apostas:', insertError);
+                        return false;
+                    }
+                }
+
+                return true;
+            } catch (error) {
+                console.error('Erro geral no gerenciamento de saldo:', error);
+                return false;
+            }
+        }
+
+        // Função para alternar detalhes da aposta
+        function toggleBetDetails(betId) {
+            const detailsDiv = document.getElementById(`details-${betId}`);
+            const chevronIcon = document.getElementById(`chevron-${betId}`);
+            
+            if (detailsDiv.classList.contains('hidden')) {
+                detailsDiv.classList.remove('hidden');
+                chevronIcon.style.transform = 'rotate(180deg)';
+            } else {
+                detailsDiv.classList.add('hidden');
+                chevronIcon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        async function loadPendingBets() {
+            try {
+                const { data: bets, error } = await supabase
+                    .from('aposta')
+                    .select('*')
+                    .eq('resultado', 'pending')
+                    .order('data', { ascending: false });
+
+                if (error) {
+                    console.error('Erro ao carregar apostas:', error);
+                    return;
+                }
+
+                console.log('Apostas carregadas:', bets);
+
+                const container = document.getElementById('pending-bets');
+
+                if (!bets || bets.length === 0) {
+                    container.innerHTML = `
+                        <div class="flex flex-col items-center justify-center bg-gray-800 rounded-xl p-12 border border-gray-700">
+                            <i data-lucide="check-circle" class="w-16 h-16 text-gray-600 mb-4"></i>
+                            <h3 class="text-xl font-bold text-gray-400">Nenhuma aposta pendente</h3>
+                            <p class="text-gray-500 mt-2">Todas as suas apostas já foram atualizadas</p>
+                            <button onclick="openNewBetModal()" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                Registrar Nova Aposta
+                            </button>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                    return;
+                }
+
+                container.innerHTML = bets.map(bet => `
+                    <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 border border-gray-700 shadow-xl hover:shadow-2xl transition-all duration-300">
+                        <!-- Header da Aposta -->
+                        <div class="flex justify-between items-start mb-6">
+                            <div class="flex-1">
+                                <h3 class="text-xl font-bold text-white mb-2">${bet.partida || 'Partida não informada'}</h3>
+                                <div class="flex items-center space-x-4 text-sm">
+                                    <span class="bg-blue-600/20 text-blue-300 px-3 py-1 rounded-full font-medium">
+                                        ${bet.tipo_aposta || 'N/A'}
+                                    </span>
+                                    <span class="bg-gray-600/20 text-gray-300 px-3 py-1 rounded-full">
+                                        ${new Date(bet.data).toLocaleDateString('pt-BR')}
+                                    </span>
+                                    ${bet.turbo > 0 ? `<span class="bg-purple-600/20 text-purple-300 px-3 py-1 rounded-full font-medium">TURBO ${bet.turbo}%</span>` : ''}
+                                </div>
+                            </div>
+                            <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 rounded-full text-sm font-medium text-white shadow-lg">
+                                ${bet.casa_de_apostas || 'N/A'}
+                            </div>
+                        </div>
+                        
+                        <!-- Informações Principais -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="bg-gray-700/50 rounded-xl p-4 relative">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <i data-lucide="dollar-sign" class="w-4 h-4 text-green-400"></i>
+                                    <span class="text-gray-400 text-sm">Valor Apostado</span>
+                                    ${bet.bonus ? `<span class="bg-blue-600 text-white text-xs px-2 py-1 rounded-full font-bold">BÔNUS</span>` : ''}
+                                </div>
+                                <p class="text-white font-bold text-lg">R$ ${parseFloat(bet.valor_apostado || 0).toFixed(2)}</p>
+                                ${bet.bonus ? `<p class="text-blue-400 text-xs mt-1">Não descontado da casa</p>` : ''}
+                            </div>
+                            
+                            <div class="bg-gray-700/50 rounded-xl p-4 relative">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <i data-lucide="trending-up" class="w-4 h-4 text-blue-400"></i>
+                                    <span class="text-gray-400 text-sm">Odd</span>
+                                </div>
+                                <div class="relative">
+                                    ${bet.turbo > 0 ? `
+                                        <div class="absolute -top-2 -right-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg z-10">
+                                            +${bet.turbo}%
+                                        </div>
+                                    ` : ''}
+                                    <p class="text-white font-bold text-lg">${parseFloat(bet.odd || 0).toFixed(2)}</p>
+                                </div>
+                                ${bet.turbo > 0 ? `<p class="text-purple-400 text-xs mt-1">Aposta Turbinada</p>` : ''}
+                            </div>
+                            
+                            <div class="bg-gray-700/50 rounded-xl p-4">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <i data-lucide="target" class="w-4 h-4 text-purple-400"></i>
+                                    <span class="text-gray-400 text-sm">Categoria</span>
+                                </div>
+                                <p class="text-white font-bold text-lg">${bet.categoria || 'N/A'}</p>
+                            </div>
+                        </div>
+
+                        <!-- Detalhes Expansíveis -->
+                        <div class="mb-6">
+                            <button onclick="toggleBetDetails(${bet.id})" 
+                                    class="flex items-center justify-between w-full p-4 bg-gray-700/30 rounded-xl hover:bg-gray-700/50 transition-all duration-200 group">
+                                <div class="flex items-center space-x-3">
+                                    <i data-lucide="file-text" class="w-5 h-5 text-gray-400 group-hover:text-blue-400 transition-colors"></i>
+                                    <span class="text-gray-300 font-medium">Detalhes da Aposta</span>
+                                </div>
+                                <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 group-hover:text-blue-400 transition-all duration-200" id="chevron-${bet.id}"></i>
+                            </button>
+                            
+                            <div id="details-${bet.id}" class="hidden mt-4 p-4 bg-gray-700/20 rounded-xl border-l-4 border-blue-500">
+                                <div class="space-y-3">
+                                    <div>
+                                        <span class="text-gray-400 text-sm">Descrição:</span>
+                                        <p class="text-white mt-1">${bet.detalhes || 'Nenhuma descrição fornecida'}</p>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-400 text-sm">Torneio:</span>
+                                        <p class="text-white mt-1">${bet.torneio || 'N/A'}</p>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <span class="text-gray-400 text-sm">Bônus:</span>
+                                            <p class="text-white mt-1">${bet.bonus ? 'Sim' : 'Não'}</p>
+                                        </div>
+                                        <div>
+                                            <span class="text-gray-400 text-sm">Turbinada:</span>
+                                            <p class="text-white mt-1">${bet.turbo > 0 ? `${bet.turbo}%` : 'Não'}</p>
+                                        </div>
+                                    </div>
+                                    ${bet.turbo > 0 ? `
+                                    <div class="bg-purple-900/20 p-3 rounded-lg border border-purple-500">
+                                        <div class="flex items-center space-x-2 mb-2">
+                                            <i data-lucide="zap" class="w-4 h-4 text-purple-400"></i>
+                                            <span class="text-purple-300 font-medium">Aposta Turbinada</span>
+                                        </div>
+                                        <p class="text-purple-200 text-sm">
+                                            Lucro normal: R$ ${(parseFloat(bet.valor_apostado) * parseFloat(bet.odd) - parseFloat(bet.valor_apostado)).toFixed(2)}<br>
+                                            Bônus turbo: R$ ${((parseFloat(bet.valor_apostado) * parseFloat(bet.odd) - parseFloat(bet.valor_apostado)) * (bet.turbo / 100)).toFixed(2)}<br>
+                                            <strong>Total: R$ ${(parseFloat(bet.valor_final) - parseFloat(bet.valor_apostado)).toFixed(2)}</strong>
+                                        </p>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botões de Ação -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <button onclick="updateBetStatus(${bet.id}, 'Ganhou')" 
+                                    class="group flex items-center justify-center space-x-3 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-green-500/25">
+                                <i data-lucide="check-circle" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
+                                <span class="font-semibold">Ganhou</span>
+                            </button>
+                            
+                            <button onclick="updateBetStatus(${bet.id}, 'Perdeu')"
+                                    class="group flex items-center justify-center space-x-3 px-6 py-3 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-red-500/25">
+                                <i data-lucide="x-circle" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
+                                <span class="font-semibold">Perdeu</span>
+                            </button>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 mt-4">
+                            <button onclick="openCashoutModal(${bet.id})"
+                                    class="group flex items-center justify-center space-x-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-blue-500/25">
+                                <i data-lucide="receipt" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
+                                <span class="font-semibold">Cashout</span>
+                            </button>
+                            
+                            <button onclick="cancelBet(${bet.id})"
+                                    class="group flex items-center justify-center space-x-3 px-6 py-3 bg-gradient-to-r from-gray-600 to-slate-600 hover:from-gray-700 hover:to-slate-700 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-gray-500/25">
+                                <i data-lucide="trash-2" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
+                                <span class="font-semibold">Cancelar</span>
+                            </button>
+                        </div>
                     </div>
-                `;
+                `).join('');
+
                 lucide.createIcons();
+            } catch (error) {
+                console.error('Erro ao carregar apostas:', error);
+            }
+        }
+
+        async function updateBetStatus(betId, status) {
+            try {
+                // Buscar dados da aposta antes de atualizar
+                const { data: betData, error: fetchError } = await supabase
+                    .from('aposta')
+                    .select('*')
+                    .eq('id', betId)
+                    .single();
+
+                if (fetchError) {
+                    console.error('Erro ao buscar dados da aposta:', fetchError);
+                    return;
+                }
+
+            // Atualizar o status da aposta
+            const { error } = await supabase
+                    .from('aposta')
+                .update({ resultado: status })
+                .eq('id', betId);
+
+            if (error) {
+                console.error('Erro ao atualizar status:', error);
                 return;
             }
 
-            container.innerHTML = pendingBets.map(bet => `
-                <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <h3 class="text-lg font-bold">${bet.match}</h3>
-                            <p class="text-gray-400">${bet.league}</p>
-                            <p class="text-sm text-gray-500 mt-1">${bet.date} ${bet.time}</p>
-                        </div>
-                        <div class="bg-gray-700 px-3 py-1 rounded-full text-sm">
-                            <span class="text-blue-400 font-medium">Odd: ${bet.odds}</span>
-                        </div>
-                    </div>
+                // Lógica baseada no resultado
+                if (status === 'Ganhou') {
+                    let winAmount;
                     
-                    <div class="flex flex-col space-y-2">
-                        <div class="flex justify-between items-center text-sm">
-                            <span class="text-gray-400">Aposta:</span>
-                            <span class="text-white font-medium">${bet.bet}</span>
-                        </div>
-                        <div class="flex justify-between items-center text-sm">
-                            <span class="text-gray-400">Stake:</span>
-                            <span class="text-white font-medium">R$ ${bet.stake}</span>
-                        </div>
-                        <div class="flex justify-between items-center text-sm">
-                            <span class="text-gray-400">Retorno Possível:</span>
-                            <span class="text-green-400 font-medium">R$ ${bet.potentialWin}</span>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3 mt-6">
-                        <button onclick="updateBetStatus(${bet.id}, 'won')" 
-                                class="flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors">
-                            <i data-lucide="check" class="w-4 h-4"></i>
-                            <span>Ganhou</span>
-                        </button>
-                        <button onclick="updateBetStatus(${bet.id}, 'lost')"
-                                class="flex items-center justify-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors">
-                            <i data-lucide="x" class="w-4 h-4"></i>
-                            <span>Perdeu</span>
-                        </button>
-                    </div>
+                    if (betData.bonus) {
+                        // Para apostas com bônus: apenas o lucro é creditado
+                        winAmount = parseFloat(betData.valor_final) - parseFloat(betData.valor_apostado);
+                    } else {
+                        // Para apostas normais: valor final completo
+                        winAmount = parseFloat(betData.valor_final);
+                    }
                     
-                    <div class="grid grid-cols-2 gap-3 mt-3">
-                        <button onclick="openCashoutModal(${bet.id})"
-                                class="flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
-                            <i data-lucide="receipt" class="w-4 h-4"></i>
-                            <span>Cashout</span>
-                        </button>
-                        <button onclick="cancelBet(${bet.id})"
-                                class="flex items-center justify-center space-x-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            <span>Cancelar</span>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
+                    // Adicionar valor ganho à casa de apostas
+                    const balanceUpdated = await updateBookieBalance(betData.casa_de_apostas, winAmount, 'add');
+                    
+                    if (balanceUpdated) {
+                        const tipoAposta = betData.bonus ? 'com bônus' : 'normal';
+                        const turboInfo = betData.turbo > 0 ? ` (Turbinada ${betData.turbo}%)` : '';
+                        alert(`Aposta ganha${turboInfo}! R$ ${winAmount.toFixed(2)} foi adicionado ao saldo de ${betData.casa_de_apostas} (${tipoAposta}).`);
+                    } else {
+                        alert('Aposta ganha, mas houve erro ao atualizar o saldo da casa de apostas.');
+                    }
+                } else if (status === 'Perdeu') {
+                    if (betData.bonus) {
+                        alert('Aposta perdida. Como era bônus, nenhum valor foi movimentado.');
+                    } else {
+                        alert('Aposta perdida. O valor permanece subtraído da casa de apostas.');
+                    }
+                }
 
-            lucide.createIcons();
-        }
-
-        function updateBetStatus(betId, status) {
-            const bets = JSON.parse(localStorage.getItem('bets') || '[]');
-            const betIndex = bets.findIndex(b => b.id === betId);
-            
-            if (betIndex === -1) return;
-
-            const bet = bets[betIndex];
-            bet.status = status;
-
-            // Atualizar a banca
-            const bankroll = JSON.parse(localStorage.getItem('bankroll') || '0');
-            if (status === 'won') {
-                localStorage.setItem('bankroll', JSON.stringify(bankroll + bet.potentialWin));
+                loadPendingBets();
+            } catch (error) {
+                console.error('Erro geral ao atualizar status:', error);
+                alert('Erro ao atualizar status da aposta.');
             }
-
-            bets[betIndex] = bet;
-            localStorage.setItem('bets', JSON.stringify(bets));
-            loadPendingBets();
         }
 
-        function openCashoutModal(betId) {
+        async function openCashoutModal(betId) {
             selectedBetForCashout = betId;
+            
+            // Buscar informações da aposta
+            try {
+                const { data: bet, error } = await supabase
+                    .from('aposta')
+                    .select('*')
+                    .eq('id', betId)
+                    .single();
+                
+                if (error) throw error;
+                
+                // Exibir informações da aposta no modal
+                const betInfoDiv = document.getElementById('cashout-bet-info');
+                betInfoDiv.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Partida:</span>
+                            <span class="text-white font-medium">${bet.partida || 'N/A'}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Valor Apostado:</span>
+                            <span class="text-white font-medium">R$ ${parseFloat(bet.valor_apostado || 0).toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Odd:</span>
+                            <span class="text-white font-medium">${parseFloat(bet.odd || 0).toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Ganho Potencial:</span>
+                            <span class="text-green-400 font-medium">R$ ${(parseFloat(bet.odd || 0) * parseFloat(bet.valor_apostado || 0)).toFixed(2)}</span>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Erro ao carregar informações da aposta:', error);
+                document.getElementById('cashout-bet-info').innerHTML = '<p class="text-red-400">Erro ao carregar informações da aposta</p>';
+            }
+            
             document.getElementById('cashout-modal').classList.remove('hidden');
         }
 
@@ -429,46 +753,109 @@ Ambas marcam - Sim"
             document.getElementById('cashout-value').value = '';
         }
 
-        function confirmCashout() {
+        async function confirmCashout() {
             if (!selectedBetForCashout) return;
 
             const cashoutValue = parseFloat(document.getElementById('cashout-value').value);
-            if (isNaN(cashoutValue) || cashoutValue <= 0) return;
+            if (isNaN(cashoutValue) || cashoutValue <= 0) {
+                alert('Por favor, digite um valor válido para o cashout.');
+                return;
+            }
 
-            const bets = JSON.parse(localStorage.getItem('bets') || '[]');
-            const betIndex = bets.findIndex(b => b.id === selectedBetForCashout);
-            
-            if (betIndex === -1) return;
+            // Confirmar ação
+            if (!confirm(`Confirmar cashout de R$ ${cashoutValue.toFixed(2)}?`)) return;
 
-            // Atualizar a banca com o valor do cashout
-            const bankroll = JSON.parse(localStorage.getItem('bankroll') || '0');
-            localStorage.setItem('bankroll', JSON.stringify(bankroll + cashoutValue));
+            try {
+                // Buscar dados da aposta para obter a casa de apostas
+                const { data: betData, error: fetchError } = await supabase
+                    .from('aposta')
+                    .select('casa_de_apostas')
+                    .eq('id', selectedBetForCashout)
+                    .single();
 
-            // Atualizar o status da aposta
-            bets[betIndex].status = 'cashout';
-            bets[betIndex].cashoutValue = cashoutValue;
-            localStorage.setItem('bets', JSON.stringify(bets));
+                if (fetchError) {
+                    console.error('Erro ao buscar dados da aposta:', fetchError);
+                    alert('Erro ao buscar dados da aposta.');
+                    return;
+                }
+
+            // Atualizar o status da aposta e o valor do cashout
+            const { error: betError } = await supabase
+                    .from('aposta')
+                .update({ 
+                    resultado: 'Cashout',
+                    cashout_value: cashoutValue 
+                })
+                .eq('id', selectedBetForCashout);
+
+            if (betError) {
+                console.error('Erro ao realizar cashout:', betError);
+                    alert('Erro ao realizar cashout. Tente novamente.');
+                return;
+            }
+
+                // Adicionar valor do cashout à casa de apostas
+                const balanceUpdated = await updateBookieBalance(betData.casa_de_apostas, cashoutValue, 'add');
+                
+                if (balanceUpdated) {
+                    alert(`Cashout realizado com sucesso! R$ ${cashoutValue.toFixed(2)} foi adicionado ao saldo de ${betData.casa_de_apostas}.`);
+                } else {
+                    alert('Cashout realizado, mas houve erro ao atualizar o saldo da casa de apostas.');
+            }
 
             closeCashoutModal();
             loadPendingBets();
+            } catch (error) {
+                console.error('Erro geral no cashout:', error);
+                alert('Erro ao realizar cashout. Tente novamente.');
+            }
         }
 
-        function cancelBet(betId) {
-            if (!confirm('Tem certeza que deseja cancelar esta aposta? O valor será estornado para sua banca.')) return;
+        async function cancelBet(betId) {
+            if (!confirm('Tem certeza que deseja cancelar esta aposta? O valor será estornado à casa de apostas.')) return;
 
-            const bets = JSON.parse(localStorage.getItem('bets') || '[]');
-            const betIndex = bets.findIndex(b => b.id === betId);
-            
-            if (betIndex === -1) return;
+            try {
+                // Buscar dados da aposta para estorno
+                const { data: bet, error: fetchError } = await supabase
+                    .from('aposta')
+                    .select('valor_apostado, casa_de_apostas')
+                .eq('id', betId)
+                .single();
 
-            // Estornar o valor para a banca
-            const bankroll = JSON.parse(localStorage.getItem('bankroll') || '0');
-            localStorage.setItem('bankroll', JSON.stringify(bankroll + bets[betIndex].stake));
+                if (fetchError) {
+                    console.error('Erro ao buscar dados da aposta:', fetchError);
+                    alert('Erro ao buscar dados da aposta.');
+                    return;
+                }
 
-            // Remover a aposta
-            bets.splice(betIndex, 1);
-            localStorage.setItem('bets', JSON.stringify(bets));
+                // Estornar o valor à casa de apostas
+                const balanceUpdated = await updateBookieBalance(bet.casa_de_apostas, bet.valor_apostado, 'add');
+                
+                if (!balanceUpdated) {
+                    alert('Erro ao estornar valor à casa de apostas. Cancelamento não realizado.');
+                    return;
+            }
+
+            // Marcar a aposta como cancelada
+            const { error } = await supabase
+                    .from('aposta')
+                .update({ resultado: 'Cancelado' })
+                .eq('id', betId);
+
+            if (error) {
+                    // Se houve erro ao cancelar, reverter o estorno
+                    await updateBookieBalance(bet.casa_de_apostas, bet.valor_apostado, 'subtract');
+                console.error('Erro ao cancelar aposta:', error);
+                    alert('Erro ao cancelar aposta.');
+                return;
+            }
+
+                alert(`Aposta cancelada! R$ ${parseFloat(bet.valor_apostado).toFixed(2)} foi estornado para ${bet.casa_de_apostas}.`);
             loadPendingBets();
+            } catch (error) {
+                console.error('Erro geral ao cancelar aposta:', error);
+                alert('Erro ao cancelar aposta.');
+            }
         }
 
         // Funções do Modal de Nova Aposta
@@ -529,24 +916,69 @@ Ambas marcam - Sim"
                 tournaments: Array.from(document.getElementById('bet-tournaments').selectedOptions).map(opt => opt.value),
                 match: document.getElementById('bet-match').value,
                 details: document.getElementById('bet-details').value,
-                bonus: document.querySelector('input[name="bonus"]:checked').value === '1'
+                bonus: document.querySelector('input[name="bonus"]:checked').value === '1',
+                turbo: parseInt(document.querySelector('input[name="turbo"]:checked').value)
             };
 
             try {
-                const response = await fetch('/api/bets', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData)
-                });
+                // Calcular valor final com Aposta Turbinada
+                let valorFinal = formData.amount * formData.odd;
+                if (formData.turbo > 0) {
+                    const lucro = valorFinal - formData.amount;
+                    const bonusTurbo = lucro * (formData.turbo / 100);
+                    valorFinal = valorFinal + bonusTurbo;
+                }
 
-                if (!response.ok) {
-                    throw new Error('Erro ao salvar aposta');
+                // Preparar dados para o Supabase
+                const supabaseData = {
+                    data: formData.date,
+                    casa_de_apostas: formData.house,
+                    tipo_aposta: formData.type,
+                    categoria: formData.categories.join(', '),
+                    valor_apostado: formData.amount,
+                    odd: formData.odd,
+                    valor_final: valorFinal,
+                    resultado: 'pending',
+                    partida: formData.match,
+                    detalhes: formData.details,
+                    torneio: formData.tournaments.join(', '),
+                    bonus: formData.bonus
+                };
+
+                // Só subtrair da casa de apostas se NÃO for bônus
+                if (!formData.bonus) {
+                    const balanceUpdated = await updateBookieBalance(formData.house, formData.amount, 'subtract');
+                    
+                    if (!balanceUpdated) {
+                        alert('Erro ao atualizar saldo da casa de apostas. Aposta não foi salva.');
+                        return;
+                    }
+                }
+
+                // Inserir a aposta
+                const { data, error } = await supabase
+                    .from('aposta')
+                    .insert([supabaseData]);
+
+                if (error) {
+                    // Se houve erro na inserção e não era bônus, reverter a subtração do saldo
+                    if (!formData.bonus) {
+                        await updateBookieBalance(formData.house, formData.amount, 'add');
+                    }
+                    throw new Error('Erro ao salvar aposta: ' + error.message);
                 }
 
                 // Mostrar mensagem de sucesso
-                alert('Aposta salva com sucesso!');
+                const mensagem = formData.bonus 
+                    ? `Aposta com bônus salva! Valor: R$ ${formData.amount.toFixed(2)} (não descontado da casa)`
+                    : `Aposta salva! R$ ${formData.amount.toFixed(2)} foi subtraído de ${formData.house}`;
+                
+                if (formData.turbo > 0) {
+                    const bonusTurbo = (valorFinal - formData.amount) - (formData.amount * formData.odd - formData.amount);
+                    alert(`${mensagem}\nAposta Turbinada ${formData.turbo}%: +R$ ${bonusTurbo.toFixed(2)} de bônus`);
+                } else {
+                    alert(mensagem);
+                }
                 
                 // Fechar o modal e recarregar os dados
                 closeNewBetModal();

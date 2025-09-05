@@ -6,6 +6,14 @@
     <title>BetTracker - Gestão de Banca</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Inicialização do Supabase -->
+    <script>
+        const SUPABASE_URL = 'https://cjlvcjfuntfbdrrkigwh.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqbHZjamZ1bnRmYmRycmtpZ3doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAyMzYyMDIsImV4cCI6MjA1NTgxMjIwMn0.FBSsXa2vVmrv78_XeLWZcpMKMUIeRe0mS9hBO7Cn45Y';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    </script>
 </head>
 <body class="bg-gray-900 text-white">
     <div class="flex h-screen">
@@ -210,22 +218,8 @@
     </div>
 
     <script>
-        let bookies = [
-            {
-                id: 1,
-                name: 'Bet365',
-                balance: 1500.00,
-                lastDeposit: '2024-03-01',
-                lastWithdraw: '2024-02-15'
-            },
-            {
-                id: 2,
-                name: 'Betfair',
-                balance: 1000.00,
-                lastDeposit: '2024-03-05',
-                lastWithdraw: '2024-02-20'
-            }
-        ];
+        // Variável global para armazenar as casas de apostas
+        let bookies = [];
 
         let currentBookieId = null;
         let currentTransactionType = null;
@@ -239,16 +233,13 @@
 
         function updateBankrollInfo() {
             const totalBankroll = bookies.reduce((sum, bookie) => sum + bookie.balance, 0);
-            const initialBankroll = 5000; // Valor inicial da banca para cálculo de ROI
-            const profit = totalBankroll - initialBankroll;
-            const roi = (profit / initialBankroll) * 100;
             const unitValue = totalBankroll * 0.02;
 
             document.getElementById('totalBankroll').textContent = formatCurrency(totalBankroll);
-            document.getElementById('roiValue').textContent = `${roi >= 0 ? '+' : ''}${roi.toFixed(1)}%`;
-            document.getElementById('roiValue').className = `text-2xl font-bold mb-1 ${roi >= 0 ? 'text-green-400' : 'text-red-400'}`;
-            document.getElementById('profitValue').textContent = formatCurrency(profit);
-            document.getElementById('profitValue').className = `text-2xl font-bold mb-1 ${profit >= 0 ? 'text-green-400' : 'text-red-400'}`;
+            document.getElementById('roiValue').textContent = '0%';
+            document.getElementById('roiValue').className = 'text-2xl font-bold mb-1 text-gray-400';
+            document.getElementById('profitValue').textContent = 'R$ 0,00';
+            document.getElementById('profitValue').className = 'text-2xl font-bold mb-1 text-gray-400';
             document.getElementById('quarterUnit').textContent = formatCurrency(unitValue * 0.25);
             document.getElementById('halfUnit').textContent = formatCurrency(unitValue * 0.5);
             document.getElementById('threeQuarterUnit').textContent = formatCurrency(unitValue * 0.75);
@@ -285,11 +276,11 @@
                         <div class="grid grid-cols-2 gap-4 pt-4 border-t border-gray-700">
                             <div>
                                 <p class="text-sm text-gray-400">Último Depósito</p>
-                                <p class="text-white">${bookie.lastDeposit}</p>
+                                <p class="text-white">${bookie.lastDeposit ? new Date(bookie.lastDeposit).toLocaleString() : '-'}</p>
                             </div>
                             <div>
                                 <p class="text-sm text-gray-400">Último Saque</p>
-                                <p class="text-white">${bookie.lastWithdraw}</p>
+                                <p class="text-white">${bookie.lastWithdraw ? new Date(bookie.lastWithdraw).toLocaleString() : '-'}</p>
                             </div>
                         </div>
                     </div>
@@ -345,7 +336,36 @@
             document.getElementById('transactionAmount').focus();
         }
 
-        function addNewBookie() {
+        // Função para carregar as casas de apostas do Supabase
+        async function loadBookies() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('bookies')
+                    .select('*')
+                    .order('balance', { ascending: false });
+
+                if (error) throw error;
+                
+                // Mapeia os dados do banco para o formato usado pela interface
+                bookies = data.map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    balance: Number(item.balance),
+                    lastDeposit: item.last_deposit,
+                    lastWithdraw: item.last_withdraw,
+                    lastUpdate: item.last_update
+                }));
+                
+                updateBankrollInfo();
+                renderBookies();
+            } catch (error) {
+                console.error('Erro ao carregar casas de apostas:', error);
+                alert('Erro ao carregar casas de apostas');
+            }
+        }
+
+        // Função para adicionar nova casa de apostas
+        async function addNewBookie() {
             const name = document.getElementById('bookieName').value;
             const balance = parseFloat(document.getElementById('bookieInitialBalance').value);
 
@@ -354,21 +374,30 @@
                 return;
             }
 
-            const newBookie = {
-                id: bookies.length + 1,
-                name,
-                balance,
-                lastDeposit: new Date().toISOString().split('T')[0],
-                lastWithdraw: '-'
-            };
+            try {
+                const now = new Date().toISOString();
+                const { data, error } = await supabaseClient
+                    .from('bookies')
+                    .insert([{
+                        name,
+                        balance,
+                        last_deposit: now,
+                        last_update: now
+                    }])
+                    .select();
 
-            bookies.push(newBookie);
-            updateBankrollInfo();
-            renderBookies();
-            closeAddBookieModal();
+                if (error) throw error;
+
+                await loadBookies();
+                closeAddBookieModal();
+            } catch (error) {
+                console.error('Erro ao adicionar casa de apostas:', error);
+                alert('Erro ao adicionar casa de apostas');
+            }
         }
 
-        function processTransaction() {
+        // Função para processar transações (depósito/saque)
+        async function processTransaction() {
             if (!currentTransactionType) {
                 document.getElementById('transactionTypeMessage').classList.remove('hidden');
                 return;
@@ -384,35 +413,59 @@
             const bookie = bookies.find(b => b.id === currentBookieId);
             if (!bookie) return;
 
-            if (currentTransactionType === 'deposit') {
-                bookie.balance += amount;
-                bookie.lastDeposit = new Date().toISOString().split('T')[0];
-            } else {
-                if (amount > bookie.balance) {
-                    alert('Saldo insuficiente para saque.');
-                    return;
-                }
-                bookie.balance -= amount;
-                bookie.lastWithdraw = new Date().toISOString().split('T')[0];
+            const newBalance = currentTransactionType === 'deposit' 
+                ? bookie.balance + amount 
+                : bookie.balance - amount;
+
+            if (currentTransactionType === 'withdraw' && amount > bookie.balance) {
+                alert('Saldo insuficiente para saque.');
+                return;
             }
 
-            updateBankrollInfo();
-            renderBookies();
-            closeTransactionModal();
+            try {
+                const now = new Date().toISOString();
+                const { error } = await supabaseClient
+                    .from('bookies')
+                    .update({ 
+                        balance: newBalance,
+                        [currentTransactionType === 'deposit' ? 'last_deposit' : 'last_withdraw']: now,
+                        last_update: now
+                    })
+                    .eq('id', currentBookieId);
+
+                if (error) throw error;
+
+                await loadBookies();
+                closeTransactionModal();
+            } catch (error) {
+                console.error('Erro ao processar transação:', error);
+                alert('Erro ao processar transação');
+            }
         }
 
-        function deleteBookie(bookieId) {
+        // Função para deletar casa de apostas
+        async function deleteBookie(bookieId) {
             if (!confirm('Tem certeza que deseja excluir esta casa de apostas?')) return;
             
-            bookies = bookies.filter(b => b.id !== bookieId);
-            updateBankrollInfo();
-            renderBookies();
+            try {
+                const { error } = await supabaseClient
+                    .from('bookies')
+                    .delete()
+                    .eq('id', bookieId);
+
+                if (error) throw error;
+
+                await loadBookies();
+            } catch (error) {
+                console.error('Erro ao deletar casa de apostas:', error);
+                alert('Erro ao deletar casa de apostas');
+            }
         }
 
+        // Inicialização
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
-            updateBankrollInfo();
-            renderBookies();
+            loadBookies(); // Carrega os dados do Supabase ao iniciar
         });
     </script>
 </body>

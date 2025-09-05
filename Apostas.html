@@ -8,9 +8,18 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons via CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tom Select -->
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    
+    <!-- Inicialização do Supabase -->
+    <script>
+        const SUPABASE_URL = 'https://cjlvcjfuntfbdrrkigwh.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqbHZjamZ1bnRmYmRycmtpZ3doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAyMzYyMDIsImV4cCI6MjA1NTgxMjIwMn0.FBSsXa2vVmrv78_XeLWZcpMKMUIeRe0mS9hBO7Cn45Y';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    </script>
     <style>
         /* Estilização personalizada para os selects */
         .ts-control {
@@ -271,6 +280,41 @@
                         </select>
                     </div>
 
+                    <!-- Aposta Turbinada -->
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Aposta Turbinada</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <label class="relative cursor-pointer">
+                                <input type="radio" name="turbo" value="0" class="sr-only peer" checked>
+                                <div class="flex items-center justify-center p-3 bg-gray-700 border border-gray-600 rounded-lg peer-checked:bg-purple-600 peer-checked:border-purple-500 hover:bg-gray-600 transition-all duration-200">
+                                    <div class="text-center">
+                                        <i data-lucide="minus" class="w-4 h-4 mx-auto mb-1 text-gray-300 peer-checked:text-white"></i>
+                                        <span class="text-sm font-medium text-gray-300 peer-checked:text-white">Não</span>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="relative cursor-pointer">
+                                <input type="radio" name="turbo" value="25" class="sr-only peer">
+                                <div class="flex items-center justify-center p-3 bg-gray-700 border border-gray-600 rounded-lg peer-checked:bg-purple-600 peer-checked:border-purple-500 hover:bg-gray-600 transition-all duration-200">
+                                    <div class="text-center">
+                                        <i data-lucide="zap" class="w-4 h-4 mx-auto mb-1 text-gray-300 peer-checked:text-white"></i>
+                                        <span class="text-sm font-medium text-gray-300 peer-checked:text-white">25%</span>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="relative cursor-pointer">
+                                <input type="radio" name="turbo" value="50" class="sr-only peer">
+                                <div class="flex items-center justify-center p-3 bg-gray-700 border border-gray-600 rounded-lg peer-checked:bg-purple-600 peer-checked:border-purple-500 hover:bg-gray-600 transition-all duration-200">
+                                    <div class="text-center">
+                                        <i data-lucide="zap" class="w-4 h-4 mx-auto mb-1 text-gray-300 peer-checked:text-white"></i>
+                                        <span class="text-sm font-medium text-gray-300 peer-checked:text-white">50%</span>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                        <p class="text-gray-400 text-xs mt-2">Aumenta o lucro em caso de vitória</p>
+                    </div>
+
                 </div>
 
                 <!-- Partida -->
@@ -313,6 +357,7 @@ Ambas marcam - Sim"
                             <span class="ml-2 text-white">Não</span>
                         </label>
                     </div>
+                    <p class="text-gray-400 text-xs mt-1">Bônus: valor não é descontado da casa, apenas lucro é creditado</p>
                 </div>
 
                 <button type="submit" 
@@ -425,123 +470,138 @@ Ambas marcam - Sim"
     </div>
 
     <script>
-        // Dados
-        const betsData = [
-    {
-        id: 1,
-        match: 'Flamengo vs Palmeiras',
-        league: 'Brasileirão Série A',
-        date: '2024-03-15',
-        time: '16:00',
-        bet: 'Flamengo Vitória',
-        odds: 2.15,
-        stake: 500,
-        potentialWin: 1075,
-        status: 'won',
-        house: 'Bet365',
-        units: 1.0
-    },
-    {
-        id: 2,
-        match: 'Manchester City vs Arsenal',
-        league: 'Premier League',
-        date: '2024-03-16',
-        time: '14:30',
-        bet: 'Over 2.5 Gols',
-        odds: 1.85,
-        stake: 1000,
-        potentialWin: 1850,
-        status: 'pending',
-        house: 'Betfair',
-        units: 2.0
-    },
-    {
-        id: 3,
-        match: 'PSG vs Lyon',
-        league: 'Ligue 1',
-        date: '2024-03-14',
-        time: '17:00',
-        bet: 'Ambas Marcam',
-        odds: 1.95,
-        stake: 750,
-        potentialWin: 1462.50,
-        status: 'lost',
-        house: 'SportingBet',
-        units: 1.5
-    },
-    {
-        id: 4,
-        match: 'Real Madrid vs Barcelona',
-        league: 'La Liga',
-        date: '2024-03-17',
-        time: '16:00',
-        bet: 'Real Madrid ou Empate',
-        odds: 1.65,
-        stake: 1200,
-        potentialWin: 1980,
-        status: 'won',
-        house: 'Bet365',
-        units: 2.4
-    },
-    {
-        id: 5,
-        match: 'Inter vs Milan',
-        league: 'Serie A',
-        date: '2024-03-18',
-        time: '15:45',
-        bet: 'Milan +1.5',
-        odds: 1.75,
-        stake: 600,
-        potentialWin: 1050,
-        status: 'cancelled',
-        house: 'Betano',
-        units: 1.2
-    },
-    {
-        id: 6,
-        match: 'Liverpool vs Chelsea',
-        league: 'Premier League',
-        date: '2024-03-19',
-        time: '16:15',
-        bet: 'Over 1.5 Gols',
-        odds: 1.45,
-        stake: 800,
-        potentialWin: 1160,
-        status: 'pending',
-        house: '1xBet',
-        units: 1.6
-    }
-];
+        // Dados globais
+        let betsData = [];
 
-        const filterOptions = [
-            { id: 'todas', label: 'Todas', count: 156 },
-            { id: 'pendentes', label: 'Pendentes', count: 12 },
-            { id: 'ganhas', label: 'Ganhas', count: 89 },
-            { id: 'perdidas', label: 'Perdidas', count: 45 },
-            { id: 'canceladas', label: 'Canceladas', count: 10 }
+        // Funções de gerenciamento de saldo das casas de apostas
+        async function updateBookieBalance(casaDeApostas, amount, operation = 'subtract') {
+            try {
+                // Buscar saldo atual da casa de apostas
+                const { data: bookie, error: fetchError } = await supabaseClient
+                    .from('bookies')
+                    .select('balance')
+                    .eq('name', casaDeApostas)
+                    .single();
+
+                if (fetchError && fetchError.code !== 'PGRST116') {
+                    console.error('Erro ao buscar casa de apostas:', fetchError);
+                    return false;
+                }
+
+                let newBalance;
+                if (bookie) {
+                    // Casa existe, atualizar saldo
+                    newBalance = operation === 'subtract' 
+                        ? parseFloat(bookie.balance) - parseFloat(amount)
+                        : parseFloat(bookie.balance) + parseFloat(amount);
+                    
+                    const { error: updateError } = await supabaseClient
+                        .from('bookies')
+                        .update({ balance: newBalance })
+                        .eq('name', casaDeApostas);
+
+                    if (updateError) {
+                        console.error('Erro ao atualizar saldo da casa:', updateError);
+                        return false;
+                    }
+                } else {
+                    // Casa não existe, criar com saldo inicial
+                    newBalance = operation === 'subtract' 
+                        ? 1000 - parseFloat(amount) // Saldo inicial de R$ 1000
+                        : 1000 + parseFloat(amount);
+                    
+                    const { error: insertError } = await supabaseClient
+                        .from('bookies')
+                        .insert([{
+                            name: casaDeApostas,
+                            balance: newBalance
+                        }]);
+
+                    if (insertError) {
+                        console.error('Erro ao criar casa de apostas:', insertError);
+                        return false;
+                    }
+                }
+
+                return true;
+            } catch (error) {
+                console.error('Erro geral no gerenciamento de saldo:', error);
+                return false;
+            }
+        }
+
+        let filterOptions = [
+            { id: 'todas', label: 'Todas', count: 0 },
+            { id: 'pendentes', label: 'Pendentes', count: 0 },
+            { id: 'ganhas', label: 'Ganhas', count: 0 },
+            { id: 'perdidas', label: 'Perdidas', count: 0 },
+            { id: 'canceladas', label: 'Canceladas', count: 0 }
         ];
+
+        // Função para atualizar contagens dos filtros
+        function updateFilterCounts() {
+            filterOptions = [
+                { 
+                    id: 'todas', 
+                    label: 'Todas', 
+                    count: betsData.length 
+                },
+                { 
+                    id: 'pendentes', 
+                    label: 'Pendentes', 
+                    count: betsData.filter(bet => bet.status === 'pending').length 
+                },
+                { 
+                    id: 'ganhas', 
+                    label: 'Ganhas', 
+                    count: betsData.filter(bet => bet.status === 'green').length 
+                },
+                { 
+                    id: 'perdidas', 
+                    label: 'Perdidas', 
+                    count: betsData.filter(bet => bet.status === 'red').length 
+                },
+                { 
+                    id: 'canceladas', 
+                    label: 'Canceladas', 
+                    count: betsData.filter(bet => bet.status === 'void').length 
+                }
+            ];
+        }
 
         // Estado da aplicação
         let currentFilter = 'todas';
         let searchTerm = '';
 
+        // Função para mapear status do banco para o sistema
+        function mapStatus(resultado) {
+            const statusMap = {
+                'Ganhou': 'green',
+                'Perdeu': 'red',
+                'pending': 'pending',
+                'Cancelado': 'void',
+                'Cashout': 'pending'
+            };
+            return statusMap[resultado] || 'pending';
+        }
+
         // Funções auxiliares
         function getStatusColor(status) {
             const colors = {
-                won: 'bg-green-900 text-green-300 border-green-500',
-                lost: 'bg-red-900 text-red-300 border-red-500',
-                pending: 'bg-yellow-900 text-yellow-300 border-yellow-500',
-                cancelled: 'bg-gray-900 text-gray-300 border-gray-500'
+                'green': 'bg-green-900 text-green-300 border-green-500',
+                'red': 'bg-red-900 text-red-300 border-red-500',
+                'pending': 'bg-yellow-900 text-yellow-300 border-yellow-500',
+                'void': 'bg-gray-900 text-gray-300 border-gray-500'
             };
-            return colors[status] || colors.cancelled;
+            return colors[status] || colors.void;
         }
 
         function getStatusText(status) {
             const texts = {
-                won: 'Vencida',
-                lost: 'Perdida',
-                pending: 'Pendente',
-                cancelled: 'Cancelada'
+                'green': 'Ganhou',
+                'red': 'Perdeu',
+                'pending': 'Pendente',
+                'void': 'Cancelada'
             };
             return texts[status] || 'Desconhecido';
         }
@@ -580,14 +640,14 @@ Ambas marcam - Sim"
             const filteredBets = betsData.filter(bet => {
                 const matchesFilter = currentFilter === 'todas' || 
                     (currentFilter === 'pendentes' && bet.status === 'pending') ||
-                    (currentFilter === 'ganhas' && bet.status === 'won') ||
-                    (currentFilter === 'perdidas' && bet.status === 'lost') ||
-                    (currentFilter === 'canceladas' && bet.status === 'cancelled');
+                    (currentFilter === 'ganhas' && bet.status === 'green') ||
+                    (currentFilter === 'perdidas' && bet.status === 'red') ||
+                    (currentFilter === 'canceladas' && bet.status === 'void');
                 
                 const matchesSearch = searchTerm === '' || 
                     bet.match.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    bet.league.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    bet.bet.toLowerCase().includes(searchTerm.toLowerCase());
+                    (bet.league && bet.league.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                    (bet.bet && bet.bet.toLowerCase().includes(searchTerm.toLowerCase()));
                 
                 return matchesFilter && matchesSearch;
             });
@@ -596,14 +656,14 @@ Ambas marcam - Sim"
                 <tr class="hover:bg-gray-700 transition-colors">
                     <td class="px-6 py-4">
                         <div>
-                            <p class="text-white font-medium">${bet.match}</p>
-                            <p class="text-gray-400 text-sm">${bet.league}</p>
+                            <p class="text-white font-medium">${bet.match || 'N/A'}</p>
+                            <p class="text-gray-400 text-sm">${bet.league || 'N/A'}</p>
                         </div>
                     </td>
                     <td class="px-6 py-4">
                         <div>
-                            <p class="text-white text-sm">${bet.bet}</p>
-                            <p class="text-gray-400 text-xs">${bet.units}u • ${bet.house}</p>
+                            <p class="text-white text-sm">${bet.bet || 'N/A'}</p>
+                            <p class="text-gray-400 text-xs">${bet.units}u • ${bet.house || 'N/A'}</p>
                         </div>
                     </td>
                     <td class="px-6 py-4">
@@ -613,13 +673,20 @@ Ambas marcam - Sim"
                         </div>
                     </td>
                     <td class="px-6 py-4">
-                        <span class="text-blue-400 font-medium">${bet.odds}</span>
+                        <div class="relative inline-block">
+                            ${bet.turbo > 0 ? `
+                                <div class="absolute -top-2 -right-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xs px-1.5 py-0.5 rounded-full font-bold shadow-lg z-10">
+                                    +${bet.turbo}%
+                                </div>
+                            ` : ''}
+                            <span class="text-blue-400 font-medium">${bet.odds || 'N/A'}</span>
+                        </div>
                     </td>
                     <td class="px-6 py-4">
-                        <span class="text-white font-medium">R$ ${bet.stake}</span>
+                        <span class="text-white font-medium">R$ ${bet.stake || '0'}</span>
                     </td>
                     <td class="px-6 py-4">
-                        <span class="text-green-400 font-medium">R$ ${bet.potentialWin}</span>
+                        <span class="text-green-400 font-medium">R$ ${bet.potentialWin ? bet.potentialWin.toFixed(2) : '0'}</span>
                     </td>
                     <td class="px-6 py-4">
                         <div class="inline-flex items-center space-x-1 px-3 py-1 rounded-full border text-xs font-medium ${getStatusColor(bet.status)}">
@@ -667,34 +734,69 @@ Ambas marcam - Sim"
         document.getElementById('newBetForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
+            const amount = parseFloat(document.getElementById('bet-amount').value);
+            const odd = parseFloat(document.getElementById('bet-odd').value);
+            
+            const bonus = document.querySelector('input[name="bonus"]:checked').value === '1';
+            const turbo = parseInt(document.querySelector('input[name="turbo"]:checked').value);
+            
+            // Calcular valor final com Aposta Turbinada
+            let valorFinal = amount * odd;
+            if (turbo > 0) {
+                const lucro = valorFinal - amount;
+                const bonusTurbo = lucro * (turbo / 100);
+                valorFinal = valorFinal + bonusTurbo;
+            }
+
             const formData = {
-                date: document.getElementById('bet-date').value,
-                house: document.getElementById('bet-house').value,
-                type: document.getElementById('bet-type').value,
-                categories: Array.from(document.getElementById('bet-categories').selectedOptions).map(opt => opt.value),
-                amount: parseFloat(document.getElementById('bet-amount').value),
-                odd: parseFloat(document.getElementById('bet-odd').value),
-                tournaments: Array.from(document.getElementById('bet-tournaments').selectedOptions).map(opt => opt.value),
-                match: document.getElementById('bet-match').value,
-                details: document.getElementById('bet-details').value,
-                bonus: document.querySelector('input[name="bonus"]:checked').value === '1'
+                data: document.getElementById('bet-date').value,
+                casa_de_apostas: document.getElementById('bet-house').value,
+                tipo_aposta: document.getElementById('bet-type').value,
+                categoria: document.getElementById('bet-categories').value,
+                resultado: 'pending',
+                valor_apostado: amount,
+                odd: odd.toString(),
+                valor_final: valorFinal,
+                torneio: document.getElementById('bet-tournaments').value,
+                partida: document.getElementById('bet-match').value,
+                detalhes: document.getElementById('bet-details').value,
+                bonus: bonus ? 1 : 0
             };
 
             try {
-                const response = await fetch('/api/bets', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData)
-                });
+                // Só subtrair da casa de apostas se NÃO for bônus
+                if (!bonus) {
+                    const balanceUpdated = await updateBookieBalance(formData.casa_de_apostas, formData.valor_apostado, 'subtract');
+                    
+                    if (!balanceUpdated) {
+                        alert('Erro ao atualizar saldo da casa de apostas. Aposta não foi salva.');
+                        return;
+                    }
+                }
 
-                if (!response.ok) {
-                    throw new Error('Erro ao salvar aposta');
+                const { error } = await supabaseClient
+                    .from('aposta')
+                    .insert([formData]);
+
+                if (error) {
+                    // Se houve erro na inserção e não era bônus, reverter a subtração do saldo
+                    if (!bonus) {
+                        await updateBookieBalance(formData.casa_de_apostas, formData.valor_apostado, 'add');
+                    }
+                    throw error;
                 }
 
                 // Mostrar mensagem de sucesso
-                alert('Aposta salva com sucesso!');
+                const mensagem = bonus 
+                    ? `Aposta com bônus salva! Valor: R$ ${formData.valor_apostado.toFixed(2)} (não descontado da casa)`
+                    : `Aposta salva! R$ ${formData.valor_apostado.toFixed(2)} foi subtraído de ${formData.casa_de_apostas}`;
+                
+                if (turbo > 0) {
+                    const bonusTurbo = (valorFinal - amount) - (amount * odd - amount);
+                    alert(`${mensagem}\nAposta Turbinada ${turbo}%: +R$ ${bonusTurbo.toFixed(2)} de bônus`);
+                } else {
+                    alert(mensagem);
+                }
                 
                 // Fechar o modal e recarregar os dados
                 closeNewBetModal();
@@ -737,6 +839,43 @@ Ambas marcam - Sim"
             // Input de busca
         }
 
+        // Função para carregar apostas do Supabase
+        async function loadBets() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('aposta')
+                    .select('*')
+                    .order('data', { ascending: false });
+
+                if (error) throw error;
+
+                betsData = data.map(item => ({
+                    id: item.id,
+                    match: item.partida,
+                    league: item.torneio,
+                    date: new Date(item.data).toLocaleDateString('pt-BR'),
+                    time: new Date(item.data).toLocaleTimeString('pt-BR'),
+                    bet: item.detalhes,
+                    odds: parseFloat(item.odd),
+                    stake: item.valor_apostado,
+                    potentialWin: item.valor_final || (parseFloat(item.odd) * parseFloat(item.valor_apostado)),
+                    status: mapStatus(item.resultado),
+                    house: item.casa_de_apostas,
+                    units: 1.0, // Pode ser calculado com base na sua lógica de unidades
+                    category: item.categoria,
+                    bonus: item.bonus === 1,
+                    turbo: item.turbo || 0
+                }));
+
+                updateFilterCounts();
+                renderFilters();
+                renderBets();
+            } catch (error) {
+                console.error('Erro ao carregar apostas:', error);
+                alert('Erro ao carregar apostas');
+            }
+        }
+
         // Inicialização
         document.addEventListener('DOMContentLoaded', () => {
             // Inicializa os ícones
@@ -745,9 +884,8 @@ Ambas marcam - Sim"
             // Inicializa os selects personalizados
             initializeSelects();
 
-            // Renderiza os filtros e apostas
-            renderFilters();
-            renderBets();
+            // Carrega dados do Supabase
+            loadBets();
 
             // Configura busca
             document.getElementById('search-input').addEventListener('input', (e) => {
