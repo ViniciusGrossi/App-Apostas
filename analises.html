@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BetTracker - Análises</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <style>
+        .tab-active { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: #fff; 
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .tab-inactive { 
+            background: #374151; 
+            color: #d1d5db; 
+            transition: all 0.3s ease;
+        }
+        .tab-inactive:hover {
+            background: #4b5563;
+            transform: translateY(-1px);
+        }
+        .metric-card {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            border: 1px solid #374151;
+            transition: all 0.3s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border-color: #667eea;
+        }
+        .chart-container {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            border: 1px solid #374151;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            min-height: 350px;
+        }
+        .ts-control, .ts-dropdown { 
+            background-color: #374151 !important; 
+            color: #fff !important; 
+            border-radius: 0.5rem !important; 
+            border: 1px solid #4b5563 !important;
+        }
+        .ts-dropdown .option { padding: 0.5rem 1rem !important; }
+        .ts-dropdown .active { background-color: #667eea !important; color: #fff !important; }
+        .ts-dropdown .option:hover { background-color: #4b5563 !important; }
+        .ts-control input { color: #fff !important; }
+        .ts-control .item { 
+            background-color: #667eea !important; 
+            color: #fff !important; 
+            border-radius: 0.25rem !important; 
+        }
+        .profit-positive { color: #10b981; }
+        .profit-negative { color: #ef4444; }
+        .loading-spinner {
+            border: 3px solid #374151;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .glass-effect {
+            background: rgba(31, 41, 55, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .no-data {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+            color: #6b7280;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 bg-gray-800 border-r border-gray-700 flex-shrink-0">
+            <div class="p-6">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 gradient-bg rounded-lg flex items-center justify-center">
+                        <i data-lucide="target" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold">BetTracker</h1>
+                        <p class="text-sm text-gray-400">Pro Analytics</p>
+                    </div>
+                </div>
+            </div>
+            <nav class="px-4 pb-4">
+                <a href="teste.html" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-all">
+                    <i data-lucide="home" class="w-5 h-5"></i>
+                    <span class="font-medium">Início</span>
+                </a>
+                <a href="Apostas.html" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-all">
+                    <i data-lucide="target" class="w-5 h-5"></i>
+                    <span class="font-medium">Apostas</span>
+                </a>
+                <a href="resultados.html" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-all">
+                    <i data-lucide="check-circle" class="w-5 h-5"></i>
+                    <span class="font-medium">Resultados</span>
+                </a>
+                <a href="#" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 gradient-bg text-white shadow-lg">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                    <span class="font-medium">Análises</span>
+                </a>
+                <a href="banca.html" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-all">
+                    <i data-lucide="wallet" class="w-5 h-5"></i>
+                    <span class="font-medium">Gestão de Banca</span>
+                </a>
+                <a href="#" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-all">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                    <span class="font-medium">Configurações</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-gray-800 border-b border-gray-700 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">Análises Avançadas</h2>
+                        <p class="text-gray-400 mt-1">Dashboard completo com métricas, gráficos e insights para suas apostas</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div id="loading-indicator" class="loading-spinner hidden"></div>
+                        <button id="refresh-data" class="px-4 py-2 gradient-bg rounded-lg hover:opacity-90 transition-all flex items-center space-x-2">
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                            <span>Atualizar</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-6">
+                <!-- Filtros Avançados -->
+                <div class="glass-effect rounded-xl p-6 mb-6">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <i data-lucide="filter" class="w-5 h-5 mr-2"></i>
+                        Filtros Avançados
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-2">Data Inicial</label>
+                            <input type="date" id="filter-date-start" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-2">Data Final</label>
+                            <input type="date" id="filter-date-end" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-2">Casa de Apostas</label>
+                            <select id="filter-house" multiple></select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-2">Tipo de Aposta</label>
+                            <select id="filter-type" multiple></select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-2">Categoria/Torneio</label>
+                            <select id="filter-tournament" multiple></select>
+                        </div>
+                        <div class="flex flex-col justify-end">
+                            <button id="btn-clear-filters" class="w-full px-4 py-2 bg-gray-600 rounded-lg text-gray-300 hover:bg-gray-500 transition-all">
+                                Limpar Filtros
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Métricas Principais -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="metric-card rounded-xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 rounded-lg bg-green-500/20 text-green-400">
+                                <i data-lucide="dollar-sign" class="w-6 h-6"></i>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-gray-400">Total investido</p>
+                                <p id="metric-total-variation" class="text-sm font-medium">-</p>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold mb-1" id="metric-total-apostado">R$ 0,00</p>
+                        <p class="text-gray-400 text-sm">Total Apostado</p>
+                    </div>
+
+                    <div class="metric-card rounded-xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 rounded-lg bg-blue-500/20 text-blue-400">
+                                <i data-lucide="trending-up" class="w-6 h-6"></i>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-gray-400">ROI ideal: 5%+</p>
+                                <p id="metric-roi-status" class="text-sm font-medium">-</p>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold mb-1" id="metric-roi">0%</p>
+                        <p class="text-gray-400 text-sm">ROI</p>
+                    </div>
+
+                    <div class="metric-card rounded-xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 rounded-lg bg-yellow-500/20 text-yellow-400">
+                                <i data-lucide="badge-dollar-sign" class="w-6 h-6"></i>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-gray-400">Maior ganho</p>
+                                <p id="metric-maior-ganho" class="text-sm font-medium">R$ 0,00</p>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold mb-1" id="metric-lucro">R$ 0,00</p>
+                        <p class="text-gray-400 text-sm">Lucro/Prejuízo</p>
+                    </div>
+
+                    <div class="metric-card rounded-xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 rounded-lg bg-purple-500/20 text-purple-400">
+                                <i data-lucide="activity" class="w-6 h-6"></i>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-gray-400">Meta: 60%+</p>
+                                <p id="metric-taxa-status" class="text-sm font-medium">-</p>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold mb-1" id="metric-taxa-acerto">0%</p>
+                        <p class="text-gray-400 text-sm">Taxa de Acerto</p>
+                    </div>
+                </div>
+
+                <!-- Gráficos Principais -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div class="chart-container">
+                        <h3 class="text-lg font-semibold mb-4">Evolução do Lucro</h3>
+                        <div id="chart-evolucao-lucro"></div>
+                    </div>
+                    <div class="chart-container">
+                        <h3 class="text-lg font-semibold mb-4">Distribuição de Resultados</h3>
+                        <div id="chart-resultados"></div>
+                    </div>
+                </div>
+
+                <!-- Estatísticas Rápidas -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="glass-effect rounded-xl p-6">
+                        <h4 class="font-semibold mb-4 flex items-center">
+                            <i data-lucide="calendar" class="w-5 h-5 mr-2"></i>
+                            Atividade
+                        </h4>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Total de Apostas:</span>
+                                <span id="stat-total-apostas" class="font-medium">0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Apostas/Dia (média):</span>
+                                <span id="stat-apostas-dia" class="font-medium">0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Dias ativos:</span>
+                                <span id="stat-dias-ativos" class="font-medium">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect rounded-xl p-6">
+                        <h4 class="font-semibold mb-4 flex items-center">
+                            <i data-lucide="target" class="w-5 h-5 mr-2"></i>
+                            Odds
+                        </h4>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Odd Média:</span>
+                                <span id="stat-odd-media" class="font-medium">0.00</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Odd Mais Alta:</span>
+                                <span id="stat-odd-alta" class="font-medium">0.00</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Odd Mais Baixa:</span>
+                                <span id="stat-odd-baixa" class="font-medium">0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect rounded-xl p-6">
+                        <h4 class="font-semibold mb-4 flex items-center">
+                            <i data-lucide="trending-up" class="w-5 h-5 mr-2"></i>
+                            Sequências
+                        </h4>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Maior Sequência de Vitórias:</span>
+                                <span id="stat-seq-vitorias" class="font-medium">0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Maior Sequência de Derrotas:</span>
+                                <span id="stat-seq-derrotas" class="font-medium">0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Sequência Atual:</span>
+                                <span id="stat-seq-atual" class="font-medium">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Insights -->
+                <div class="glass-effect rounded-xl p-6">
+                    <h3 class="text-lg font-semibold mb-4">Insights e Recomendações</h3>
+                    <div id="insights-container" class="space-y-3">
+                        <div class="flex items-start space-x-3 p-4 rounded-lg bg-blue-500/20">
+                            <i data-lucide="lightbulb" class="w-5 h-5 mt-0.5 text-blue-400 flex-shrink-0"></i>
+                            <div>
+                                <h4 class="font-medium text-white mb-1">Aguardando dados</h4>
+                                <p class="text-gray-300 text-sm">Adicione apostas para gerar insights personalizados sobre sua performance.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Configuração do Supabase
+        const SUPABASE_CONFIG = {
+            url: 'https://cjlvcjfuntfbdrrkigwh.supabase.co',
+            anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqbHZjamZ1bnRmYmRycmtpZ3doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAyMzYyMDIsImV4cCI6MjA1NTgxMjIwMn0.FBSsXa2vVmrv78_XeLWZcpMKMUIeRe0mS9hBO7Cn45Y'
+        };
+        
+        // Variáveis globais
+        let supabase;
+        let apostas = [];
+        let apostasFiltradas = [];
+        let charts = {};
+        let tomSelects = {};
+
+        // Funções utilitárias
+        function formatarMoeda(valor) {
+            return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        function formatarPercentual(valor) {
+            return `${valor.toFixed(1)}%`;
+        }
+
+        function calcularROI(lucro, totalApostado) {
+            if (totalApostado === 0) return 0;
+            return (lucro / totalApostado) * 100;
+        }
+
+        function calcularTaxaAcerto(ganhas, total) {
+            if (total === 0) return 0;
+            return (ganhas / total) * 100;
+        }
+
+        // Extrair odd de forma robusta a partir dos campos disponíveis
+        function extrairOdd(aposta) {
+            try {
+                let valor = aposta?.odd;
+                if (valor === null || valor === undefined || valor === '') {
+                    const alt = parseFloat(aposta?.odd_final) || parseFloat(aposta?.odd_inicial);
+                    return Number.isFinite(alt) ? alt : NaN;
+                }
+                if (typeof valor === 'string') {
+                    valor = valor.replace(',', '.');
+                }
+                const num = parseFloat(valor);
+                if (Number.isFinite(num) && num > 0) return num;
+                const fallback = parseFloat(aposta?.odd_final) || parseFloat(aposta?.odd_inicial);
+                return Number.isFinite(fallback) ? fallback : NaN;
+            } catch {
+                return NaN;
+            }
+        }
+
+        function showLoading() {
+            const loader = document.getElementById('loading-indicator');
+            if (loader) loader.classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            const loader = document.getElementById('loading-indicator');
+            if (loader) loader.classList.add('hidden');
+        }
+
+        // Função para carregar apostas
+        async function carregarApostas() {
+            showLoading();
+            try {
+                console.log('Iniciando carregamento das apostas...');
+                
+                let query = supabase.from('aposta').select('*').order('data', { ascending: true });
+
+                // Aplicar filtros
+                const startDate = document.getElementById('filter-date-start')?.value;
+                const endDate = document.getElementById('filter-date-end')?.value;
+                
+                if (startDate) {
+                    console.log('Aplicando filtro de data inicial:', startDate);
+                    query = query.gte('data', startDate);
+                }
+                if (endDate) {
+                    console.log('Aplicando filtro de data final:', endDate);
+                    query = query.lte('data', endDate);
+                }
+
+                console.log('Executando query no Supabase...');
+                const { data, error } = await query;
+                
+                if (error) {
+                    console.error('Erro do Supabase:', error);
+                    throw error;
+                }
+
+                console.log('Dados carregados com sucesso:', data?.length || 0, 'apostas');
+                apostas = data || [];
+                
+                // Definir datas padrão se não estiverem definidas e houver apostas
+                if (apostas.length > 0) {
+                    definirDatasDefault();
+                }
+                
+                aplicarFiltros();
+                preencherFiltros();
+                atualizarAnalises();
+                
+                console.log('Carregamento concluído com sucesso');
+            } catch (error) {
+                console.error('Erro ao carregar apostas:', error);
+                
+                let mensagemErro = 'Erro ao carregar apostas do banco de dados.';
+                if (error.message) {
+                    if (error.message.includes('network') || error.message.includes('fetch')) {
+                        mensagemErro = 'Erro de conexão. Verifique sua internet.';
+                    } else if (error.message.includes('permission') || error.message.includes('auth')) {
+                        mensagemErro = 'Erro de permissão no banco de dados.';
+                    }
+                }
+                
+                alert(mensagemErro);
+                
+                // Em caso de erro, inicializar com dados vazios
+                apostas = [];
+                apostasFiltradas = [];
+                atualizarMetricas();
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Definir datas padrão
+        function definirDatasDefault() {
+            try {
+                const startDateInput = document.getElementById('filter-date-start');
+                const endDateInput = document.getElementById('filter-date-end');
+                
+                if (!startDateInput || !endDateInput) return;
+                
+                // Data de início: primeira aposta
+                if (!startDateInput.value && apostas.length > 0) {
+                    const primeiraData = apostas[0].data;
+                    if (primeiraData) {
+                        startDateInput.value = primeiraData;
+                        console.log('Data inicial definida como:', primeiraData);
+                    }
+                }
+                
+                // Data de fim: hoje
+                if (!endDateInput.value) {
+                    const hoje = new Date().toISOString().split('T')[0];
+                    endDateInput.value = hoje;
+                    console.log('Data final definida como:', hoje);
+                }
+            } catch (error) {
+                console.error('Erro ao definir datas padrão:', error);
+            }
+        }
+
+        // Aplicar filtros adicionais
+        function aplicarFiltros() {
+            try {
+                console.log('Aplicando filtros adicionais...');
+                apostasFiltradas = apostas.filter(aposta => {
+                    const houseFilter = tomSelects.house?.getValue() || [];
+                    const typeFilter = tomSelects.type?.getValue() || [];
+                    const tournamentFilter = tomSelects.tournament?.getValue() || [];
+
+                    if (houseFilter.length && !houseFilter.includes(aposta.casa_de_apostas)) return false;
+                    if (typeFilter.length && !typeFilter.includes(aposta.tipo_aposta)) return false;
+
+                    if (tournamentFilter.length) {
+                        const apostaTokens = (aposta.categoria || '')
+                            .split(/[,;]+/)
+                            .map(s => s.trim().toLowerCase())
+                            .filter(Boolean);
+                        const selectedLower = tournamentFilter.map(t => String(t).toLowerCase());
+                        const match = selectedLower.some(sel => apostaTokens.includes(sel));
+                        if (!match) return false;
+                    }
+
+                    return true;
+                });
+                console.log('Filtros aplicados:', apostasFiltradas.length, 'apostas restantes');
+            } catch (error) {
+                console.error('Erro ao aplicar filtros:', error);
+                apostasFiltradas = apostas;
+            }
+        }
+
+        // Preencher filtros
+        function preencherFiltros() {
+            try {
+                console.log('Preenchendo filtros...');
+                const casas = [...new Set(apostas.map(a => a.casa_de_apostas).filter(Boolean))];
+                const tipos = [...new Set(apostas.map(a => a.tipo_aposta).filter(Boolean))];
+
+                // Normalizar categorias/torneios: separar por vírgula/; , aparar e remover duplicados case-insensitive
+                const rawCategorias = apostas.map(a => a.categoria).filter(Boolean);
+                const tokens = rawCategorias
+                    .flatMap(c => String(c).split(/[,;]+/))
+                    .map(s => s.trim())
+                    .filter(Boolean);
+                const lowerToOriginal = new Map();
+                tokens.forEach(tok => {
+                    const key = tok.toLowerCase();
+                    if (!lowerToOriginal.has(key)) lowerToOriginal.set(key, tok);
+                });
+                const torneirosUnicos = Array.from(lowerToOriginal.values());
+
+                // Limpar TomSelects existentes
+                Object.values(tomSelects).forEach(select => {
+                    if (select && select.destroy) {
+                        try {
+                            select.destroy();
+                        } catch (e) {
+                            console.log('Erro ao destruir select:', e);
+                        }
+                    }
+                });
+                tomSelects = {};
+
+                preencherSelect('filter-house', casas);
+                preencherSelect('filter-type', tipos);
+                preencherSelect('filter-tournament', torneirosUnicos);
+
+                // Criar novos TomSelects
+                if (document.getElementById('filter-house')) {
+                    tomSelects.house = new TomSelect('#filter-house', {
+                        plugins: ['remove_button'],
+                        placeholder: 'Selecione casas...',
+                        onItemAdd: () => { aplicarFiltros(); atualizarAnalises(); },
+                        onItemRemove: () => { aplicarFiltros(); atualizarAnalises(); }
+                    });
+                }
+                
+                if (document.getElementById('filter-type')) {
+                    tomSelects.type = new TomSelect('#filter-type', {
+                        plugins: ['remove_button'],
+                        placeholder: 'Selecione tipos...',
+                        onItemAdd: () => { aplicarFiltros(); atualizarAnalises(); },
+                        onItemRemove: () => { aplicarFiltros(); atualizarAnalises(); }
+                    });
+                }
+                
+                if (document.getElementById('filter-tournament')) {
+                    tomSelects.tournament = new TomSelect('#filter-tournament', {
+                        plugins: ['remove_button'],
+                        placeholder: 'Selecione torneios...',
+                        onItemAdd: () => { aplicarFiltros(); atualizarAnalises(); },
+                        onItemRemove: () => { aplicarFiltros(); atualizarAnalises(); }
+                    });
+                }
+
+                console.log('Filtros preenchidos com sucesso');
+            } catch (error) {
+                console.error('Erro ao preencher filtros:', error);
+            }
+        }
+
+        function preencherSelect(id, opcoes) {
+            try {
+                const select = document.getElementById(id);
+                if (!select) return;
+                
+                select.innerHTML = '';
+                opcoes.forEach(opcao => {
+                    const option = document.createElement('option');
+                    option.value = opcao;
+                    option.textContent = opcao;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erro ao preencher select:', id, error);
+            }
+        }
+
+        // Atualizar análises
+        function atualizarAnalises() {
+            try {
+                atualizarMetricas();
+                renderizarGraficos();
+                atualizarEstatisticas();
+                atualizarInsights();
+            } catch (error) {
+                console.error('Erro ao atualizar análises:', error);
+            }
+        }
+
+        // Atualizar métricas principais
+        function atualizarMetricas() {
+            try {
+                const totalApostado = apostasFiltradas.reduce((sum, aposta) => sum + (parseFloat(aposta.valor_apostado) || 0), 0);
+                const lucro = calcularLucroTotal();
+                const ganhas = apostasFiltradas.filter(a => a.resultado === 'Ganhou').length;
+                const total = apostasFiltradas.length;
+                const roi = calcularROI(lucro, totalApostado);
+                const taxaAcerto = calcularTaxaAcerto(ganhas, total);
+
+                // Atualizar elementos
+                const elements = {
+                    'metric-total-apostado': formatarMoeda(totalApostado),
+                    'metric-roi': formatarPercentual(roi),
+                    'metric-lucro': formatarMoeda(lucro),
+                    'metric-taxa-acerto': formatarPercentual(taxaAcerto)
+                };
+
+                Object.entries(elements).forEach(([id, value]) => {
+                    const element = document.getElementById(id);
+                    if (element) element.textContent = value;
+                });
+
+                // Status indicators
+                const roiStatus = document.getElementById('metric-roi-status');
+                if (roiStatus) {
+                    roiStatus.textContent = roi >= 5 ? '✓ Excelente' : roi >= 0 ? '~ Positivo' : '✗ Negativo';
+                }
+
+                const taxaStatus = document.getElementById('metric-taxa-status');
+                if (taxaStatus) {
+                    taxaStatus.textContent = taxaAcerto >= 60 ? '✓ Excelente' : taxaAcerto >= 50 ? '~ Bom' : '✗ Abaixo';
+                }
+
+                // Maior ganho
+                const maiorGanho = Math.max(...apostasFiltradas.map(a => 
+                    a.resultado === 'Ganhou' ? (parseFloat(a.valor_final) || 0) : 0
+                ));
+                const maiorGanhoEl = document.getElementById('metric-maior-ganho');
+                if (maiorGanhoEl) {
+                    maiorGanhoEl.textContent = formatarMoeda(maiorGanho || 0);
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar métricas:', error);
+            }
+        }
+
+        function calcularLucroTotal() {
+            return apostasFiltradas
+                .filter(aposta => aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu')  // Filtra somente 'Ganhou' e 'Perdeu'
+                .reduce((sum, aposta) => {
+                    // Se o resultado for 'Ganhou', soma o valor final (já é o lucro)
+                    if (aposta.resultado === 'Ganhou') {
+                        return sum + parseFloat(aposta.valor_final);
+                    } 
+                    // Se o resultado for 'Perdeu', já está negativo, então somamos diretamente
+                    else if (aposta.resultado === 'Perdeu') {
+                        return sum + parseFloat(aposta.valor_final);  // Soma o valor final diretamente (já negativo)
+                    }
+                    // Caso contrário, mantém o valor acumulado
+                    return sum;
+                }, 0);
+        }
+
+
+
+        // Renderizar gráficos
+        function renderizarGraficos() {
+            if (apostasFiltradas.length === 0) {
+                renderizarGraficoVazio('chart-evolucao-lucro', 'Nenhum dado disponível para mostrar a evolução do lucro');
+                renderizarGraficoVazio('chart-resultados', 'Nenhum dado disponível para mostrar a distribuição de resultados');
+                return;
+            }
+
+            try {
+                renderizarGraficoEvolucao();
+                renderizarGraficoResultados();
+            } catch (error) {
+                console.error('Erro ao renderizar gráficos:', error);
+            }
+        }
+
+        function renderizarGraficoVazio(containerId, message) {
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.innerHTML = `<div class="no-data">${message}</div>`;
+            }
+        }
+
+        function renderizarGraficoEvolucao() {
+            try {
+                if (charts.evolucao) {
+                    charts.evolucao.destroy();
+                    delete charts.evolucao;
+                }
+
+                let saldo = 0;
+                const dados = apostasFiltradas
+                    .filter(aposta => aposta.data)
+                    .map((aposta) => {
+                        const x = new Date(aposta.data).getTime();
+                        if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu' || aposta.resultado === 'Cashout') {
+                            saldo += parseFloat(aposta.valor_final) || 0; // valor_final já é lucro/prejuízo
+                        }
+                        return { x, y: saldo };
+                    });
+
+                const options = {
+                    chart: {
+                        type: 'line',
+                        height: 360,
+                        background: 'transparent',
+                        toolbar: { show: false }
+                    },
+                    series: [{
+                        name: 'Lucro Acumulado',
+                        data: dados
+                    }],
+                    stroke: {
+                        curve: 'smooth',
+                        width: 4,
+                        colors: ['#22c55e']
+                    },
+                    markers: {
+                        size: 2,
+                        colors: ['#22c55e'],
+                        strokeColors: '#0f172a',
+                        strokeWidth: 2,
+                        hover: { size: 4 }
+                    },
+                    grid: {
+                        borderColor: '#374151',
+                        strokeDashArray: 4
+                    },
+                    annotations: {
+                        yaxis: [{
+                            y: 0,
+                            borderColor: '#6b7280',
+                            strokeDashArray: 4,
+                            label: {
+                                text: 'Zero',
+                                style: { background: '#374151', color: '#d1d5db' }
+                            }
+                        }]
+                    },
+                    xaxis: {
+                        type: 'datetime',
+                        title: { text: 'Data', style: { color: '#d1d5db' } },
+                        labels: { style: { colors: '#d1d5db' } },
+                        tickAmount: 6
+                    },
+                    yaxis: {
+                        title: { text: 'Lucro (R$)', style: { color: '#d1d5db' } },
+                        labels: {
+                            style: { colors: '#d1d5db' },
+                            formatter: function(value) { return formatarMoeda(value); }
+                        }
+                    },
+                    theme: { mode: 'dark' },
+                    tooltip: {
+                        theme: 'dark',
+                        x: { format: 'dd/MM/yyyy' },
+                        y: { formatter: function(value) { return formatarMoeda(value); } }
+                    }
+                };
+
+                charts.evolucao = new ApexCharts(document.querySelector('#chart-evolucao-lucro'), options);
+                charts.evolucao.render();
+            } catch (error) {
+                console.error('Erro no gráfico de evolução:', error);
+                renderizarGraficoVazio('chart-evolucao-lucro', 'Erro ao carregar gráfico');
+            }
+        }
+
+        function renderizarGraficoResultados() {
+            try {
+                if (charts.resultados) {
+                    charts.resultados.destroy();
+                    delete charts.resultados;
+                }
+
+                const resultados = apostasFiltradas.reduce((acc, aposta) => {
+                    acc[aposta.resultado] = (acc[aposta.resultado] || 0) + 1;
+                    return acc;
+                }, {});
+
+                const cores = {
+                    'Ganhou': '#10b981',
+                    'Perdeu': '#ef4444',
+                    'Cashout': '#f59e0b',
+                    'Cancelada': '#6b7280'
+                };
+
+                const options = {
+                    chart: {
+                        type: 'donut',
+                        height: 300,
+                        background: 'transparent'
+                    },
+                    series: Object.values(resultados),
+                    labels: Object.keys(resultados),
+                    colors: Object.keys(resultados).map(r => cores[r] || '#6b7280'),
+                    legend: {
+                        labels: { colors: '#d1d5db' },
+                        position: 'bottom'
+                    },
+                    theme: { mode: 'dark' },
+                    tooltip: { theme: 'dark' },
+                    plotOptions: {
+                        pie: {
+                            donut: {
+                                size: '70%'
+                            }
+                        }
+                    }
+                };
+
+                charts.resultados = new ApexCharts(document.querySelector("#chart-resultados"), options);
+                charts.resultados.render();
+            } catch (error) {
+                console.error('Erro no gráfico de resultados:', error);
+                renderizarGraficoVazio('chart-resultados', 'Erro ao carregar gráfico');
+            }
+        }
+
+        // Atualizar estatísticas
+        function atualizarEstatisticas() {
+            try {
+                const totalApostas = apostasFiltradas.length;
+                const diasUnicos = new Set(apostasFiltradas.map(a => a.data)).size;
+                const apostasPorDia = totalApostas / (diasUnicos || 1);
+
+                // Corrigido: extrair odd do campo correto com fallback
+                const odds = apostasFiltradas
+                    .map(a => extrairOdd(a))
+                    .filter(o => Number.isFinite(o) && o > 0);
+                const oddMedia = odds.length > 0 ? odds.reduce((a, b) => a + b, 0) / odds.length : 0;
+                const oddAlta = odds.length > 0 ? Math.max(...odds) : 0;
+                const oddBaixa = odds.length > 0 ? Math.min(...odds) : 0;
+
+                const { maiorVitorias, maiorDerrotas, sequenciaAtual } = calcularSequencias();
+
+                // Atualizar elementos
+                const stats = {
+                    'stat-total-apostas': totalApostas,
+                    'stat-apostas-dia': apostasPorDia.toFixed(1),
+                    'stat-dias-ativos': diasUnicos,
+                    'stat-odd-media': oddMedia.toFixed(2),
+                    'stat-odd-alta': oddAlta.toFixed(2),
+                    'stat-odd-baixa': oddBaixa.toFixed(2),
+                    'stat-seq-vitorias': maiorVitorias,
+                    'stat-seq-derrotas': maiorDerrotas,
+                    'stat-seq-atual': sequenciaAtual
+                };
+
+                Object.entries(stats).forEach(([id, value]) => {
+                    const element = document.getElementById(id);
+                    if (element) element.textContent = value;
+                });
+            } catch (error) {
+                console.error('Erro ao atualizar estatísticas:', error);
+            }
+        }
+
+        function calcularSequencias() {
+            let maiorVitorias = 0;
+            let maiorDerrotas = 0;
+            let sequenciaAtualVitorias = 0;
+            let sequenciaAtualDerrotas = 0;
+            let ultimoResultado = '';
+
+            apostasFiltradas.forEach(aposta => {
+                if (aposta.resultado === 'Ganhou') {
+                    sequenciaAtualVitorias++;
+                    sequenciaAtualDerrotas = 0;
+                    maiorVitorias = Math.max(maiorVitorias, sequenciaAtualVitorias);
+                    ultimoResultado = 'V';
+                } else if (aposta.resultado === 'Perdeu') {
+                    sequenciaAtualDerrotas++;
+                    sequenciaAtualVitorias = 0;
+                    maiorDerrotas = Math.max(maiorDerrotas, sequenciaAtualDerrotas);
+                    ultimoResultado = 'D';
+                }
+            });
+
+            const sequenciaAtual = ultimoResultado === 'V' ? `${sequenciaAtualVitorias}V` : 
+                                  ultimoResultado === 'D' ? `${sequenciaAtualDerrotas}D` : '-';
+
+            return { maiorVitorias, maiorDerrotas, sequenciaAtual };
+        }
+
+        // Atualizar insights
+        function atualizarInsights() {
+            try {
+                const insights = gerarInsights();
+                const container = document.getElementById('insights-container');
+                if (!container) return;
+                
+                container.innerHTML = insights.map(insight => `
+                    <div class="flex items-start space-x-3 p-4 rounded-lg bg-gray-700/50">
+                        <i data-lucide="${insight.icone}" class="w-5 h-5 mt-0.5 text-blue-400 flex-shrink-0"></i>
+                        <div>
+                            <h4 class="font-medium text-white mb-1">${insight.titulo}</h4>
+                            <p class="text-gray-300 text-sm">${insight.descricao}</p>
+                        </div>
+                    </div>
+                `).join('');
+                
+                // Recriar ícones
+                if (window.lucide) {
+                    lucide.createIcons();
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar insights:', error);
+            }
+        }
+
+        function gerarInsights() {
+            const insights = [];
+            
+            if (apostasFiltradas.length === 0) {
+                insights.push({
+                    icone: 'info',
+                    titulo: 'Sem dados suficientes',
+                    descricao: 'Adicione mais apostas para gerar insights personalizados.'
+                });
+                return insights;
+            }
+
+            const totalApostado = apostasFiltradas.reduce((sum, a) => sum + parseFloat(a.valor_apostado), 0);
+            const lucro = calcularLucroTotal();
+            const roi = calcularROI(lucro, totalApostado);
+            const taxaAcerto = calcularTaxaAcerto(apostasFiltradas.filter(a => a.resultado === 'Ganhou').length, apostasFiltradas.length);
+
+            // Insight sobre performance geral
+            if (roi > 10) {
+                insights.push({
+                    icone: 'trending-up',
+                    titulo: 'Performance Excelente!',
+                    descricao: `Seu ROI de ${formatarPercentual(roi)} está bem acima da média. Continue com essa estratégia!`
+                });
+            } else if (roi > 0) {
+                insights.push({
+                    icone: 'thumbs-up',
+                    titulo: 'Performance Positiva',
+                    descricao: `ROI positivo de ${formatarPercentual(roi)}. Bom trabalho mantendo os lucros!`
+                });
+            } else {
+                insights.push({
+                    icone: 'alert-triangle',
+                    titulo: 'Atenção na Estratégia',
+                    descricao: `ROI negativo de ${formatarPercentual(roi)}. Considere revisar sua estratégia de apostas.`
+                });
+            }
+
+            // Insight sobre taxa de acerto
+            if (taxaAcerto >= 60) {
+                insights.push({
+                    icone: 'target',
+                    titulo: 'Taxa de Acerto Excelente',
+                    descricao: `${formatarPercentual(taxaAcerto)} de acerto. Você está escolhendo bem suas apostas!`
+                });
+            } else if (taxaAcerto >= 45) {
+                insights.push({
+                    icone: 'activity',
+                    titulo: 'Taxa de Acerto Razoável',
+                    descricao: `${formatarPercentual(taxaAcerto)} de acerto. Há espaço para melhorar a seleção.`
+                });
+            } else {
+                insights.push({
+                    icone: 'x-circle',
+                    titulo: 'Taxa de Acerto Baixa',
+                    descricao: `${formatarPercentual(taxaAcerto)} de acerto. Foque em apostas mais conservadoras.`
+                });
+            }
+
+            // Insight sobre volume
+            if (apostasFiltradas.length >= 50) {
+                insights.push({
+                    icone: 'database',
+                    titulo: 'Volume Significativo',
+                    descricao: `Com ${apostasFiltradas.length} apostas, você tem dados suficientes para análises confiáveis.`
+                });
+            } else {
+                insights.push({
+                    icone: 'plus-circle',
+                    titulo: 'Aumente o Volume',
+                    descricao: `Com ${apostasFiltradas.length} apostas, continue adicionando dados para análises mais precisas.`
+                });
+            }
+
+            return insights;
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                console.log('Inicializando aplicação...');
+                
+                // Inicializar Supabase
+                supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+                
+                // Inicializar ícones
+                if (window.lucide) {
+                    lucide.createIcons();
+                }
+                
+                // Definir data de hoje como padrão no campo final
+                const hoje = new Date().toISOString().split('T')[0];
+                const endDateInput = document.getElementById('filter-date-end');
+                if (endDateInput) {
+                    endDateInput.value = hoje;
+                    console.log('Data final padrão definida:', hoje);
+                }
+                
+                // Carregar dados iniciais
+                carregarApostas();
+                
+                // Configurar event listeners
+                const startDateInput = document.getElementById('filter-date-start');
+                const endDateInputListener = document.getElementById('filter-date-end');
+                const refreshBtn = document.getElementById('refresh-data');
+                const clearBtn = document.getElementById('btn-clear-filters');
+                
+                if (startDateInput) {
+                    startDateInput.addEventListener('change', () => {
+                        console.log('Data inicial alterada:', startDateInput.value);
+                        carregarApostas();
+                    });
+                }
+                
+                if (endDateInputListener) {
+                    endDateInputListener.addEventListener('change', () => {
+                        console.log('Data final alterada:', endDateInputListener.value);
+                        carregarApostas();
+                    });
+                }
+
+                if (refreshBtn) {
+                    refreshBtn.addEventListener('click', () => {
+                        console.log('Botão atualizar clicado');
+                        carregarApostas();
+                    });
+                }
+
+                if (clearBtn) {
+                    clearBtn.addEventListener('click', () => {
+                        console.log('Limpando filtros');
+                        
+                        if (startDateInput) startDateInput.value = '';
+                        
+                        const hoje = new Date().toISOString().split('T')[0];
+                        if (endDateInputListener) endDateInputListener.value = hoje;
+                        
+                        Object.values(tomSelects).forEach(select => {
+                            if (select && select.clear) {
+                                try {
+                                    select.clear();
+                                } catch (e) {
+                                    console.log('Erro ao limpar select:', e);
+                                }
+                            }
+                        });
+
+                        carregarApostas();
+                    });
+                }
+                
+                console.log('Aplicação inicializada com sucesso');
+            } catch (error) {
+                console.error('Erro na inicialização:', error);
+                alert('Erro ao inicializar a aplicação. Recarregue a página.');
+            }
+        });
+
+        // Redimensionar gráficos quando a janela muda de tamanho
+        window.addEventListener('resize', () => {
+            Object.values(charts).forEach(chart => {
+                if (chart && chart.updateOptions) {
+                    try {
+                        chart.updateOptions({
+                            chart: { width: '100%' }
+                        });
+                    } catch (e) {
+                        console.log('Erro ao redimensionar gráfico:', e);
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
