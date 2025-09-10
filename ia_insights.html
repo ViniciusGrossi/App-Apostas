@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BetTracker - IA Insights</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Inicialização do Supabase -->
+    <script>
+        const SUPABASE_URL = 'https://cjlvcjfuntfbdrrkigwh.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqbHZjamZ1bnRmYmRycmtpZ3doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAyMzYyMDIsImV4cCI6MjA1NTgxMjIwMn0.FBSsXa2vVmrv78_XeLWZcpMKMUIeRe0mS9hBO7Cn45Y';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    </script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            min-height: 100vh;
+        }
+
+        .glass-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3);
+            border-color: rgba(99, 102, 241, 0.6);
+        }
+
+        .metric-card {
+            background: linear-gradient(145deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .metric-card:hover::before {
+            left: 100%;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3);
+            border-color: rgba(99, 102, 241, 0.6);
+        }
+
+        .chat-container {
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.8));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .message-bubble {
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .message-bubble-user {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .message-bubble-ai {
+            background: linear-gradient(145deg, rgba(51, 65, 85, 0.8), rgba(30, 41, 59, 0.8));
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .sidebar {
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-item {
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 0;
+            background: linear-gradient(180deg, #6366f1, #8b5cf6);
+            transition: height 0.3s ease;
+        }
+
+        .nav-item.active::before,
+        .nav-item:hover::before {
+            height: 100%;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.2), transparent);
+            border-right: 2px solid #6366f1;
+        }
+
+        .floating-header {
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .metric-icon {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+            backdrop-filter: blur(10px);
+        }
+
+        .action-button {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(99, 102, 241, 0.6);
+        }
+
+        .action-button:active {
+            transform: translateY(0);
+        }
+
+        .suggestion-pill {
+            background: linear-gradient(145deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            z-index: 1;
+        }
+
+        .suggestion-pill:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+            border-color: rgba(99, 102, 241, 0.6);
+            z-index: 10;
+        }
+
+        .typing-indicator {
+            display: inline-block;
+        }
+
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #6366f1;
+            margin: 0 2px;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.7;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        .loading-spinner {
+            border: 3px solid rgba(99, 102, 241, 0.3);
+            border-top: 3px solid #6366f1;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        /* Scrollbar personalizada para o chat */
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        }
+
+        /* Hamburger Menu */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 0.5rem;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 0.5rem;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .hamburger:hover {
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        .hamburger span {
+            width: 1.5rem;
+            height: 2px;
+            background: #ffffff;
+            margin: 2px 0;
+            transition: 0.3s;
+            border-radius: 1px;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 35;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .sidebar-hidden {
+            transform: translateX(-100%);
+        }
+
+        @media (max-width: 768px) {
+            .hamburger {
+                display: flex;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                width: 280px;
+                z-index: 40;
+                transition: transform 0.3s ease-in-out;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- Overlay para mobile -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 sidebar flex-shrink-0">
+            <div class="p-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center">
+                            <i data-lucide="trending-up" class="w-6 h-6 text-white"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold gradient-text">BetTracker</h1>
+                            <p class="text-sm text-slate-400 font-medium">Pro Analytics</p>
+                        </div>
+                    </div>
+                    <!-- Botão fechar para mobile -->
+                    <button id="close-sidebar" class="md:hidden p-2 rounded-lg hover:bg-slate-700/50 transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <nav class="px-4 pb-4 space-y-2">
+                <a href="teste.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="home" class="w-5 h-5"></i>
+                    <span class="font-medium">Início</span>
+                </a>
+                <a href="Apostas.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="target" class="w-5 h-5"></i>
+                    <span class="font-medium">Apostas</span>
+                </a>
+                <a href="#" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                    <span class="font-medium">Análises</span>
+                </a>
+                <a href="ia-insights.html" class="nav-item active flex items-center space-x-3 px-6 py-4 rounded-2xl text-white">
+                    <i data-lucide="sparkles" class="w-5 h-5"></i>
+                    <span class="font-medium">IA Insights</span>
+                </a>
+                <a href="banca.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="wallet" class="w-5 h-5"></i>
+                    <span class="font-medium">Gestão de Banca</span>
+                </a>
+                <a href="#" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                    <span class="font-medium">Configurações</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden main-content">
+            <!-- Header -->
+            <header class="floating-header px-4 md:px-8 py-4 md:py-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <!-- Botão hamburguer para mobile -->
+                        <button id="menu-toggle" class="hamburger md:hidden">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </button>
+                        <div>
+                            <h2 class="text-2xl md:text-4xl font-bold gradient-text mb-1 md:mb-2">IA Insights</h2>
+                            <p class="text-slate-400 text-sm md:text-lg hidden sm:block">Converse com seu assistente de apostas inteligente</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-4">
+                        <div id="loading-indicator" class="loading-spinner hidden"></div>
+                        <div class="pulse-dot w-3 h-3 bg-green-400 rounded-full"></div>
+                        
+                        <button onclick="clearChat()" 
+                                class="p-2 md:p-3 metric-icon rounded-xl transition-all hover:bg-slate-600/50">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main content -->
+            <main class="flex-1 overflow-hidden p-4 md:p-8">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 h-full">
+                    <!-- Coluna lateral com insights rápidos -->
+                    <div class="lg:col-span-1 space-y-4 overflow-y-auto">
+                        <!-- Card de Status -->
+                        <div class="metric-card rounded-2xl p-4">
+                            <div class="flex items-center space-x-3 mb-3">
+                                <div class="metric-icon p-2 rounded-xl">
+                                    <i data-lucide="brain" class="w-5 h-5 text-purple-400"></i>
+                                </div>
+                                <h3 class="font-semibold">Assistente IA</h3>
+                            </div>
+                            <p class="text-sm text-slate-400 mb-2">Status</p>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                                <span class="text-green-400 text-sm">Online</span>
+                            </div>
+                        </div>
+
+                        <!-- Sugestões Rápidas -->
+                        <div class="glass-card rounded-2xl p-4">
+                            <h3 class="font-semibold mb-3 flex items-center">
+                                <i data-lucide="lightbulb" class="w-4 h-4 mr-2 text-yellow-400"></i>
+                                Pergunte sobre
+                            </h3>
+                            <div class="space-y-2">
+                                <button onclick="sendSuggestion('Qual foi minha melhor sequência de vitórias?')" 
+                                        class="suggestion-pill w-full p-3 rounded-xl text-left text-sm hover:pl-4 transition-all">
+                                    💰 Melhor sequência
+                                </button>
+                                <button onclick="sendSuggestion('Quais tipos de apostas me dão mais lucro?')" 
+                                        class="suggestion-pill w-full p-3 rounded-xl text-left text-sm hover:pl-4 transition-all">
+                                    📊 Apostas lucrativas
+                                </button>
+                                <button onclick="sendSuggestion('Como melhorar minha taxa de acerto?')" 
+                                        class="suggestion-pill w-full p-3 rounded-xl text-left text-sm hover:pl-4 transition-all">
+                                    🎯 Melhorar acertos
+                                </button>
+                                <button onclick="sendSuggestion('Análise das minhas últimas apostas')" 
+                                        class="suggestion-pill w-full p-3 rounded-xl text-left text-sm hover:pl-4 transition-all">
+                                    📈 Análise recente
+                                </button>
+                                <button onclick="sendSuggestion('Dicas para gestão de banca')" 
+                                        class="suggestion-pill w-full p-3 rounded-xl text-left text-sm hover:pl-4 transition-all">
+                                    💳 Gestão de banca
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Estatísticas Rápidas -->
+                        <div class="glass-card rounded-2xl p-4 hidden lg:block">
+                            <h3 class="font-semibold mb-3 flex items-center">
+                                <i data-lucide="pie-chart" class="w-4 h-4 mr-2 text-blue-400"></i>
+                                Suas Estatísticas
+                            </h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <p class="text-xs text-slate-400">Taxa de Acerto</p>
+                                    <p class="text-lg font-bold text-green-400">65.8%</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-slate-400">ROI Médio</p>
+                                    <p class="text-lg font-bold text-blue-400">+12.3%</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-slate-400">Melhor Odd</p>
+                                    <p class="text-lg font-bold text-purple-400">3.45</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Container do Chat -->
+                    <div class="lg:col-span-3 flex flex-col h-full">
+                        <div class="chat-container rounded-2xl md:rounded-3xl flex flex-col h-full">
+                            <!-- Mensagens do Chat -->
+                            <div id="chat-messages" class="chat-messages flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
+                                <!-- Mensagem de boas-vindas -->
+                                <div class="flex items-start space-x-3">
+                                    <div class="metric-icon p-2 rounded-xl flex-shrink-0">
+                                        <i data-lucide="sparkles" class="w-5 h-5 text-purple-400"></i>
+                                    </div>
+                                    <div class="message-bubble message-bubble-ai rounded-2xl p-4 max-w-[80%]">
+                                        <p class="text-sm">
+                                            Olá! 👋 Sou seu assistente de apostas inteligente. Posso analisar suas estatísticas, identificar padrões de sucesso e fornecer insights personalizados para melhorar seus resultados.
+                                        </p>
+                                        <p class="text-sm mt-2">
+                                            Como posso ajudá-lo hoje?
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Indicador de digitação -->
+                            <div id="typing-indicator" class="hidden px-6 py-2">
+                                <div class="flex items-start space-x-3">
+                                    <div class="metric-icon p-2 rounded-xl">
+                                        <i data-lucide="sparkles" class="w-5 h-5 text-purple-400"></i>
+                                    </div>
+                                    <div class="message-bubble message-bubble-ai rounded-2xl p-4">
+                                        <div class="typing-indicator">
+                                            <span></span>
+                                            <span></span>
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Campo de Input -->
+                            <div class="border-t border-slate-700 p-4 md:p-6">
+                                <form id="chat-form" class="flex space-x-3">
+                                    <input type="text" 
+                                           id="message-input" 
+                                           placeholder="Digite sua mensagem..."
+                                           class="flex-1 bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                           disabled>
+                                    <button type="submit" 
+                                            id="send-button"
+                                            class="action-button px-6 py-3 rounded-xl text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                            disabled>
+                                        <i data-lucide="send" class="w-5 h-5"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Configuração do N8N Webhook
+        const N8N_WEBHOOK_URL = 'YOUR_N8N_WEBHOOK_URL'; // Substitua pela URL do seu webhook N8N
+
+        // Variáveis globais
+        let isWaitingResponse = false;
+
+        // Sistema de navegação responsiva
+        function setupResponsiveNavigation() {
+            const menuToggle = document.getElementById('menu-toggle');
+            const closeSidebar = document.getElementById('close-sidebar');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+
+            function openSidebar() {
+                sidebar.classList.remove('sidebar-hidden');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeSidebarFunc() {
+                sidebar.classList.add('sidebar-hidden');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            if (menuToggle) {
+                menuToggle.addEventListener('click', openSidebar);
+            }
+
+            if (closeSidebar) {
+                closeSidebar.addEventListener('click', closeSidebarFunc);
+            }
+
+            if (overlay) {
+                overlay.addEventListener('click', closeSidebarFunc);
+            }
+
+            // Fechar sidebar ao redimensionar para desktop
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 768) {
+                    sidebar.classList.remove('sidebar-hidden');
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                } else {
+                    sidebar.classList.add('sidebar-hidden');
+                }
+            });
+
+            // Configurar estado inicial baseado no tamanho da tela
+            if (window.innerWidth < 768) {
+                sidebar.classList.add('sidebar-hidden');
+            }
+        }
+
+        // Função para adicionar mensagem ao chat
+        function addMessage(message, isUser = false) {
+            const messagesContainer = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `flex items-start space-x-3 ${isUser ? 'justify-end' : ''}`;
+            
+            if (isUser) {
+                messageDiv.innerHTML = `
+                    <div class="message-bubble message-bubble-user rounded-2xl p-4 max-w-[80%]">
+                        <p class="text-sm text-white">${escapeHtml(message)}</p>
+                    </div>
+                    <div class="metric-icon p-2 rounded-xl flex-shrink-0">
+                        <i data-lucide="user" class="w-5 h-5"></i>
+                    </div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="metric-icon p-2 rounded-xl flex-shrink-0">
+                        <i data-lucide="sparkles" class="w-5 h-5 text-purple-400"></i>
+                    </div>
+                    <div class="message-bubble message-bubble-ai rounded-2xl p-4 max-w-[80%]">
+                        <p class="text-sm">${message}</p>
+                    </div>
+                `;
+            }
+            
+            messagesContainer.appendChild(messageDiv);
+            lucide.createIcons();
+            
+            // Auto scroll para a última mensagem
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Função para escapar HTML
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Função para mostrar indicador de digitação
+        function showTypingIndicator() {
+            document.getElementById('typing-indicator').classList.remove('hidden');
+            const messagesContainer = document.getElementById('chat-messages');
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Função para esconder indicador de digitação
+        function hideTypingIndicator() {
+            document.getElementById('typing-indicator').classList.add('hidden');
+        }
+
+        // Função para enviar mensagem
+        async function sendMessage(message) {
+            if (!message || isWaitingResponse) return;
+            
+            // Adicionar mensagem do usuário
+            addMessage(message, true);
+            
+            // Limpar input
+            document.getElementById('message-input').value = '';
+            
+            // Desabilitar input enquanto espera resposta
+            setInputState(false);
+            isWaitingResponse = true;
+            
+            // Mostrar indicador de digitação
+            showTypingIndicator();
+            
+            try {
+                // Buscar dados do Supabase para contexto
+                const context = await getContextData();
+                
+                // Enviar para N8N webhook
+                const response = await fetch(N8N_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        context: context,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Erro na comunicação com o servidor');
+                }
+                
+                const data = await response.json();
+                
+                // Esconder indicador de digitação
+                hideTypingIndicator();
+                
+                // Adicionar resposta da IA
+                addMessage(data.response || 'Desculpe, não consegui processar sua mensagem.');
+                
+            } catch (error) {
+                console.error('Erro ao enviar mensagem:', error);
+                hideTypingIndicator();
+                
+                // Mensagem de erro
+                addMessage('Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.');
+            } finally {
+                // Reabilitar input
+                setInputState(true);
+                isWaitingResponse = false;
+            }
+        }
+
+        // Função para buscar contexto do Supabase
+        async function getContextData() {
+            try {
+                // Buscar últimas apostas
+                const { data: apostas, error: apostasError } = await supabaseClient
+                    .from('aposta')
+                    .select('*')
+                    .order('data', { ascending: false })
+                    .limit(50);
+                
+                // Buscar saldo das casas
+                const { data: bookies, error: bookiesError } = await supabaseClient
+                    .from('bookies')
+                    .select('*');
+                
+                // Calcular estatísticas
+                const stats = calculateStats(apostas || []);
+                
+                return {
+                    recentBets: apostas || [],
+                    bookies: bookies || [],
+                    statistics: stats
+                };
+            } catch (error) {
+                console.error('Erro ao buscar contexto:', error);
+                return {};
+            }
+        }
+
+        // Função para calcular estatísticas
+        function calculateStats(apostas) {
+            if (!apostas || apostas.length === 0) return {};
+            
+            const ganhas = apostas.filter(a => a.resultado === 'Ganhou').length;
+            const perdidas = apostas.filter(a => a.resultado === 'Perdeu').length;
+            const totalApostado = apostas.reduce((sum, a) => sum + parseFloat(a.valor_apostado || 0), 0);
+            const lucroTotal = apostas.reduce((sum, a) => {
+                if (a.resultado === 'Ganhou') {
+                    return sum + (parseFloat(a.valor_final || 0) - parseFloat(a.valor_apostado || 0));
+                } else if (a.resultado === 'Perdeu') {
+                    return sum - parseFloat(a.valor_apostado || 0);
+                }
+                return sum;
+            }, 0);
+            
+            return {
+                totalBets: apostas.length,
+                wins: ganhas,
+                losses: perdidas,
+                winRate: ganhas + perdidas > 0 ? (ganhas / (ganhas + perdidas) * 100).toFixed(2) : 0,
+                totalStaked: totalApostado.toFixed(2),
+                totalProfit: lucroTotal.toFixed(2),
+                roi: totalApostado > 0 ? (lucroTotal / totalApostado * 100).toFixed(2) : 0
+            };
+        }
+
+        // Função para habilitar/desabilitar input
+        function setInputState(enabled) {
+            const input = document.getElementById('message-input');
+            const button = document.getElementById('send-button');
+            
+            input.disabled = !enabled;
+            button.disabled = !enabled;
+            
+            if (enabled) {
+                input.focus();
+            }
+        }
+
+        // Função para enviar sugestão
+        function sendSuggestion(text) {
+            document.getElementById('message-input').value = text;
+            document.getElementById('chat-form').dispatchEvent(new Event('submit'));
+        }
+
+        // Função para limpar chat
+        function clearChat() {
+            if (confirm('Tem certeza que deseja limpar o histórico do chat?')) {
+                const messagesContainer = document.getElementById('chat-messages');
+                messagesContainer.innerHTML = `
+                    <div class="flex items-start space-x-3">
+                        <div class="metric-icon p-2 rounded-xl flex-shrink-0">
+                            <i data-lucide="sparkles" class="w-5 h-5 text-purple-400"></i>
+                        </div>
+                        <div class="message-bubble message-bubble-ai rounded-2xl p-4 max-w-[80%]">
+                            <p class="text-sm">
+                                Chat limpo! Como posso ajudá-lo?
+                            </p>
+                        </div>
+                    </div>
+                `;
+                lucide.createIcons();
+            }
+        }
+
+        // Event listener para o formulário
+        document.getElementById('chat-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+            
+            if (message) {
+                await sendMessage(message);
+            }
+        });
+
+        // Verificar se o webhook está configurado
+        function checkWebhookConfiguration() {
+            if (N8N_WEBHOOK_URL === 'YOUR_N8N_WEBHOOK_URL') {
+                addMessage('⚠️ Atenção: O webhook do N8N não está configurado. Por favor, configure a URL do webhook no código para ativar a integração com a IA.');
+                return false;
+            }
+            return true;
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            setupResponsiveNavigation();
+            
+            // Verificar configuração do webhook
+            if (checkWebhookConfiguration()) {
+                // Habilitar input se webhook estiver configurado
+                setInputState(true);
+            }
+        });
+    </script>
+</body>
+</html>

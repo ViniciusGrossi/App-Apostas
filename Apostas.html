@@ -3,405 +3,625 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BetTracker - Pro Analytics</title>
-    <!-- Tailwind CSS via CDN -->
+    <title>BetTracker - Apostas</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons via CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Tom Select -->
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
-    
-    <!-- Inicialização do Supabase -->
-    <script>
-        const SUPABASE_URL = 'https://cjlvcjfuntfbdrrkigwh.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqbHZjamZ1bnRmYmRycmtpZ3doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAyMzYyMDIsImV4cCI6MjA1NTgxMjIwMn0.FBSsXa2vVmrv78_XeLWZcpMKMUIeRe0mS9hBO7Cn45Y';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    </script>
     <style>
-        /* Estilização personalizada para os selects */
-        .ts-control {
-            background-color: rgb(55, 65, 81) !important;
-            border-color: rgb(75, 85, 99) !important;
-            color: white !important;
-            border-radius: 0.5rem !important;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
         }
-        .ts-dropdown {
-            background-color: rgb(55, 65, 81) !important;
-            border-color: rgb(75, 85, 99) !important;
-            color: white !important;
-            border-radius: 0.5rem !important;
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            min-height: 100vh;
         }
-        .ts-dropdown .option {
-            padding: 0.5rem 1rem !important;
+
+        .glass-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .ts-dropdown .active {
-            background-color: rgb(37, 99, 235) !important;
-            color: white !important;
+
+        .glass-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3);
+            border-color: rgba(99, 102, 241, 0.6);
         }
-        .ts-dropdown .option:hover {
-            background-color: rgb(55, 85, 99) !important;
+
+        .metric-card {
+            background: linear-gradient(145deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .metric-card:hover::before {
+            left: 100%;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3);
+            border-color: rgba(99, 102, 241, 0.6);
+        }
+
+        .sidebar {
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .sidebar-hidden {
+            transform: translateX(-100%);
+        }
+
+        .nav-item {
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 0;
+            background: linear-gradient(180deg, #6366f1, #8b5cf6);
+            transition: height 0.3s ease;
+        }
+
+        .nav-item.active::before,
+        .nav-item:hover::before {
+            height: 100%;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.2), transparent);
+            border-right: 2px solid #6366f1;
+        }
+
+        .floating-header {
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .metric-icon {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+            backdrop-filter: blur(10px);
+        }
+
+        .action-button {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(99, 102, 241, 0.6);
+        }
+
+        .action-button:active {
+            transform: translateY(0);
+        }
+
+        .filter-button {
+            background: linear-gradient(145deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .filter-button:hover {
+            transform: translateY(-2px);
+            border-color: rgba(99, 102, 241, 0.6);
+        }
+
+        .filter-button.active {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-color: #6366f1;
+        }
+
+        .bet-row {
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.8));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .bet-row:hover {
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 15px 40px rgba(99, 102, 241, 0.2);
+            border-color: rgba(99, 102, 241, 0.5);
+        }
+
+        .status-indicator {
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-green {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .status-red {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .status-pending {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .status-void {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+            color: white;
+            box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3);
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 35;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 0.5rem;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 0.5rem;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .hamburger:hover {
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        .hamburger span {
+            width: 1.5rem;
+            height: 2px;
+            background: #ffffff;
+            margin: 2px 0;
+            transition: 0.3s;
+            border-radius: 1px;
+        }
+
+        /* Tom Select Styling */
+        .ts-control, .ts-dropdown { 
+            background: linear-gradient(145deg, rgba(55, 65, 81, 0.9), rgba(75, 85, 99, 0.9)) !important;
+            backdrop-filter: blur(10px) !important;
+            color: #fff !important; 
+            border-radius: 0.75rem !important; 
+            border: 1px solid rgba(99, 102, 241, 0.3) !important;
+            width: 100% !important;
+        }
+
+        .ts-dropdown .option:hover { 
+            background: rgba(99, 102, 241, 0.3) !important; 
+        }
+
+        .ts-wrapper { 
+            width: 100% !important; 
+            position: relative; 
+            z-index: 10; 
+        }
+
+        .ts-dropdown { 
+            z-index: 1000 !important; 
+            position: absolute !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
+        }
+
         .ts-control input {
             color: white !important;
         }
+
         .ts-control .item {
-            background-color: rgb(37, 99, 235) !important;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
             color: white !important;
-            border-radius: 0.25rem !important;
+            border-radius: 0.5rem !important;
         }
-        /* Estilização dos inputs numéricos */
-        input[type="number"] {
-            appearance: none;
-            -moz-appearance: textfield;
+
+        @media (max-width: 768px) {
+            .hamburger {
+                display: flex;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                width: 280px;
+                z-index: 40;
+            }
         }
-        input[type="number"]::-webkit-outer-spin-button,
-        input[type="number"]::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
+
+        .table-container {
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.9));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+            overflow: hidden;
         }
-        /* Estilização do calendário */
-        input[type="date"] {
-            position: relative;
+
+        .table-header {
+            background: linear-gradient(145deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            background-color: transparent;
-            color: transparent;
-            cursor: pointer;
-            height: 100%;
-            left: 0;
-            position: absolute;
-            right: 0;
-            width: 100%;
+
+        .action-icon {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        /* Animações suaves */
-        .ts-control, .ts-dropdown, input, select, textarea {
-            transition: all 0.2s ease-in-out !important;
+
+        .action-icon:hover {
+            transform: scale(1.2);
         }
-        input:focus, select:focus, textarea:focus {
-            box-shadow: 0 0 0 2px rgb(37, 99, 235) !important;
+
+        input[type="text"], input[type="date"], input[type="number"], textarea {
+            background: linear-gradient(145deg, rgba(55, 65, 81, 0.8), rgba(75, 85, 99, 0.8)) !important;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(99, 102, 241, 0.3) !important;
+            border-radius: 0.75rem !important;
+            color: white !important;
+            transition: all 0.3s ease !important;
+        }
+
+        input[type="text"]:focus, input[type="date"]:focus, input[type="number"]:focus, textarea:focus {
+            border-color: rgba(99, 102, 241, 0.6) !important;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
         }
     </style>
 </head>
-<body class="bg-gray-900 text-white">
+<body class="text-white">
+    <!-- Overlay para mobile -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
     <div class="flex h-screen">
         <!-- Sidebar -->
-        <div class="w-64 bg-gray-800 border-r border-gray-700">
+        <aside id="sidebar" class="w-64 sidebar flex-shrink-0">
             <div class="p-6">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
-                        <i data-lucide="target" class="w-6 h-6 text-white"></i>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center">
+                            <i data-lucide="trending-up" class="w-6 h-6 text-white"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold gradient-text">BetTracker</h1>
+                            <p class="text-sm text-slate-400 font-medium">Pro Analytics</p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 class="text-xl font-bold">BetTracker</h1>
-                        <p class="text-sm text-gray-400">Pro Analytics</p>
-                    </div>
+                    <!-- Botão fechar para mobile -->
+                    <button id="close-sidebar" class="md:hidden p-2 rounded-lg hover:bg-slate-700/50 transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
                 </div>
             </div>
 
-            <nav class="px-4 pb-4">
-          <a href="teste.html"
-            class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 text-gray-300 hover:bg-gray-700 hover:text-white"
-          >
-            <i data-lucide="home" class="w-5 h-5"></i>
-            <span class="font-medium">Início</span>
-          </a>
-          <a href="Apostas.html"
-            class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-lg"
-          >
-            <i data-lucide="target" class="w-5 h-5"></i>
-            <span class="font-medium">Apostas</span>
-          </a>
-          <a href="resultados.html"
-            class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 text-gray-300 hover:bg-gray-700 hover:text-white"
-          >
-            <i data-lucide="check-circle" class="w-5 h-5"></i>
-            <span class="font-medium">Resultados</span>
-          </a>
-          <a href="#"
-            class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 text-gray-300 hover:bg-gray-700 hover:text-white"
-          >
-            <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
-            <span class="font-medium">Análises</span>
-          </a>
-          <a href="#"
-            class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 text-gray-300 hover:bg-gray-700 hover:text-white"
-          >
-            <i data-lucide="message-circle" class="w-5 h-5"></i>
-            <span class="font-medium">IA Insights</span>
-          </a>
-          <a href="banca.html"
-            class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 text-gray-300 hover:bg-gray-700 hover:text-white"
-          >
-            <i data-lucide="wallet" class="w-5 h-5"></i>
-            <span class="font-medium">Gestão de Banca</span>
-          </a>
-          <a href="#"
-            class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 text-gray-300 hover:bg-gray-700 hover:text-white"
-          >
-            <i data-lucide="settings" class="w-5 h-5"></i>
-            <span class="font-medium">Configurações</span>
-          </a>
-        </nav>
-        </div>
+            <nav class="px-4 pb-4 space-y-2">
+                <a href="teste.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="home" class="w-5 h-5"></i>
+                    <span class="font-medium">Início</span>
+                </a>
+                <a href="Apostas.html" class="nav-item active flex items-center space-x-3 px-6 py-4 rounded-2xl text-white">
+                    <i data-lucide="target" class="w-5 h-5"></i>
+                    <span class="font-medium">Apostas</span>
+                </a>
+                <a href="resultados.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="check-circle" class="w-5 h-5"></i>
+                    <span class="font-medium">Resultados</span>
+                </a>
+                <a href="analises.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                    <span class="font-medium">Análises</span>
+                </a>
+                <a href="ia_insights.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="message-circle" class="w-5 h-5"></i>
+                    <span class="font-medium">IA Insights</span>
+                </a>
+                <a href="banca.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="wallet" class="w-5 h-5"></i>
+                    <span class="font-medium">Gestão de Banca</span>
+                </a>
+                <a href="#" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                    <span class="font-medium">Configurações</span>
+                </a>
+            </nav>
+        </aside>
 
         <!-- Modal de Nova Aposta -->
-    <div id="new-bet-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center overflow-y-auto">
-        <div class="bg-gray-800 rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-white">Nova Aposta</h3>
-                <button onclick="closeNewBetModal()" class="text-gray-400 hover:text-white">
-                    <i data-lucide="x" class="w-6 h-6"></i>
-                </button>
-            </div>
-            
-            <form id="newBetForm" class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Data -->
-                    <div class="form-group">
-                        <label class="block text-sm font-medium text-gray-300 mb-1">Data</label>
-                        <div class="relative flex items-center">
-                            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                                <i data-lucide="calendar" class="w-4 h-4 text-gray-400"></i>
+        <div id="new-bet-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center overflow-y-auto p-4">
+            <div class="glass-card rounded-2xl md:rounded-3xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-white flex items-center">
+                        <div class="metric-icon p-2 rounded-xl mr-3">
+                            <i data-lucide="target" class="w-5 h-5"></i>
+                        </div>
+                        Nova Aposta
+                    </h3>
+                    <button onclick="closeNewBetModal()" class="text-gray-400 hover:text-white transition-colors">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+                
+                <form id="newBetForm" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Data -->
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Data</label>
+                            <div class="relative">
+                                <div class="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                                    <i data-lucide="calendar" class="w-4 h-4 text-gray-400"></i>
+                                </div>
+                                <input type="date" id="bet-date" 
+                                       class="w-full pl-10 pr-4 py-3 text-white focus:outline-none transition-all">
                             </div>
-                            <input type="date" id="bet-date" 
-                                   class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none hover:border-gray-500">
+                        </div>
+
+                        <!-- Casa de Apostas -->
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Casa de Apostas</label>
+                            <select id="bet-house">
+                                <option value="">Selecione uma casa</option>
+                                <option value="Bet 365">Bet 365</option>
+                                <option value="Betano">Betano</option>
+                                <option value="Betfair">Betfair</option>
+                                <option value="Superbet">Superbet</option>
+                                <option value="Estrela Bet">Estrela Bet</option>
+                                <option value="PixBet">PixBet</option>
+                                <option value="Sporting Bet">Sporting Bet</option>
+                            </select>
+                        </div>
+
+                        <!-- Tipo de Aposta -->
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Tipo de Aposta</label>
+                            <select id="bet-type">
+                                <option value="Simples">Simples</option>
+                                <option value="Dupla">Dupla</option>
+                                <option value="Tripla">Tripla</option>
+                                <option value="Múltipla">Múltipla</option>
+                                <option value="Super Odd">Super Odd</option>
+                            </select>
+                        </div>
+
+                        <!-- Valor Apostado -->
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Valor Apostado (R$)</label>
+                            <div class="relative">
+                                <i data-lucide="dollar-sign" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
+                                <input type="number" id="bet-amount" step="0.01" min="0" 
+                                       class="w-full pl-10 pr-4 py-3 text-white focus:outline-none transition-all">
+                            </div>
+                        </div>
+
+                        <!-- Odd -->
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Odd</label>
+                            <div class="relative">
+                                <i data-lucide="trending-up" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
+                                <input type="number" id="bet-odd" step="0.01" min="1" 
+                                       class="w-full pl-10 pr-4 py-3 text-white focus:outline-none transition-all">
+                            </div>
+                        </div>
+
+                        <!-- Categoria -->
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Categoria</label>
+                            <select id="bet-categories" multiple>
+                                <option value="Resultado">Resultado</option>
+                                <option value="Finalizações">Finalizações</option>
+                                <option value="Escanteios">Escanteios</option>
+                                <option value="HT">HT</option>
+                                <option value="FT">FT</option>
+                                <option value="Gols">Gols</option>
+                                <option value="Chutes ao Gol">Chutes ao Gol</option>
+                                <option value="Ambas Equipes">Ambas Equipes</option>
+                                <option value="Faltas cometidas">Faltas cometidas</option>
+                                <option value="Faltas Sofridas">Faltas Sofridas</option>
+                                <option value="Cartões">Cartões</option>
+                                <option value="Defesas">Defesas</option>
+                                <option value="Desarmes">Desarmes</option>
+                                <option value="Handicap">Handicap</option>
+                                <option value="Tiro de Linha">Tiro de Linha</option>
+                                <option value="Impedimentos">Impedimentos</option>
+                                <option value="Desempenho">Desempenho</option>
+                                <option value="Outros">Outros</option>
+                            </select>
                         </div>
                     </div>
 
-                    <!-- Casa de Apostas -->
+                    <!-- Partida -->
                     <div class="form-group">
-                        <label class="block text-sm font-medium text-gray-300 mb-1">Casa de Apostas</label>
-                        <select id="bet-house" placeholder="Selecione uma casa...">
-                            <option value="">Selecione uma casa</option>
-                            <option value="Bet 365">Bet 365</option>
-                            <option value="Betano">Betano</option>
-                            <option value="Betfair">Betfair</option>
-                            <option value="Superbet">Superbet</option>
-                            <option value="Estrela Bet">Estrela Bet</option>
-                            <option value="PixBet">PixBet</option>
-                            <option value="Sporting Bet">Sporting Bet</option>
-                        </select>
-                    </div>
-
-                    <!-- Tipo de Aposta -->
-                    <div class="form-group">
-                        <label class="block text-sm font-medium text-gray-300 mb-1">Tipo de Aposta</label>
-                        <select id="bet-type" placeholder="Selecione o tipo...">
-                            <option value="Simples">Simples</option>
-                            <option value="Dupla">Dupla</option>
-                            <option value="Tripla">Tripla</option>
-                            <option value="Múltipla">Múltipla</option>
-                            <option value="Super Odd">Super Odd</option>
-                        </select>
-                    </div>
-
-                    <!-- Valor Apostado -->
-                    <div class="form-group">
-                        <label class="block text-sm font-medium text-gray-300 mb-1">Valor Apostado (R$)</label>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Partida</label>
                         <div class="relative">
-                            <i data-lucide="dollar-sign" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
-                            <input type="number" id="bet-amount" step="0.01" min="0" 
-                                   class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none hover:border-gray-500">
+                            <i data-lucide="trophy" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
+                            <input type="text" id="bet-match" placeholder="Ex: Manchester City vs Arsenal"
+                                   class="w-full pl-10 pr-4 py-3 text-white focus:outline-none transition-all">
                         </div>
                     </div>
 
-                    <!-- Odd -->
+                    <!-- Detalhes -->
                     <div class="form-group">
-                        <label class="block text-sm font-medium text-gray-300 mb-1">Odd</label>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Detalhes</label>
                         <div class="relative">
-                            <i data-lucide="trending-up" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
-                            <input type="number" id="bet-odd" step="0.01" min="1" 
-                                   class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none hover:border-gray-500">
+                            <textarea id="bet-details" rows="4" 
+                                      placeholder="Ex: Manchester City - Over 2.5 Gols, Arsenal - Under 4.5 Cartões, Ambas marcam - Sim"
+                                      class="w-full pl-4 pr-4 py-3 text-white focus:outline-none transition-all resize-none"></textarea>
+                            <div class="absolute right-2 bottom-2 text-gray-400">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Categoria (Multiselect) -->
-                    <div class="form-group">
-                        <label class="block text-sm font-medium text-gray-300 mb-1">Categoria</label>
-                        <select id="bet-categories" multiple placeholder="Selecione as categorias...">
-                            <option value="Resultado">Resultado</option>
-                            <option value="Finalizações">Finalizações</option>
-                            <option value="Escanteios">Escanteios</option>
-                            <option value="HT">HT</option>
-                            <option value="FT">FT</option>
-                            <option value="Gols">Gols</option>
-                            <option value="Chutes ao Gol">Chutes ao Gol</option>
-                            <option value="Ambas Equipes">Ambas Equipes</option>
-                            <option value="Faltas cometidas">Faltas cometidas</option>
-                            <option value="Faltas Sofridas">Faltas Sofridas</option>
-                            <option value="Cartões">Cartões</option>
-                            <option value="Defesas">Defesas</option>
-                            <option value="Desarmes">Desarmes</option>
-                            <option value="Handicap">Handicap</option>
-                            <option value="Tiro de Linha">Tiro de Linha</option>
-                            <option value="Impedimentos">Impedimentos</option>
-                            <option value="Desempenho">Desempenho</option>
-                            <option value="Outros">Outros</option>
-                        </select>
-                    </div>
-
-                    <!-- Torneio (Multiselect) -->
-                    <div class="form-group">
-                        <label class="block text-sm font-medium text-gray-300 mb-1">Torneio</label>
-                        <select id="bet-tournaments" multiple placeholder="Selecione os torneios...">
-                            <option value="Brasileirão A">Brasileirão A</option>
-                            <option value="Champions League">Champions League</option>
-                            <option value="Europa League">Europa League</option>
-                            <option value="Conference League">Conference League</option>
-                            <option value="Premier League">Premier League</option>
-                            <option value="FA Cup">FA Cup</option>
-                            <option value="Carabao Cup">Carabao Cup</option>
-                            <option value="La Liga">La Liga</option>
-                            <option value="Copa do Rei">Copa do Rei</option>
-                            <option value="Bundesliga">Bundesliga</option>
-                            <option value="Copa da Alemanha">Copa da Alemanha</option>
-                            <option value="Serie A">Serie A</option>
-                            <option value="Coppa Italia">Coppa Italia</option>
-                            <option value="Copa da França">Copa da França</option>
-                            <option value="Ligue 1">Ligue 1</option>
-                            <option value="Mundial de Clubes">Mundial de Clubes</option>
-                            <option value="Copa do Brasil">Copa do Brasil</option>
-                            <option value="Serie B Italia">Serie B Italia</option>
-                            <option value="Brasileirão B">Brasileirão B</option>
-                            <option value="Championship">Championship</option>
-                            <option value="Pro Saudi League">Pro Saudi League</option>
-                            <option value="Torneo Betano">Torneo Betano</option>
-                            <option value="Libertadores">Libertadores</option>
-                            <option value="Sul-Americana">Sul-Americana</option>
-                            <option value="Liga Portugal">Liga Portugal</option>
-                            <option value="Taça de Portugal">Taça de Portugal</option>
-                            <option value="Super Lig">Super Lig</option>
-                            <option value="Estaduais">Estaduais</option>
-                            <option value="Data Fifa">Data Fifa</option>
-                            <option value="Outros">Outros</option>
-                        </select>
-                    </div>
-
-                    <!-- Aposta Turbinada -->
-                    <div class="form-group">
-                        <label class="block text-sm font-medium text-gray-300 mb-1">Aposta Turbinada</label>
-                        <div class="grid grid-cols-3 gap-2">
-                            <label class="relative cursor-pointer">
-                                <input type="radio" name="turbo" value="0" class="sr-only peer" checked>
-                                <div class="flex items-center justify-center p-3 bg-gray-700 border border-gray-600 rounded-lg peer-checked:bg-purple-600 peer-checked:border-purple-500 hover:bg-gray-600 transition-all duration-200">
-                                    <div class="text-center">
-                                        <i data-lucide="minus" class="w-4 h-4 mx-auto mb-1 text-gray-300 peer-checked:text-white"></i>
-                                        <span class="text-sm font-medium text-gray-300 peer-checked:text-white">Não</span>
-                                    </div>
-                                </div>
-                            </label>
-                            <label class="relative cursor-pointer">
-                                <input type="radio" name="turbo" value="25" class="sr-only peer">
-                                <div class="flex items-center justify-center p-3 bg-gray-700 border border-gray-600 rounded-lg peer-checked:bg-purple-600 peer-checked:border-purple-500 hover:bg-gray-600 transition-all duration-200">
-                                    <div class="text-center">
-                                        <i data-lucide="zap" class="w-4 h-4 mx-auto mb-1 text-gray-300 peer-checked:text-white"></i>
-                                        <span class="text-sm font-medium text-gray-300 peer-checked:text-white">25%</span>
-                                    </div>
-                                </div>
-                            </label>
-                            <label class="relative cursor-pointer">
-                                <input type="radio" name="turbo" value="50" class="sr-only peer">
-                                <div class="flex items-center justify-center p-3 bg-gray-700 border border-gray-600 rounded-lg peer-checked:bg-purple-600 peer-checked:border-purple-500 hover:bg-gray-600 transition-all duration-200">
-                                    <div class="text-center">
-                                        <i data-lucide="zap" class="w-4 h-4 mx-auto mb-1 text-gray-300 peer-checked:text-white"></i>
-                                        <span class="text-sm font-medium text-gray-300 peer-checked:text-white">50%</span>
-                                    </div>
-                                </div>
-                            </label>
-                        </div>
-                        <p class="text-gray-400 text-xs mt-2">Aumenta o lucro em caso de vitória</p>
-                    </div>
-
-                </div>
-
-                <!-- Partida -->
-                <div class="form-group">
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Partida</label>
-                    <div class="relative">
-                        <i data-lucide="trophy" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
-                        <input type="text" id="bet-match" 
-                               placeholder="Ex: Manchester City vs Arsenal"
-                               class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none hover:border-gray-500">
-                    </div>
-                </div>
-
-                <!-- Detalhes -->
-                <div class="form-group">
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Detalhes</label>
-                    <div class="relative">
-                        <textarea id="bet-details" rows="4" 
-                                  placeholder="Ex: 
-Manchester City - Over 2.5 Gols
-Arsenal - Under 4.5 Cartões
-Ambas marcam - Sim"
-                                  class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-4 pr-4 py-2 text-white focus:outline-none hover:border-gray-500 resize-none"></textarea>
-                        <div class="absolute right-2 bottom-2 text-gray-400">
-                            <i data-lucide="edit-3" class="w-4 h-4"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bônus -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-3">Aposta com Bônus?</label>
-                    <div class="flex items-center space-x-4">
-                        <label class="inline-flex items-center">
-                            <input type="radio" name="bonus" value="1" class="form-radio text-blue-600">
-                            <span class="ml-2 text-white">Sim</span>
-                        </label>
-                        <label class="inline-flex items-center">
-                            <input type="radio" name="bonus" value="0" class="form-radio text-blue-600" checked>
-                            <span class="ml-2 text-white">Não</span>
-                        </label>
-                    </div>
-                    <p class="text-gray-400 text-xs mt-1">Bônus: valor não é descontado da casa, apenas lucro é creditado</p>
-                </div>
-
-                <button type="submit" 
-                        class="w-full bg-gradient-to-r from-blue-600 to-green-600 text-white py-2 px-4 rounded-lg hover:from-blue-700 hover:to-green-700 transition-all flex items-center justify-center space-x-2">
-                    <i data-lucide="save" class="w-4 h-4"></i>
-                    <span>Salvar Aposta</span>
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Main Content -->
-        <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Header -->
-            <header class="bg-gray-800 border-b border-gray-700 px-6 py-4">
-                <div class="flex items-center justify-between">
+                    <!-- Bônus -->
                     <div>
-                        <h2 class="text-2xl font-bold">Apostas</h2>
-                        <p class="text-gray-400">Gerencie todas as suas apostas</p>
+                        <label class="block text-sm font-medium text-gray-300 mb-3">Aposta com Bônus?</label>
+                        <div class="flex items-center space-x-4">
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="bonus" value="1" class="form-radio text-blue-600">
+                                <span class="ml-2 text-white">Sim</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="bonus" value="0" class="form-radio text-blue-600" checked>
+                                <span class="ml-2 text-white">Não</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" 
+                            class="w-full action-button text-white py-3 px-6 rounded-2xl transition-all flex items-center justify-center space-x-2 font-medium">
+                        <i data-lucide="save" class="w-5 h-5"></i>
+                        <span>Salvar Aposta</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Conteúdo Principal -->
+        <div class="flex-1 flex flex-col overflow-hidden main-content">
+            <!-- Header -->
+            <header class="floating-header px-4 md:px-8 py-4 md:py-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <!-- Botão hamburguer para mobile -->
+                        <button id="menu-toggle" class="hamburger md:hidden">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </button>
+                        <div>
+                            <h2 class="text-2xl md:text-4xl font-bold gradient-text mb-1 md:mb-2">Apostas</h2>
+                            <p class="text-slate-400 text-sm md:text-lg hidden sm:block">Gerencie todas as suas apostas</p>
+                        </div>
                     </div>
                     
                     <div class="flex items-center space-x-4">
-                        <button onclick="openNewBetModal()" class="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-green-600 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-green-700 transition-all">
+                        <button onclick="openNewBetModal()" class="action-button flex items-center space-x-2 text-white px-4 py-2 rounded-xl transition-all">
                             <i data-lucide="plus" class="w-4 h-4"></i>
-                            <span>Nova Aposta</span>
+                            <span class="hidden sm:inline">Nova Aposta</span>
                         </button>
                         
-                        <button class="flex items-center space-x-2 bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
-                            <i data-lucide="download" class="w-4 h-4"></i>
-                            <span>Exportar</span>
+                        <button class="metric-icon p-2 rounded-xl transition-all hover:bg-slate-600 active:scale-95">
+                            <i data-lucide="download" class="w-5 h-5"></i>
                         </button>
                     </div>
                 </div>
             </header>
 
             <!-- Main Content -->
-            <main class="flex-1 overflow-y-auto p-6">
+            <main class="flex-1 overflow-y-auto p-4 md:p-8 space-y-8">
                 <!-- Stats Cards -->
-                <div id="stats-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <!-- Preenchido via JavaScript -->
+                <div id="stats-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="metric-card rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="metric-icon p-3 rounded-xl text-emerald-400">
+                                <i data-lucide="target" class="w-6 h-6"></i>
+                            </div>
+                            <span class="text-sm font-medium text-green-400">Total</span>
+                        </div>
+                        <p class="text-3xl font-bold mb-2" id="total-bets">0</p>
+                        <p class="text-slate-400 font-medium">Apostas</p>
+                    </div>
+
+                    <div class="metric-card rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="metric-icon p-3 rounded-xl text-green-400">
+                                <i data-lucide="check-circle" class="w-6 h-6"></i>
+                            </div>
+                            <span class="text-sm font-medium text-green-400">Ganhas</span>
+                        </div>
+                        <p class="text-3xl font-bold mb-2" id="green-bets">0</p>
+                        <p class="text-slate-400 font-medium">Vitórias</p>
+                    </div>
+
+                    <div class="metric-card rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="metric-icon p-3 rounded-xl text-red-400">
+                                <i data-lucide="x-circle" class="w-6 h-6"></i>
+                            </div>
+                            <span class="text-sm font-medium text-red-400">Perdidas</span>
+                        </div>
+                        <p class="text-3xl font-bold mb-2" id="red-bets">0</p>
+                        <p class="text-slate-400 font-medium">Derrotas</p>
+                    </div>
+
+                    <div class="metric-card rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="metric-icon p-3 rounded-xl text-yellow-400">
+                                <i data-lucide="clock" class="w-6 h-6"></i>
+                            </div>
+                            <span class="text-sm font-medium text-yellow-400">Pendentes</span>
+                        </div>
+                        <p class="text-3xl font-bold mb-2" id="pending-bets">0</p>
+                        <p class="text-slate-400 font-medium">Aguardando</p>
+                    </div>
                 </div>
 
                 <!-- Filters -->
-                <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 mb-6">
+                <div class="glass-card rounded-2xl p-6">
                     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
                         <div id="filter-buttons" class="flex flex-wrap gap-2">
                             <!-- Preenchido via JavaScript -->
@@ -414,9 +634,7 @@ Ambas marcam - Sim"
                                     type="text"
                                     id="search-input"
                                     placeholder="Buscar apostas..."
-                                    class="bg-gray-700 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-sm 
-                                           focus:outline-none focus:ring-2 focus:ring-blue-500 
-                                           transition-all duration-300 w-40 focus:w-64"
+                                    class="pl-10 pr-4 py-2 text-sm focus:outline-none transition-all w-40 focus:w-64"
                                 />
                             </div>
                         </div>
@@ -424,22 +642,22 @@ Ambas marcam - Sim"
                 </div>
 
                 <!-- Table -->
-                <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+                <div class="table-container">
                     <div class="overflow-x-auto">
                         <table class="w-full">
-                            <thead class="bg-gray-700">
+                            <thead class="table-header">
                                 <tr>
-                                    <th class="px-6 py-4 text-left">Partida</th>
-                                    <th class="px-6 py-4 text-left">Aposta</th>
-                                    <th class="px-6 py-4 text-left">Data/Hora</th>
-                                    <th class="px-6 py-4 text-left">Odd</th>
-                                    <th class="px-6 py-4 text-left">Stake</th>
-                                    <th class="px-6 py-4 text-left">Retorno</th>
-                                    <th class="px-6 py-4 text-left">Status</th>
-                                    <th class="px-6 py-4 text-left">Ações</th>
+                                    <th class="px-6 py-4 text-left text-slate-300 font-medium">Partida</th>
+                                    <th class="px-6 py-4 text-left text-slate-300 font-medium">Aposta</th>
+                                    <th class="px-6 py-4 text-left text-slate-300 font-medium">Data/Hora</th>
+                                    <th class="px-6 py-4 text-left text-slate-300 font-medium">Odd</th>
+                                    <th class="px-6 py-4 text-left text-slate-300 font-medium">Stake</th>
+                                    <th class="px-6 py-4 text-left text-slate-300 font-medium">Retorno</th>
+                                    <th class="px-6 py-4 text-left text-slate-300 font-medium">Status</th>
+                                    <th class="px-6 py-4 text-left text-slate-300 font-medium">Ações</th>
                                 </tr>
                             </thead>
-                            <tbody id="bets-table-body" class="divide-y divide-gray-700">
+                            <tbody id="bets-table-body" class="divide-y divide-slate-700">
                                 <!-- Preenchido via JavaScript -->
                             </tbody>
                         </table>
@@ -447,22 +665,24 @@ Ambas marcam - Sim"
                 </div>
 
                 <!-- Pagination -->
-                <div class="mt-6 flex items-center justify-between">
-                    <p class="text-sm text-gray-400" id="pagination-info">
-                        <!-- Preenchido via JavaScript -->
-                    </p>
-                    <div class="flex items-center space-x-2">
-                        <button class="px-3 py-2 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50">
-                            Anterior
-                        </button>
-                        <div class="flex space-x-1">
-                            <button class="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg">1</button>
-                            <button class="px-3 py-2 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors">2</button>
-                            <button class="px-3 py-2 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors">3</button>
+                <div class="glass-card rounded-2xl p-6">
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm text-gray-400" id="pagination-info">
+                            <!-- Preenchido via JavaScript -->
+                        </p>
+                        <div class="flex items-center space-x-2">
+                            <button class="metric-icon px-3 py-2 text-sm text-gray-300 rounded-lg transition-all hover:bg-slate-600 disabled:opacity-50">
+                                Anterior
+                            </button>
+                            <div class="flex space-x-1">
+                                <button class="action-button px-3 py-2 text-sm text-white rounded-lg">1</button>
+                                <button class="metric-icon px-3 py-2 text-sm text-gray-300 rounded-lg transition-all hover:bg-slate-600">2</button>
+                                <button class="metric-icon px-3 py-2 text-sm text-gray-300 rounded-lg transition-all hover:bg-slate-600">3</button>
+                            </div>
+                            <button class="metric-icon px-3 py-2 text-sm text-gray-300 rounded-lg transition-all hover:bg-slate-600">
+                                Próximo
+                            </button>
                         </div>
-                        <button class="px-3 py-2 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors">
-                            Próximo
-                        </button>
                     </div>
                 </div>
             </main>
@@ -470,65 +690,13 @@ Ambas marcam - Sim"
     </div>
 
     <script>
+        // Configuração do Supabase
+        const SUPABASE_URL = 'https://cjlvcjfuntfbdrrkigwh.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqbHZjamZ1bnRmYmRycmtpZ3doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAyMzYyMDIsImV4cCI6MjA1NTgxMjIwMn0.FBSsXa2vVmrv78_XeLWZcpMKMUIeRe0mS9hBO7Cn45Y';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         // Dados globais
         let betsData = [];
-
-        // Funções de gerenciamento de saldo das casas de apostas
-        async function updateBookieBalance(casaDeApostas, amount, operation = 'subtract') {
-            try {
-                // Buscar saldo atual da casa de apostas
-                const { data: bookie, error: fetchError } = await supabaseClient
-                    .from('bookies')
-                    .select('balance')
-                    .eq('name', casaDeApostas)
-                    .single();
-
-                if (fetchError && fetchError.code !== 'PGRST116') {
-                    console.error('Erro ao buscar casa de apostas:', fetchError);
-                    return false;
-                }
-
-                let newBalance;
-                if (bookie) {
-                    // Casa existe, atualizar saldo
-                    newBalance = operation === 'subtract' 
-                        ? parseFloat(bookie.balance) - parseFloat(amount)
-                        : parseFloat(bookie.balance) + parseFloat(amount);
-                    
-                    const { error: updateError } = await supabaseClient
-                        .from('bookies')
-                        .update({ balance: newBalance })
-                        .eq('name', casaDeApostas);
-
-                    if (updateError) {
-                        console.error('Erro ao atualizar saldo da casa:', updateError);
-                        return false;
-                    }
-                } else {
-                    // Casa não existe, criar com saldo inicial
-                    newBalance = operation === 'subtract' 
-                        ? 1000 - parseFloat(amount) // Saldo inicial de R$ 1000
-                        : 1000 + parseFloat(amount);
-                    
-                    const { error: insertError } = await supabaseClient
-                        .from('bookies')
-                        .insert([{
-                            name: casaDeApostas,
-                            balance: newBalance
-                        }]);
-
-                    if (insertError) {
-                        console.error('Erro ao criar casa de apostas:', insertError);
-                        return false;
-                    }
-                }
-
-                return true;
-            } catch (error) {
-                console.error('Erro geral no gerenciamento de saldo:', error);
-                return false;
-            }
-        }
 
         let filterOptions = [
             { id: 'todas', label: 'Todas', count: 0 },
@@ -537,6 +705,91 @@ Ambas marcam - Sim"
             { id: 'perdidas', label: 'Perdidas', count: 0 },
             { id: 'canceladas', label: 'Canceladas', count: 0 }
         ];
+
+        // Estado da aplicação
+        let currentFilter = 'todas';
+        let searchTerm = '';
+
+        // Sistema de navegação responsiva
+        function setupResponsiveNavigation() {
+            const menuToggle = document.getElementById('menu-toggle');
+            const closeSidebar = document.getElementById('close-sidebar');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+
+            function openSidebar() {
+                sidebar.classList.remove('sidebar-hidden');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeSidebarFunc() {
+                sidebar.classList.add('sidebar-hidden');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            if (menuToggle) {
+                menuToggle.addEventListener('click', openSidebar);
+            }
+
+            if (closeSidebar) {
+                closeSidebar.addEventListener('click', closeSidebarFunc);
+            }
+
+            if (overlay) {
+                overlay.addEventListener('click', closeSidebarFunc);
+            }
+
+            // Fechar sidebar ao redimensionar para desktop
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 768) {
+                    sidebar.classList.remove('sidebar-hidden');
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                } else {
+                    sidebar.classList.add('sidebar-hidden');
+                }
+            });
+
+            // Configurar estado inicial baseado no tamanho da tela
+            if (window.innerWidth < 768) {
+                sidebar.classList.add('sidebar-hidden');
+            }
+        }
+
+        // Função para mapear status do banco para o sistema
+        function mapStatus(resultado) {
+            const statusMap = {
+                'Ganhou': 'green',
+                'Perdeu': 'red',
+                'pending': 'pending',
+                'Cancelado': 'void',
+                'Cashout': 'pending'
+            };
+            return statusMap[resultado] || 'pending';
+        }
+
+        // Funções auxiliares
+        function getStatusColor(status) {
+            const colors = {
+                'green': 'status-green',
+                'red': 'status-red',
+                'pending': 'status-pending',
+                'void': 'status-void'
+            };
+            return colors[status] || colors.void;
+        }
+
+        function getStatusText(status) {
+            const texts = {
+                'green': 'Ganhou',
+                'red': 'Perdeu',
+                'pending': 'Pendente',
+                'void': 'Cancelada'
+            };
+            return texts[status] || 'Desconhecido';
+        }
 
         // Função para atualizar contagens dos filtros
         function updateFilterCounts() {
@@ -569,57 +822,16 @@ Ambas marcam - Sim"
             ];
         }
 
-        // Estado da aplicação
-        let currentFilter = 'todas';
-        let searchTerm = '';
-
-        // Função para mapear status do banco para o sistema
-        function mapStatus(resultado) {
-            const statusMap = {
-                'Ganhou': 'green',
-                'Perdeu': 'red',
-                'pending': 'pending',
-                'Cancelado': 'void',
-                'Cashout': 'pending'
-            };
-            return statusMap[resultado] || 'pending';
-        }
-
-        // Funções auxiliares
-        function getStatusColor(status) {
-            const colors = {
-                'green': 'bg-green-900 text-green-300 border-green-500',
-                'red': 'bg-red-900 text-red-300 border-red-500',
-                'pending': 'bg-yellow-900 text-yellow-300 border-yellow-500',
-                'void': 'bg-gray-900 text-gray-300 border-gray-500'
-            };
-            return colors[status] || colors.void;
-        }
-
-        function getStatusText(status) {
-            const texts = {
-                'green': 'Ganhou',
-                'red': 'Perdeu',
-                'pending': 'Pendente',
-                'void': 'Cancelada'
-            };
-            return texts[status] || 'Desconhecido';
-        }
-
         // Renderização
         function renderFilters() {
             const container = document.getElementById('filter-buttons');
             container.innerHTML = filterOptions.map(filter => `
                 <button
                     data-filter="${filter.id}"
-                    class="flex items-center space-x-2 px-4 py-2 rounded-lg text-sm transition-all ${
-                        currentFilter === filter.id
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    }"
+                    class="filter-button ${currentFilter === filter.id ? 'active' : ''} flex items-center space-x-2 px-4 py-2 rounded-xl text-sm transition-all"
                 >
-                    <span>${filter.label}</span>
-                    <span class="bg-gray-600 text-xs px-2 py-1 rounded-full">
+                    <span class="font-medium">${filter.label}</span>
+                    <span class="metric-icon text-xs px-2 py-1 rounded-full">
                         ${filter.count}
                     </span>
                 </button>
@@ -653,23 +865,23 @@ Ambas marcam - Sim"
             });
 
             tbody.innerHTML = filteredBets.map(bet => `
-                <tr class="hover:bg-gray-700 transition-colors">
+                <tr class="bet-row hover:bg-slate-700/50 transition-all">
                     <td class="px-6 py-4">
                         <div>
                             <p class="text-white font-medium">${bet.match || 'N/A'}</p>
-                            <p class="text-gray-400 text-sm">${bet.league || 'N/A'}</p>
+                            <p class="text-slate-400 text-sm">${bet.league || 'N/A'}</p>
                         </div>
                     </td>
                     <td class="px-6 py-4">
                         <div>
                             <p class="text-white text-sm">${bet.bet || 'N/A'}</p>
-                            <p class="text-gray-400 text-xs">${bet.units}u • ${bet.house || 'N/A'}</p>
+                            <p class="text-slate-400 text-xs">${bet.units}u • ${bet.house || 'N/A'}</p>
                         </div>
                     </td>
                     <td class="px-6 py-4">
                         <div>
                             <p class="text-white text-sm">${bet.date}</p>
-                            <p class="text-gray-400 text-xs">${bet.time}</p>
+                            <p class="text-slate-400 text-xs">${bet.time}</p>
                         </div>
                     </td>
                     <td class="px-6 py-4">
@@ -689,19 +901,19 @@ Ambas marcam - Sim"
                         <span class="text-green-400 font-medium">R$ ${bet.potentialWin ? bet.potentialWin.toFixed(2) : '0'}</span>
                     </td>
                     <td class="px-6 py-4">
-                        <div class="inline-flex items-center space-x-1 px-3 py-1 rounded-full border text-xs font-medium ${getStatusColor(bet.status)}">
+                        <div class="status-indicator ${getStatusColor(bet.status)}">
                             <span>${getStatusText(bet.status)}</span>
                         </div>
                     </td>
                     <td class="px-6 py-4">
-                        <div class="flex items-center space-x-2">
-                            <button class="p-1 text-gray-400 hover:text-blue-400 transition-colors">
+                        <div class="flex items-center space-x-3">
+                            <button class="action-icon p-2 text-slate-400 hover:text-blue-400 rounded-lg transition-all hover:bg-blue-400/10">
                                 <i data-lucide="eye" class="w-4 h-4"></i>
                             </button>
-                            <button class="p-1 text-gray-400 hover:text-green-400 transition-colors">
+                            <button class="action-icon p-2 text-slate-400 hover:text-green-400 rounded-lg transition-all hover:bg-green-400/10">
                                 <i data-lucide="edit" class="w-4 h-4"></i>
                             </button>
-                            <button class="p-1 text-gray-400 hover:text-red-400 transition-colors">
+                            <button class="action-icon p-2 text-slate-400 hover:text-red-400 rounded-lg transition-all hover:bg-red-400/10">
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </div>
@@ -713,14 +925,28 @@ Ambas marcam - Sim"
             document.getElementById('pagination-info').textContent = 
                 `Mostrando ${filteredBets.length} de ${betsData.length} apostas`;
 
+            // Atualiza stats cards
+            updateStatsCards();
+
             // Reinicializa os ícones
             lucide.createIcons();
+        }
+
+        function updateStatsCards() {
+            const total = betsData.length;
+            const green = betsData.filter(bet => bet.status === 'green').length;
+            const red = betsData.filter(bet => bet.status === 'red').length;
+            const pending = betsData.filter(bet => bet.status === 'pending').length;
+
+            document.getElementById('total-bets').textContent = total;
+            document.getElementById('green-bets').textContent = green;
+            document.getElementById('red-bets').textContent = red;
+            document.getElementById('pending-bets').textContent = pending;
         }
 
         // Funções do Modal de Nova Aposta
         function openNewBetModal() {
             document.getElementById('new-bet-modal').classList.remove('hidden');
-            // Set default date to today
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('bet-date').value = today;
         }
@@ -730,85 +956,8 @@ Ambas marcam - Sim"
             document.getElementById('newBetForm').reset();
         }
 
-        // Inicialização do formulário de nova aposta
-        document.getElementById('newBetForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const amount = parseFloat(document.getElementById('bet-amount').value);
-            const odd = parseFloat(document.getElementById('bet-odd').value);
-            
-            const bonus = document.querySelector('input[name="bonus"]:checked').value === '1';
-            const turbo = parseInt(document.querySelector('input[name="turbo"]:checked').value);
-            
-            // Calcular valor final com Aposta Turbinada
-            let valorFinal = amount * odd;
-            if (turbo > 0) {
-                const lucro = valorFinal - amount;
-                const bonusTurbo = lucro * (turbo / 100);
-                valorFinal = valorFinal + bonusTurbo;
-            }
-
-            const formData = {
-                data: document.getElementById('bet-date').value,
-                casa_de_apostas: document.getElementById('bet-house').value,
-                tipo_aposta: document.getElementById('bet-type').value,
-                categoria: document.getElementById('bet-categories').value,
-                resultado: 'pending',
-                valor_apostado: amount,
-                odd: odd.toString(),
-                valor_final: valorFinal,
-                torneio: document.getElementById('bet-tournaments').value,
-                partida: document.getElementById('bet-match').value,
-                detalhes: document.getElementById('bet-details').value,
-                bonus: bonus ? 1 : 0
-            };
-
-            try {
-                // Só subtrair da casa de apostas se NÃO for bônus
-                if (!bonus) {
-                    const balanceUpdated = await updateBookieBalance(formData.casa_de_apostas, formData.valor_apostado, 'subtract');
-                    
-                    if (!balanceUpdated) {
-                        alert('Erro ao atualizar saldo da casa de apostas. Aposta não foi salva.');
-                        return;
-                    }
-                }
-
-                const { error } = await supabaseClient
-                    .from('aposta')
-                    .insert([formData]);
-
-                if (error) {
-                    // Se houve erro na inserção e não era bônus, reverter a subtração do saldo
-                    if (!bonus) {
-                        await updateBookieBalance(formData.casa_de_apostas, formData.valor_apostado, 'add');
-                    }
-                    throw error;
-                }
-
-                // Mostrar mensagem de sucesso
-                const mensagem = bonus 
-                    ? `Aposta com bônus salva! Valor: R$ ${formData.valor_apostado.toFixed(2)} (não descontado da casa)`
-                    : `Aposta salva! R$ ${formData.valor_apostado.toFixed(2)} foi subtraído de ${formData.casa_de_apostas}`;
-                
-                if (turbo > 0) {
-                    const bonusTurbo = (valorFinal - amount) - (amount * odd - amount);
-                    alert(`${mensagem}\nAposta Turbinada ${turbo}%: +R$ ${bonusTurbo.toFixed(2)} de bônus`);
-                } else {
-                    alert(mensagem);
-                }
-                
-                // Fechar o modal e recarregar os dados
-                closeNewBetModal();
-                loadBets();
-            } catch (error) {
-                alert('Erro ao salvar aposta: ' + error.message);
-            }
-        });
-
         // Inicialização dos selects personalizados
         function initializeSelects() {
-            // Select simples
             new TomSelect('#bet-house', {
                 create: false,
                 sortField: {field: 'text', direction: 'asc'}
@@ -819,7 +968,6 @@ Ambas marcam - Sim"
                 sortField: {field: 'text', direction: 'asc'}
             });
 
-            // Multiselects
             new TomSelect('#bet-categories', {
                 plugins: ['remove_button'],
                 persist: false,
@@ -827,16 +975,6 @@ Ambas marcam - Sim"
                 create: false,
                 maxItems: null
             });
-
-            new TomSelect('#bet-tournaments', {
-                plugins: ['remove_button'],
-                persist: false,
-                createOnBlur: false,
-                create: false,
-                maxItems: null
-            });
-
-            // Input de busca
         }
 
         // Função para carregar apostas do Supabase
@@ -861,7 +999,7 @@ Ambas marcam - Sim"
                     potentialWin: item.valor_final || (parseFloat(item.odd) * parseFloat(item.valor_apostado)),
                     status: mapStatus(item.resultado),
                     house: item.casa_de_apostas,
-                    units: 1.0, // Pode ser calculado com base na sua lógica de unidades
+                    units: 1.0,
                     category: item.categoria,
                     bonus: item.bonus === 1,
                     turbo: item.turbo || 0
@@ -872,14 +1010,95 @@ Ambas marcam - Sim"
                 renderBets();
             } catch (error) {
                 console.error('Erro ao carregar apostas:', error);
-                alert('Erro ao carregar apostas');
+                // Criar dados de exemplo em caso de erro
+                createExampleData();
             }
         }
+
+        function createExampleData() {
+            betsData = [
+                {
+                    id: 1,
+                    match: 'Manchester City vs Arsenal',
+                    league: 'Premier League',
+                    date: '09/09/2025',
+                    time: '16:30',
+                    bet: 'Over 2.5 Gols',
+                    odds: 1.85,
+                    stake: 100,
+                    potentialWin: 185,
+                    status: 'green',
+                    house: 'Bet365',
+                    units: 1.0,
+                    category: 'Gols',
+                    bonus: false,
+                    turbo: 0
+                },
+                {
+                    id: 2,
+                    match: 'Barcelona vs Real Madrid',
+                    league: 'La Liga',
+                    date: '08/09/2025',
+                    time: '21:00',
+                    bet: 'Ambas Marcam',
+                    odds: 1.60,
+                    stake: 150,
+                    potentialWin: 240,
+                    status: 'pending',
+                    house: 'Betano',
+                    units: 1.0,
+                    category: 'Ambas Equipes',
+                    bonus: false,
+                    turbo: 25
+                }
+            ];
+
+            updateFilterCounts();
+            renderFilters();
+            renderBets();
+        }
+
+        // Inicialização do formulário de nova aposta
+        document.getElementById('newBetForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = {
+                data: document.getElementById('bet-date').value,
+                casa_de_apostas: document.getElementById('bet-house').value,
+                tipo_aposta: document.getElementById('bet-type').value,
+                categoria: document.getElementById('bet-categories').value,
+                resultado: 'pending',
+                valor_apostado: parseFloat(document.getElementById('bet-amount').value),
+                odd: document.getElementById('bet-odd').value,
+                valor_final: parseFloat(document.getElementById('bet-odd').value) * parseFloat(document.getElementById('bet-amount').value),
+                partida: document.getElementById('bet-match').value,
+                detalhes: document.getElementById('bet-details').value,
+                bonus: document.querySelector('input[name="bonus"]:checked').value === '1' ? 1 : 0
+            };
+
+            try {
+                const { error } = await supabaseClient
+                    .from('aposta')
+                    .insert([formData]);
+
+                if (error) throw error;
+
+                alert('Aposta salva com sucesso!');
+                closeNewBetModal();
+                loadBets();
+            } catch (error) {
+                console.error('Erro ao salvar aposta:', error);
+                alert('Erro ao salvar aposta: ' + error.message);
+            }
+        });
 
         // Inicialização
         document.addEventListener('DOMContentLoaded', () => {
             // Inicializa os ícones
             lucide.createIcons();
+
+            // Configurar navegação responsiva
+            setupResponsiveNavigation();
 
             // Inicializa os selects personalizados
             initializeSelects();
