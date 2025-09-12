@@ -391,7 +391,7 @@
             </nav>
         </aside>
 
-        <!-- Modal de Nova Aposta -->
+        <!-- Modal de Nova Aposta (substituído com versão corrigida) -->
         <div id="new-bet-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center overflow-y-auto p-4">
             <div class="glass-card rounded-2xl md:rounded-3xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
                 <div class="flex justify-between items-center mb-6">
@@ -423,7 +423,7 @@
                         <!-- Casa de Apostas -->
                         <div class="form-group">
                             <label class="block text-sm font-medium text-gray-300 mb-2">Casa de Apostas</label>
-                            <select id="bet-house">
+                            <select id="bet-house" placeholder="Selecione uma casa...">
                                 <option value="">Selecione uma casa</option>
                                 <option value="Bet 365">Bet 365</option>
                                 <option value="Betano">Betano</option>
@@ -438,7 +438,7 @@
                         <!-- Tipo de Aposta -->
                         <div class="form-group">
                             <label class="block text-sm font-medium text-gray-300 mb-2">Tipo de Aposta</label>
-                            <select id="bet-type">
+                            <select id="bet-type" placeholder="Selecione o tipo...">
                                 <option value="Simples">Simples</option>
                                 <option value="Dupla">Dupla</option>
                                 <option value="Tripla">Tripla</option>
@@ -467,10 +467,10 @@
                             </div>
                         </div>
 
-                        <!-- Categoria -->
+                        <!-- Categoria (Multiselect) -->
                         <div class="form-group">
                             <label class="block text-sm font-medium text-gray-300 mb-2">Categoria</label>
-                            <select id="bet-categories" multiple>
+                            <select id="bet-categories" multiple placeholder="Selecione as categorias...">
                                 <option value="Resultado">Resultado</option>
                                 <option value="Finalizações">Finalizações</option>
                                 <option value="Escanteios">Escanteios</option>
@@ -491,6 +491,78 @@
                                 <option value="Outros">Outros</option>
                             </select>
                         </div>
+
+                        <!-- Torneio (Multiselect) -->
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Torneio</label>
+                            <select id="bet-tournaments" multiple placeholder="Selecione os torneios...">
+                                <option value="Brasileirão A">Brasileirão A</option>
+                                <option value="Champions League">Champions League</option>
+                                <option value="Europa League">Europa League</option>
+                                <option value="Conference League">Conference League</option>
+                                <option value="Premier League">Premier League</option>
+                                <option value="FA Cup">FA Cup</option>
+                                <option value="Carabao Cup">Carabao Cup</option>
+                                <option value="La Liga">La Liga</option>
+                                <option value="Copa do Rei">Copa do Rei</option>
+                                <option value="Bundesliga">Bundesliga</option>
+                                <option value="Copa da Alemanha">Copa da Alemanha</option>
+                                <option value="Serie A">Serie A</option>
+                                <option value="Coppa Italia">Coppa Italia</option>
+                                <option value="Copa da França">Copa da França</option>
+                                <option value="Ligue 1">Ligue 1</option>
+                                <option value="Mundial de Clubes">Mundial de Clubes</option>
+                                <option value="Copa do Brasil">Copa do Brasil</option>
+                                <option value="Serie B Italia">Serie B Italia</option>
+                                <option value="Brasileirão B">Brasileirão B</option>
+                                <option value="Championship">Championship</option>
+                                <option value="Pro Saudi League">Pro Saudi League</option>
+                                <option value="Torneo Betano">Torneo Betano</option>
+                                <option value="Libertadores">Libertadores</option>
+                                <option value="Sul-Americana">Sul-Americana</option>
+                                <option value="Liga Portugal">Liga Portugal</option>
+                                <option value="Taça de Portugal">Taça de Portugal</option>
+                                <option value="Super Lig">Super Lig</option>
+                                <option value="Estaduais">Estaduais</option>
+                                <option value="Data Fifa">Data Fifa</option>
+                                <option value="Outros">Outros</option>
+                            </select>
+                        </div>
+
+                        <!-- Aposta Turbinada -->
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Aposta Turbinada</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <label class="relative cursor-pointer">
+                                    <input type="radio" name="turbo" value="0" class="sr-only peer" checked>
+                                    <div class="flex items-center justify-center p-3 bg-slate-700/50 border border-slate-600 rounded-xl peer-checked:bg-gradient-to-r peer-checked:from-indigo-600 peer-checked:to-purple-600 peer-checked:border-transparent hover:bg-slate-600/50 transition-all duration-200">
+                                        <div class="text-center">
+                                            <i data-lucide="minus" class="w-4 h-4 mx-auto mb-1"></i>
+                                            <span class="text-sm font-medium">Não</span>
+                                        </div>
+                                    </div>
+                                </label>
+                                <label class="relative cursor-pointer">
+                                    <input type="radio" name="turbo" value="25" class="sr-only peer">
+                                    <div class="flex items-center justify-center p-3 bg-slate-700/50 border border-slate-600 rounded-xl peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-pink-600 peer-checked:border-transparent hover:bg-slate-600/50 transition-all duration-200">
+                                        <div class="text-center">
+                                            <i data-lucide="zap" class="w-4 h-4 mx-auto mb-1"></i>
+                                            <span class="text-sm font-medium">25%</span>
+                                        </div>
+                                    </div>
+                                </label>
+                                <label class="relative cursor-pointer">
+                                    <input type="radio" name="turbo" value="50" class="sr-only peer">
+                                    <div class="flex items-center justify-center p-3 bg-slate-700/50 border border-slate-600 rounded-xl peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-pink-600 peer-checked:border-transparent hover:bg-slate-600/50 transition-all duration-200">
+                                        <div class="text-center">
+                                            <i data-lucide="zap" class="w-4 h-4 mx-auto mb-1"></i>
+                                            <span class="text-sm font-medium">50%</span>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                            <p class="text-slate-400 text-xs mt-2">Aumenta o lucro em caso de vitória</p>
+                        </div>
                     </div>
 
                     <!-- Partida -->
@@ -498,7 +570,8 @@
                         <label class="block text-sm font-medium text-gray-300 mb-2">Partida</label>
                         <div class="relative">
                             <i data-lucide="trophy" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
-                            <input type="text" id="bet-match" placeholder="Ex: Manchester City vs Arsenal"
+                            <input type="text" id="bet-match" 
+                                   placeholder="Ex: Manchester City vs Arsenal"
                                    class="w-full pl-10 pr-4 py-3 text-white focus:outline-none transition-all">
                         </div>
                     </div>
@@ -508,7 +581,7 @@
                         <label class="block text-sm font-medium text-gray-300 mb-2">Detalhes</label>
                         <div class="relative">
                             <textarea id="bet-details" rows="4" 
-                                      placeholder="Ex: Manchester City - Over 2.5 Gols, Arsenal - Under 4.5 Cartões, Ambas marcam - Sim"
+                                      placeholder="Ex: \nManchester City - Over 2.5 Gols\nArsenal - Under 4.5 Cartões\nAmbas marcam - Sim"
                                       class="w-full pl-4 pr-4 py-3 text-white focus:outline-none transition-all resize-none"></textarea>
                             <div class="absolute right-2 bottom-2 text-gray-400">
                                 <i data-lucide="edit-3" class="w-4 h-4"></i>
@@ -529,6 +602,7 @@
                                 <span class="ml-2 text-white">Não</span>
                             </label>
                         </div>
+                        <p class="text-slate-400 text-xs mt-1">Bônus: valor não é descontado da casa, apenas lucro é creditado</p>
                     </div>
 
                     <button type="submit" 
@@ -949,6 +1023,17 @@
             document.getElementById('new-bet-modal').classList.remove('hidden');
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('bet-date').value = today;
+            initializeSelects();
+            const houseEl = document.getElementById('bet-house');
+            if (houseEl && houseEl.tomselect) houseEl.tomselect.clear();
+            const typeEl = document.getElementById('bet-type');
+            if (typeEl && typeEl.tomselect) typeEl.tomselect.clear();
+            const catEl = document.getElementById('bet-categories');
+            if (catEl && catEl.tomselect) catEl.tomselect.clear();
+            const tournEl = document.getElementById('bet-tournaments');
+            if (tournEl && tournEl.tomselect) tournEl.tomselect.clear();
+            const turbo0 = document.querySelector('input[name="turbo"][value="0"]');
+            if (turbo0) turbo0.checked = true;
         }
 
         function closeNewBetModal() {
@@ -958,23 +1043,43 @@
 
         // Inicialização dos selects personalizados
         function initializeSelects() {
-            new TomSelect('#bet-house', {
-                create: false,
-                sortField: {field: 'text', direction: 'asc'}
-            });
+            const houseEl = document.getElementById('bet-house');
+            if (houseEl && !houseEl.tomselect) {
+                new TomSelect('#bet-house', {
+                    create: false,
+                    sortField: {field: 'text', direction: 'asc'}
+                });
+            }
 
-            new TomSelect('#bet-type', {
-                create: false,
-                sortField: {field: 'text', direction: 'asc'}
-            });
+            const typeEl = document.getElementById('bet-type');
+            if (typeEl && !typeEl.tomselect) {
+                new TomSelect('#bet-type', {
+                    create: false,
+                    sortField: {field: 'text', direction: 'asc'}
+                });
+            }
 
-            new TomSelect('#bet-categories', {
-                plugins: ['remove_button'],
-                persist: false,
-                createOnBlur: false,
-                create: false,
-                maxItems: null
-            });
+            const catEl = document.getElementById('bet-categories');
+            if (catEl && !catEl.tomselect) {
+                new TomSelect('#bet-categories', {
+                    plugins: ['remove_button'],
+                    persist: false,
+                    createOnBlur: false,
+                    create: false,
+                    maxItems: null
+                });
+            }
+
+            const tournEl = document.getElementById('bet-tournaments');
+            if (tournEl && !tournEl.tomselect) {
+                new TomSelect('#bet-tournaments', {
+                    plugins: ['remove_button'],
+                    persist: false,
+                    createOnBlur: false,
+                    create: false,
+                    maxItems: null
+                });
+            }
         }
 
         // Função para carregar apostas do Supabase
@@ -1058,30 +1163,55 @@
             renderBets();
         }
 
-        // Inicialização do formulário de nova aposta
+        // Inicialização do formulário de nova aposta (com turbo e fallback de coluna)
         document.getElementById('newBetForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            const formData = {
+            const categories = Array.from(document.getElementById('bet-categories').selectedOptions).map(o => o.value);
+            const tournaments = Array.from((document.getElementById('bet-tournaments') || { selectedOptions: [] }).selectedOptions).map(o => o.value);
+            const amount = parseFloat(document.getElementById('bet-amount').value);
+            const odd = parseFloat(document.getElementById('bet-odd').value);
+            const turbo = parseInt((document.querySelector('input[name="turbo"]:checked') || { value: '0' }).value);
+            const bonus = document.querySelector('input[name="bonus"]:checked').value === '1';
+
+            let valorFinal = amount * odd;
+            if (turbo > 0) {
+                const lucro = valorFinal - amount;
+                valorFinal += lucro * (turbo / 100);
+            }
+
+            const payload = {
                 data: document.getElementById('bet-date').value,
                 casa_de_apostas: document.getElementById('bet-house').value,
                 tipo_aposta: document.getElementById('bet-type').value,
-                categoria: document.getElementById('bet-categories').value,
+                categoria: categories.join(', '),
                 resultado: 'pending',
-                valor_apostado: parseFloat(document.getElementById('bet-amount').value),
-                odd: document.getElementById('bet-odd').value,
-                valor_final: parseFloat(document.getElementById('bet-odd').value) * parseFloat(document.getElementById('bet-amount').value),
+                valor_apostado: amount,
+                odd: odd,
+                valor_final: valorFinal,
                 partida: document.getElementById('bet-match').value,
                 detalhes: document.getElementById('bet-details').value,
-                bonus: document.querySelector('input[name="bonus"]:checked').value === '1' ? 1 : 0
+                bonus: bonus,
+                turbo: turbo,
+                torneio: tournaments.join(', ')
             };
 
             try {
-                const { error } = await supabaseClient
-                    .from('aposta')
-                    .insert([formData]);
-
-                if (error) throw error;
+                // Inserção com fallback quando turbo não existir
+                let { error: insertError } = await supabaseClient.from('aposta').insert([payload]);
+                if (insertError) {
+                    const msg = (insertError.message || '').toLowerCase();
+                    const isTurboMissing = insertError.code === '42703' || (msg.includes('column') && msg.includes('turbo'));
+                    if (isTurboMissing) {
+                        const fallback = { ...payload };
+                        delete fallback.turbo;
+                        fallback.valor_final = amount * odd;
+                        const { error: retryError } = await supabaseClient.from('aposta').insert([fallback]);
+                        if (retryError) throw retryError;
+                    } else {
+                        throw insertError;
+                    }
+                }
 
                 alert('Aposta salva com sucesso!');
                 closeNewBetModal();
