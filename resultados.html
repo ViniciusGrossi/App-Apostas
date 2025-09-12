@@ -897,7 +897,7 @@ Ambas marcam - Sim"
                                     <span class="bg-slate-600/30 text-slate-300 px-3 py-1 rounded-full">
                                         ${new Date(bet.data).toLocaleDateString('pt-BR')}
                                     </span>
-                                    ${bet.turbo > 0 ? `<span class="status-turbo px-3 py-1 rounded-full font-medium">TURBO ${bet.turbo}%</span>` : ''}
+                                    ${Number(bet.turbo) > 0 ? `<span class="status-turbo px-3 py-1 rounded-full font-medium">TURBO ${Number(bet.turbo)}%</span>` : ''}
                                 </div>
                             </div>
                             <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-2 rounded-full text-sm font-medium text-white shadow-lg">
@@ -923,14 +923,14 @@ Ambas marcam - Sim"
                                     <span class="text-slate-400 text-sm">Odd</span>
                                 </div>
                                 <div class="relative">
-                                    ${bet.turbo > 0 ? `
+                                    ${Number(bet.turbo) > 0 ? `
                                         <div class="absolute -top-2 -right-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg z-10">
-                                            +${bet.turbo}%
+                                            +${Number(bet.turbo)}%
                                         </div>
                                     ` : ''}
                                     <p class="text-white font-bold text-lg">${parseFloat(bet.odd || 0).toFixed(2)}</p>
                                 </div>
-                                ${bet.turbo > 0 ? `<p class="text-purple-400 text-xs mt-1">Aposta Turbinada</p>` : ''}
+                                ${Number(bet.turbo) > 0 ? `<p class="text-purple-400 text-xs mt-1">Aposta Turbinada</p>` : ''}
                             </div>
                             
                             <div class="value-display rounded-xl p-4">
@@ -970,10 +970,10 @@ Ambas marcam - Sim"
                                         </div>
                                         <div>
                                             <span class="text-slate-400 text-sm">Turbinada:</span>
-                                            <p class="text-white mt-1">${bet.turbo > 0 ? `${bet.turbo}%` : 'Não'}</p>
+                                            <p class="text-white mt-1">${Number(bet.turbo) > 0 ? `${Number(bet.turbo)}%` : 'Não'}</p>
                                         </div>
                                     </div>
-                                    ${bet.turbo > 0 ? `
+                                    ${Number(bet.turbo) > 0 ? `
                                     <div class="bg-gradient-to-r from-purple-900/20 to-pink-900/20 p-3 rounded-lg border border-purple-500/30">
                                         <div class="flex items-center space-x-2 mb-2">
                                             <i data-lucide="zap" class="w-4 h-4 text-purple-400"></i>
@@ -981,7 +981,7 @@ Ambas marcam - Sim"
                                         </div>
                                         <p class="text-purple-200 text-sm">
                                             Lucro normal: R$ ${(parseFloat(bet.valor_apostado) * parseFloat(bet.odd) - parseFloat(bet.valor_apostado)).toFixed(2)}<br>
-                                            Bônus turbo: R$ ${((parseFloat(bet.valor_apostado) * parseFloat(bet.odd) - parseFloat(bet.valor_apostado)) * (bet.turbo / 100)).toFixed(2)}<br>
+                                            Bônus turbo: R$ ${((parseFloat(bet.valor_apostado) * parseFloat(bet.odd) - parseFloat(bet.valor_apostado)) * (Number(bet.turbo) / 100)).toFixed(2)}<br>
                                             <strong>Total: R$ ${(parseFloat(bet.valor_final) - parseFloat(bet.valor_apostado)).toFixed(2)}</strong>
                                         </p>
                                     </div>
@@ -1072,7 +1072,7 @@ Ambas marcam - Sim"
                     
                     if (balanceUpdated) {
                         const tipoAposta = betData.bonus ? 'com bônus' : 'normal';
-                        const turboInfo = betData.turbo > 0 ? ` (Turbinada ${betData.turbo}%)` : '';
+                        const turboInfo = Number(betData.turbo) > 0 ? ` (Turbinada ${Number(betData.turbo)}%)` : '';
                         alert(`Aposta ganha${turboInfo}! R$ ${winAmount.toFixed(2)} foi adicionado ao saldo de ${betData.casa_de_apostas} (${tipoAposta}).`);
                     } else {
                         alert('Aposta ganha, mas houve erro ao atualizar o saldo da casa de apostas.');
@@ -1263,6 +1263,17 @@ Ambas marcam - Sim"
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('bet-date').value = today;
             initializeSelects();
+            // Reset selects if already initialized
+            const houseEl = document.getElementById('bet-house');
+            if (houseEl && houseEl.tomselect) houseEl.tomselect.clear();
+            const typeEl = document.getElementById('bet-type');
+            if (typeEl && typeEl.tomselect) typeEl.tomselect.clear();
+            const catEl = document.getElementById('bet-categories');
+            if (catEl && catEl.tomselect) catEl.tomselect.clear();
+            const tournEl = document.getElementById('bet-tournaments');
+            if (tournEl && tournEl.tomselect) tournEl.tomselect.clear();
+            const turbo0 = document.querySelector('input[name="turbo"][value="0"]');
+            if (turbo0) turbo0.checked = true;
         }
 
         function closeNewBetModal() {
@@ -1272,33 +1283,44 @@ Ambas marcam - Sim"
 
         // Inicialização dos selects personalizados
         function initializeSelects() {
-            // Select simples
-            new TomSelect('#bet-house', {
-                create: false,
-                sortField: {field: 'text', direction: 'asc'}
-            });
+            // Evitar reinicialização do TomSelect
+            const houseEl = document.getElementById('bet-house');
+            if (houseEl && !houseEl.tomselect) {
+                new TomSelect('#bet-house', {
+                    create: false,
+                    sortField: {field: 'text', direction: 'asc'}
+                });
+            }
 
-            new TomSelect('#bet-type', {
-                create: false,
-                sortField: {field: 'text', direction: 'asc'}
-            });
+            const typeEl = document.getElementById('bet-type');
+            if (typeEl && !typeEl.tomselect) {
+                new TomSelect('#bet-type', {
+                    create: false,
+                    sortField: {field: 'text', direction: 'asc'}
+                });
+            }
 
-            // Multiselects
-            new TomSelect('#bet-categories', {
-                plugins: ['remove_button'],
-                persist: false,
-                createOnBlur: false,
-                create: false,
-                maxItems: null
-            });
+            const catEl = document.getElementById('bet-categories');
+            if (catEl && !catEl.tomselect) {
+                new TomSelect('#bet-categories', {
+                    plugins: ['remove_button'],
+                    persist: false,
+                    createOnBlur: false,
+                    create: false,
+                    maxItems: null
+                });
+            }
 
-            new TomSelect('#bet-tournaments', {
-                plugins: ['remove_button'],
-                persist: false,
-                createOnBlur: false,
-                create: false,
-                maxItems: null
-            });
+            const tournEl = document.getElementById('bet-tournaments');
+            if (tournEl && !tournEl.tomselect) {
+                new TomSelect('#bet-tournaments', {
+                    plugins: ['remove_button'],
+                    persist: false,
+                    createOnBlur: false,
+                    create: false,
+                    maxItems: null
+                });
+            }
         }
 
         // Inicialização do formulário de nova aposta
@@ -1357,17 +1379,36 @@ Ambas marcam - Sim"
                     }
                 }
 
-                // Inserir a aposta
-                const { data, error } = await supabase
+                // Inserir a aposta com fallback caso a coluna turbo não exista
+                let insertError = null;
+                let insertData = null;
+                ({ data: insertData, error: insertError } = await supabase
                     .from('aposta')
-                    .insert([supabaseData]);
+                    .insert([supabaseData]));
 
-                if (error) {
-                    // Se houve erro na inserção e não era bônus, reverter a subtração do saldo
-                    if (!formData.bonus) {
-                        await updateBookieBalance(formData.house, formData.amount, 'add');
+                if (insertError) {
+                    const msg = (insertError.message || '').toLowerCase();
+                    const isTurboMissing = insertError.code === '42703' || msg.includes('column') && msg.includes('turbo');
+                    if (isTurboMissing) {
+                        // Recalcular valor final sem turbo e tentar novamente sem a coluna
+                        const fallbackData = { ...supabaseData };
+                        delete fallbackData.turbo;
+                        fallbackData.valor_final = formData.amount * formData.odd;
+                        const { error: retryError } = await supabase
+                            .from('aposta')
+                            .insert([fallbackData]);
+                        if (retryError) {
+                            if (!formData.bonus) {
+                                await updateBookieBalance(formData.house, formData.amount, 'add');
+                            }
+                            throw new Error('Erro ao salvar aposta (fallback): ' + retryError.message);
+                        }
+                    } else {
+                        if (!formData.bonus) {
+                            await updateBookieBalance(formData.house, formData.amount, 'add');
+                        }
+                        throw new Error('Erro ao salvar aposta: ' + insertError.message);
                     }
-                    throw new Error('Erro ao salvar aposta: ' + error.message);
                 }
 
                 // Mostrar mensagem de sucesso
