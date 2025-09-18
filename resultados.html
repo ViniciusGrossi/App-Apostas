@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BetTracker - Resultados</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons via CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Tom Select -->
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    
+    <!-- Inicialização do Supabase -->
+    <script>
+        const SUPABASE_URL = 'https://cjlvcjfuntfbdrrkigwh.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqbHZjamZ1bnRmYmRycmtpZ3doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAyMzYyMDIsImV4cCI6MjA1NTgxMjIwMn0.FBSsXa2vVmrv78_XeLWZcpMKMUIeRe0mS9hBO7Cn45Y';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            min-height: 100vh;
+        }
+
+        .glass-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3);
+            border-color: rgba(99, 102, 241, 0.6);
+        }
+
+        .metric-card {
+            background: linear-gradient(145deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .metric-card:hover::before {
+            left: 100%;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3);
+            border-color: rgba(99, 102, 241, 0.6);
+        }
+
+        .bet-card {
+            background: linear-gradient(145deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bet-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .bet-card:hover::before {
+            left: 100%;
+        }
+
+        .bet-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3);
+            border-color: rgba(99, 102, 241, 0.6);
+        }
+
+        .sidebar {
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-item {
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 0;
+            background: linear-gradient(180deg, #6366f1, #8b5cf6);
+            transition: height 0.3s ease;
+        }
+
+        .nav-item.active::before,
+        .nav-item:hover::before {
+            height: 100%;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.2), transparent);
+            border-right: 2px solid #6366f1;
+        }
+
+        .floating-header {
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .metric-icon {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+            backdrop-filter: blur(10px);
+        }
+
+        .action-button {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(99, 102, 241, 0.6);
+        }
+
+        .action-button:active {
+            transform: translateY(0);
+        }
+
+        .action-button-green {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        }
+
+        .action-button-green:hover {
+            box-shadow: 0 15px 35px rgba(16, 185, 129, 0.6);
+        }
+
+        .action-button-red {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        .action-button-red:hover {
+            box-shadow: 0 15px 35px rgba(239, 68, 68, 0.6);
+        }
+
+        .action-button-cyan {
+            background: linear-gradient(135deg, #06b6d4, #0891b2);
+            box-shadow: 0 8px 25px rgba(6, 182, 212, 0.4);
+        }
+
+        .action-button-cyan:hover {
+            box-shadow: 0 15px 35px rgba(6, 182, 212, 0.6);
+        }
+
+        .action-button-gray {
+            background: linear-gradient(135deg, #64748b, #475569);
+            box-shadow: 0 8px 25px rgba(100, 116, 139, 0.4);
+        }
+
+        .action-button-gray:hover {
+            box-shadow: 0 15px 35px rgba(100, 116, 139, 0.6);
+        }
+
+        .filter-button {
+            background: linear-gradient(145deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .filter-button:hover {
+            transform: translateY(-2px);
+            border-color: rgba(99, 102, 241, 0.6);
+        }
+
+        .filter-button.active {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-color: #6366f1;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-simples {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+        }
+
+        .status-turbo {
+            background: linear-gradient(135deg, #a855f7, #9333ea);
+            color: white;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
+        }
+
+        /* Tom Select Styling */
+        .ts-control, .ts-dropdown { 
+            background: linear-gradient(145deg, rgba(55, 65, 81, 0.8), rgba(75, 85, 99, 0.8)) !important;
+            backdrop-filter: blur(10px) !important;
+            color: #fff !important; 
+            border-radius: 0.75rem !important; 
+            border: 1px solid rgba(99, 102, 241, 0.3) !important;
+            width: 100% !important;
+            min-height: 48px !important;
+        }
+
+        .ts-dropdown .option:hover { 
+            background: rgba(99, 102, 241, 0.3) !important; 
+        }
+
+        .ts-wrapper { 
+            width: 100% !important; 
+            position: relative; 
+            z-index: 10; 
+        }
+
+        .ts-dropdown { 
+            z-index: 1000 !important; 
+            position: absolute !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .ts-control input {
+            color: white !important;
+            background: transparent !important;
+        }
+
+        .ts-control .item {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+            color: white !important;
+            border-radius: 0.5rem !important;
+            margin: 2px !important;
+        }
+
+        .ts-control.focus {
+            border-color: rgba(99, 102, 241, 0.6) !important;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+        }
+
+        .ts-control.dropdown-active {
+            border-color: rgba(99, 102, 241, 0.6) !important;
+        }
+
+        .ts-control.single .ts-control-input {
+            padding: 12px !important;
+        }
+
+        .ts-control.multi .ts-control-input {
+            padding: 8px !important;
+        }
+
+        /* Força estilo em todos os selects específicos */
+        #bet-house, #bet-type, #bet-categories, #bet-tournaments {
+            background: linear-gradient(145deg, rgba(55, 65, 81, 0.8), rgba(75, 85, 99, 0.8)) !important;
+            border: 1px solid rgba(99, 102, 241, 0.3) !important;
+            border-radius: 0.75rem !important;
+            color: white !important;
+            min-height: 48px !important;
+        }
+
+        .value-display {
+            background: linear-gradient(145deg, rgba(51, 65, 85, 0.5), rgba(30, 41, 59, 0.5));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .loading-spinner {
+            border: 3px solid rgba(99, 102, 241, 0.3);
+            border-top: 3px solid #6366f1;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        .empty-state {
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.8));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-content {
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Sistema de Notificações Elegante */
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .notification {
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            transform: translateX(400px);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: all;
+            max-width: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, #6366f1, #8b5cf6);
+        }
+
+        .notification.success::before {
+            background: linear-gradient(180deg, #10b981, #059669);
+        }
+
+        .notification.error::before {
+            background: linear-gradient(180deg, #ef4444, #dc2626);
+        }
+
+        .notification.warning::before {
+            background: linear-gradient(180deg, #f59e0b, #d97706);
+        }
+
+        .notification.info::before {
+            background: linear-gradient(180deg, #06b6d4, #0891b2);
+        }
+
+        .notification-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .notification-icon {
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notification.success .notification-icon {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
+        }
+
+        .notification.error .notification-icon {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+        }
+
+        .notification.warning .notification-icon {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.2));
+        }
+
+        .notification.info .notification-icon {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(8, 145, 178, 0.2));
+        }
+
+        .notification-text {
+            flex: 1;
+        }
+
+        .notification-title {
+            color: white;
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .notification-message {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .notification-close {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .notification-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Hamburger Menu */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 0.5rem;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 0.5rem;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .hamburger:hover {
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        .hamburger span {
+            width: 1.5rem;
+            height: 2px;
+            background: #ffffff;
+            margin: 2px 0;
+            transition: 0.3s;
+            border-radius: 1px;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 35;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .sidebar-hidden {
+            transform: translateX(-100%);
+        }
+
+        @media (max-width: 768px) {
+            .hamburger {
+                display: flex;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                width: 280px;
+                z-index: 40;
+                transition: transform 0.3s ease-in-out;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+            }
+
+            .notification-container {
+                left: 10px;
+                right: 10px;
+            }
+
+            .notification {
+                max-width: 100%;
+            }
+        }
+
+        /* Estilos para inputs e textareas */
+        input[type="text"], input[type="date"], input[type="number"], input[type="time"], textarea, select {
+            background: linear-gradient(145deg, rgba(55, 65, 81, 0.8), rgba(75, 85, 99, 0.8)) !important;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(99, 102, 241, 0.3) !important;
+            border-radius: 0.75rem !important;
+            color: white !important;
+            transition: all 0.3s ease !important;
+        }
+
+        input[type="text"]:focus, input[type="date"]:focus, input[type="number"]:focus, input[type="time"]:focus, textarea:focus, select:focus {
+            border-color: rgba(99, 102, 241, 0.6) !important;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+        }
+
+        /* Animações Customizadas para o Modal */
+        @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slide-up {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.9; }
+        }
+
+        .animate-fade-in {
+            animation: fade-in 0.3s ease-out;
+        }
+
+        .animate-slide-up {
+            animation: slide-up 0.4s ease-out;
+        }
+
+        .animate-pulse-soft {
+            animation: pulse-soft 2s ease-in-out infinite;
+        }
+
+        /* Transição suave para seções */
+        .glass-section {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-section:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Scrollbar customizada para o modal */
+        #new-bet-modal ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #new-bet-modal ::-webkit-scrollbar-track {
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 4px;
+        }
+
+        #new-bet-modal ::-webkit-scrollbar-thumb {
+            background: linear-gradient(to bottom, #6366f1, #8b5cf6);
+            border-radius: 4px;
+        }
+
+        #new-bet-modal ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(to bottom, #4f46e5, #7c3aed);
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- Container de Notificações -->
+    <div id="notification-container" class="notification-container"></div>
+
+    <!-- Overlay para mobile -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 sidebar flex-shrink-0">
+            <div class="p-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center">
+                            <i data-lucide="trending-up" class="w-6 h-6 text-white"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold gradient-text">BetTracker</h1>
+                            <p class="text-sm text-slate-400 font-medium">Pro Analytics</p>
+                        </div>
+                    </div>
+                    <!-- Botão fechar para mobile -->
+                    <button id="close-sidebar" class="md:hidden p-2 rounded-lg hover:bg-slate-700/50 transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <nav class="px-4 pb-4 space-y-2">
+                <a href="teste.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="home" class="w-5 h-5"></i>
+                    <span class="font-medium">Início</span>
+                </a>
+                <a href="Apostas.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="target" class="w-5 h-5"></i>
+                    <span class="font-medium">Apostas</span>
+                </a>
+                <a href="resultados.html" class="nav-item active flex items-center space-x-3 px-6 py-4 rounded-2xl text-white">
+                    <i data-lucide="check-circle" class="w-5 h-5"></i>
+                    <span class="font-medium">Resultados</span>
+                </a>
+                <a href="analises.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                    <span class="font-medium">Análises</span>
+                </a>
+                <a href="ia_insights.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="message-circle" class="w-5 h-5"></i>
+                    <span class="font-medium">IA Insights</span>
+                </a>
+                <a href="banca.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="wallet" class="w-5 h-5"></i>
+                    <span class="font-medium">Gestão de Banca</span>
+                </a>
+                <a href="#" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                    <span class="font-medium">Configurações</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <div class="flex-1 flex flex-col overflow-hidden main-content">
+            <!-- Header -->
+            <header class="floating-header px-4 md:px-8 py-4 md:py-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <!-- Botão hamburguer para mobile -->
+                        <button id="menu-toggle" class="hamburger md:hidden">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </button>
+                        <div>
+                            <h2 class="text-2xl md:text-4xl font-bold gradient-text mb-1 md:mb-2">Resultados</h2>
+                            <p class="text-slate-400 text-sm md:text-lg hidden sm:block">Atualize o status das suas apostas</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-4">
+                        <div id="loading-indicator" class="loading-spinner hidden"></div>
+                        <div class="pulse-dot w-3 h-3 bg-green-400 rounded-full"></div>
+                        
+                        <button onclick="openNewBetModal()" class="action-button px-4 py-2 rounded-xl text-white font-medium flex items-center space-x-2">
+                            <i data-lucide="plus" class="w-5 h-5"></i>
+                            <span class="hidden sm:inline">Nova Aposta</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
+                <!-- Métricas -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                    <div class="metric-card rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="metric-icon p-3 rounded-xl">
+                                <i data-lucide="clock" class="w-6 h-6 text-yellow-400"></i>
+                            </div>
+                            <span class="text-sm font-medium text-yellow-400">Pendentes</span>
+                        </div>
+                        <p id="total-pending" class="text-3xl font-bold mb-2">0</p>
+                        <p class="text-slate-400 font-medium">Apostas aguardando</p>
+                    </div>
+
+                    <div class="metric-card rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="metric-icon p-3 rounded-xl">
+                                <i data-lucide="dollar-sign" class="w-6 h-6 text-blue-400"></i>
+                            </div>
+                            <span class="text-sm font-medium text-blue-400">Em jogo</span>
+                        </div>
+                        <p id="total-stake" class="text-3xl font-bold mb-2">R$ 0,00</p>
+                        <p class="text-slate-400 font-medium">Valor apostado</p>
+                    </div>
+
+                    <div class="metric-card rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="metric-icon p-3 rounded-xl">
+                                <i data-lucide="trending-up" class="w-6 h-6 text-green-400"></i>
+                            </div>
+                            <span class="text-sm font-medium text-green-400">Potencial</span>
+                        </div>
+                        <p id="potential-win" class="text-3xl font-bold mb-2">R$ 0,00</p>
+                        <p class="text-slate-400 font-medium">Retorno possível</p>
+                    </div>
+                </div>
+
+                <!-- Filtros -->
+                <div class="glass-card rounded-2xl p-6">
+                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                        <div class="flex flex-wrap gap-2">
+                            <button data-filter="all" class="filter-button active px-4 py-2 rounded-xl text-sm font-medium transition-all">
+                                Todas
+                            </button>
+                            <button data-filter="today" class="filter-button px-4 py-2 rounded-xl text-sm font-medium transition-all">
+                                Hoje
+                            </button>
+                            <button data-filter="week" class="filter-button px-4 py-2 rounded-xl text-sm font-medium transition-all">
+                                Esta Semana
+                            </button>
+                            <button data-filter="month" class="filter-button px-4 py-2 rounded-xl text-sm font-medium transition-all">
+                                Este Mês
+                            </button>
+                            <button data-filter="bonus" class="filter-button px-4 py-2 rounded-xl text-sm font-medium transition-all">
+                                Com Bônus
+                            </button>
+                            <button data-filter="turbo" class="filter-button px-4 py-2 rounded-xl text-sm font-medium transition-all">
+                                Turbinadas
+                            </button>
+                        </div>
+
+                        <div class="flex items-center space-x-4">
+                            <div class="relative">
+                                <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4"></i>
+                                <input 
+                                    type="text"
+                                    id="search-input"
+                                    placeholder="Buscar apostas..."
+                                    class="pl-10 pr-4 py-2 bg-slate-800/50 border border-slate-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm w-40 focus:w-64"
+                                />
+                            </div>
+                            <select id="sort-select" class="bg-slate-800/50 border border-slate-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                                <option value="date-desc">Mais recentes</option>
+                                <option value="date-asc">Mais antigas</option>
+                                <option value="value-desc">Maior valor</option>
+                                <option value="value-asc">Menor valor</option>
+                                <option value="odd-desc">Maior odd</option>
+                                <option value="odd-asc">Menor odd</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grid de Apostas -->
+                <div class="grid gap-6" id="pending-bets">
+                    <!-- Apostas pendentes serão inseridas aqui -->
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal de Nova Aposta Completo -->
+    <div id="new-bet-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center overflow-y-auto p-4 animate-fade-in">
+        <div class="glass-card rounded-3xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto relative animate-slide-up">
+            
+            <!-- Header Fixo Aprimorado -->
+            <div class="sticky top-0 bg-gradient-to-b from-slate-900/95 to-slate-900/80 backdrop-blur-xl pb-6 mb-6 -m-6 p-6 z-10 border-b border-slate-700/50">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-2xl font-bold text-white flex items-center">
+                        <div class="p-3 rounded-2xl mr-3 bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/25">
+                            <i data-lucide="target" class="w-6 h-6"></i>
+                        </div>
+                        Nova Aposta
+                    </h3>
+                    <button onclick="closeNewBetModal()" 
+                            class="p-2.5 rounded-xl bg-slate-800/50 hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-all duration-200 hover:rotate-90">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+                
+                <!-- Preview do Retorno Potencial Animado -->
+                <div id="potential-return-preview" class="mt-4 p-4 bg-gradient-to-r from-indigo-600/20 via-purple-600/20 to-pink-600/20 rounded-2xl border border-indigo-500/30 hidden animate-pulse-soft">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-slate-300 mb-1">Retorno Potencial</p>
+                            <p id="preview-return" class="text-3xl font-bold text-white">R$ 0,00</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm text-slate-300 mb-1">Lucro Estimado</p>
+                            <p id="preview-profit" class="text-2xl font-semibold">
+                                <span class="text-green-400">+</span>
+                                <span id="profit-amount" class="text-green-400">R$ 0,00</span>
+                            </p>
+                            <div id="profit-percentage" class="text-xs text-green-300 mt-1 hidden">
+                                <i data-lucide="trending-up" class="w-3 h-3 inline"></i>
+                                <span id="profit-percent">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="turbo-preview" class="mt-3 hidden">
+                        <div class="flex items-center justify-between p-2 bg-purple-500/20 rounded-lg">
+                            <div class="flex items-center">
+                                <i data-lucide="zap" class="w-4 h-4 text-purple-300 mr-2"></i>
+                                <span class="text-sm text-purple-300">Bônus Turbo Aplicado</span>
+                            </div>
+                            <span id="turbo-bonus-amount" class="font-bold text-purple-300">+R$ 0,00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <form id="newBetForm" class="space-y-6">
+                <!-- Seção 1: Informações Básicas -->
+                <div class="glass-section bg-slate-800/30 rounded-2xl p-6 border border-slate-700/50 hover:border-indigo-500/30 transition-all duration-300">
+                    <h4 class="text-lg font-semibold text-white mb-4 flex items-center">
+                        <div class="p-2 rounded-lg bg-indigo-500/20 mr-3">
+                            <i data-lucide="info" class="w-5 h-5 text-indigo-400"></i>
+                        </div>
+                        Informações Básicas
+                    </h4>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Data e Hora -->
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">
+                                Data e Hora da Partida
+                            </label>
+                            <div class="flex gap-2">
+                                <div class="relative flex-1">
+                                    <div class="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                                        <i data-lucide="calendar" class="w-4 h-4 text-gray-400"></i>
+                                    </div>
+                                    <input type="date" id="bet-date" required
+                                        class="w-full pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                                </div>
+                                <div class="relative w-32">
+                                    <div class="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                                        <i data-lucide="clock" class="w-4 h-4 text-gray-400"></i>
+                                    </div>
+                                    <input type="time" id="bet-time" 
+                                        class="w-full pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Casa de Apostas com Saldo -->
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">
+                                Casa de Apostas
+                            </label>
+                            <div class="relative">
+                                <select id="bet-house" required class="w-full" onchange="updateAvailableBalance()">
+                                    <option value="">Selecione uma casa</option>
+                                </select>
+                                <div id="house-balance-info" class="mt-2 p-2 bg-slate-800/50 rounded-lg hidden">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-slate-400">Saldo disponível:</span>
+                                        <span id="available-balance" class="font-semibold text-indigo-400">R$ 0,00</span>
+                                    </div>
+                                    <div id="balance-warning" class="mt-1 text-xs text-yellow-400 hidden">
+                                        <i data-lucide="alert-triangle" class="w-3 h-3 inline"></i>
+                                        Saldo insuficiente
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tipo de Aposta -->
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">
+                                Tipo de Aposta
+                                <span class="ml-2 text-xs text-slate-500">(afeta cálculo de odds)</span>
+                            </label>
+                            <select id="bet-type" required class="w-full" onchange="updateOddsCalculation()">
+                                <option value="Simples">Simples</option>
+                                <option value="Dupla">Dupla</option>
+                                <option value="Tripla">Tripla</option>
+                                <option value="Múltipla">Múltipla</option>
+                                <option value="Super Odd">Super Odd</option>
+                            </select>
+                        </div>
+
+                        <!-- Partida -->
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">
+                                Partida
+                                <span class="text-red-400 ml-1">*</span>
+                            </label>
+                            <div class="relative">
+                                <i data-lucide="trophy" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
+                                <input type="text" id="bet-match" required
+                                    placeholder="Ex: Manchester City vs Arsenal"
+                                    class="w-full pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção 2: Valores e Odds -->
+                <div class="glass-section bg-slate-800/30 rounded-2xl p-6 border border-slate-700/50 hover:border-green-500/30 transition-all duration-300">
+                    <h4 class="text-lg font-semibold text-white mb-4 flex items-center">
+                        <div class="p-2 rounded-lg bg-green-500/20 mr-3">
+                            <i data-lucide="dollar-sign" class="w-5 h-5 text-green-400"></i>
+                        </div>
+                        Valores e Odds
+                    </h4>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Valor Apostado -->
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">
+                                Valor Apostado (R$)
+                                <span id="stake-percentage" class="ml-2 text-xs px-2 py-1 bg-indigo-500/20 rounded-full text-indigo-300 hidden">
+                                    <span id="stake-percent-value">0%</span> da banca
+                                </span>
+                            </label>
+                            <div class="relative">
+                                <i data-lucide="dollar-sign" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
+                                <input type="number" id="bet-amount" step="0.01" min="0" required
+                                    placeholder="0,00"
+                                    oninput="updatePotentialReturn()"
+                                    class="w-full pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500 transition-all">
+                            </div>
+                            <!-- Botões de valor rápido melhorados -->
+                            <div class="flex gap-2 mt-3">
+                                <button type="button" onclick="setQuickAmount(50)" 
+                                        class="quick-amount-btn flex-1 px-3 py-2 bg-slate-700/50 hover:bg-green-600/30 border border-slate-600 hover:border-green-500/50 rounded-lg text-xs font-medium transition-all duration-200 hover:scale-105">
+                                    R$ 50
+                                </button>
+                                <button type="button" onclick="setQuickAmount(100)" 
+                                        class="quick-amount-btn flex-1 px-3 py-2 bg-slate-700/50 hover:bg-green-600/30 border border-slate-600 hover:border-green-500/50 rounded-lg text-xs font-medium transition-all duration-200 hover:scale-105">
+                                    R$ 100
+                                </button>
+                                <button type="button" onclick="setQuickAmount(200)" 
+                                        class="quick-amount-btn flex-1 px-3 py-2 bg-slate-700/50 hover:bg-green-600/30 border border-slate-600 hover:border-green-500/50 rounded-lg text-xs font-medium transition-all duration-200 hover:scale-105">
+                                    R$ 200
+                                </button>
+                                <button type="button" onclick="setQuickAmount(500)" 
+                                        class="quick-amount-btn flex-1 px-3 py-2 bg-slate-700/50 hover:bg-green-600/30 border border-slate-600 hover:border-green-500/50 rounded-lg text-xs font-medium transition-all duration-200 hover:scale-105">
+                                    R$ 500
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Odd com Indicadores -->
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">
+                                Odd
+                                <span id="implied-probability" class="ml-2 text-xs px-2 py-1 bg-blue-500/20 rounded-full text-blue-300 hidden">
+                                    Prob. <span id="prob-value">0%</span>
+                                </span>
+                            </label>
+                            <div class="relative">
+                                <i data-lucide="trending-up" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
+                                <input type="number" id="bet-odd" step="0.01" min="1" required
+                                    placeholder="1.00"
+                                    oninput="updateOddIndicators()"
+                                    class="w-full pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                            </div>
+                            <!-- Indicador de qualidade da odd animado -->
+                            <div id="odd-quality" class="mt-3 p-3 bg-slate-800/50 rounded-lg hidden">
+                                <div class="flex items-center justify-between text-xs mb-2">
+                                    <span class="text-slate-400">Qualidade da Odd:</span>
+                                    <span id="odd-rating" class="font-semibold px-2 py-1 rounded-full">-</span>
+                                </div>
+                                <div class="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
+                                    <div id="odd-bar" class="h-2 rounded-full transition-all duration-500 bg-gradient-to-r" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Opções Especiais Redesenhadas -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                        <!-- Aposta com Bônus -->
+                        <div class="form-group p-4 bg-slate-800/50 rounded-xl border border-slate-700/50 hover:border-yellow-500/30 transition-all">
+                            <label class="block text-sm font-medium text-gray-300 mb-3">
+                                <i data-lucide="gift" class="w-4 h-4 inline mr-2 text-yellow-400"></i>
+                                Aposta com Bônus?
+                            </label>
+                            <div class="flex items-center space-x-4">
+                                <label class="relative cursor-pointer flex items-center group">
+                                    <input type="radio" name="bonus" value="0" class="sr-only peer" checked onchange="updateBonusInfo()">
+                                    <div class="w-6 h-6 border-2 border-slate-500 rounded-full peer-checked:border-green-500 peer-checked:bg-green-500 transition-all duration-200 group-hover:scale-110">
+                                        <div class="w-2.5 h-2.5 bg-white rounded-full m-auto mt-1 opacity-0 peer-checked:opacity-100"></div>
+                                    </div>
+                                    <span class="ml-2 text-white">Não</span>
+                                </label>
+                                <label class="relative cursor-pointer flex items-center group">
+                                    <input type="radio" name="bonus" value="1" class="sr-only peer" onchange="updateBonusInfo()">
+                                    <div class="w-6 h-6 border-2 border-slate-500 rounded-full peer-checked:border-yellow-500 peer-checked:bg-yellow-500 transition-all duration-200 group-hover:scale-110">
+                                        <div class="w-2.5 h-2.5 bg-white rounded-full m-auto mt-1 opacity-0 peer-checked:opacity-100"></div>
+                                    </div>
+                                    <span class="ml-2 text-white">Sim</span>
+                                </label>
+                            </div>
+                            <div id="bonus-info" class="mt-3 p-2 bg-yellow-500/10 rounded-lg hidden">
+                                <p class="text-yellow-300 text-xs">
+                                    <i data-lucide="info" class="w-3 h-3 inline mr-1"></i>
+                                    Valor não será descontado da casa
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Aposta Turbinada Melhorada -->
+                        <div class="form-group p-4 bg-slate-800/50 rounded-xl border border-slate-700/50 hover:border-purple-500/30 transition-all">
+                            <label class="block text-sm font-medium text-gray-300 mb-3">
+                                <i data-lucide="zap" class="w-4 h-4 inline mr-2 text-purple-400"></i>
+                                Aposta Turbinada
+                            </label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <label class="relative cursor-pointer group">
+                                    <input type="radio" name="turbo" value="0" class="sr-only peer" checked onchange="updateTurboBonus()">
+                                    <div class="flex items-center justify-center p-3 bg-slate-700/50 border-2 border-slate-600 rounded-xl peer-checked:bg-gradient-to-r peer-checked:from-slate-600 peer-checked:to-slate-700 peer-checked:border-slate-500 hover:bg-slate-600/50 transition-all duration-200 group-hover:scale-105">
+                                        <div class="text-center">
+                                            <i data-lucide="minus" class="w-4 h-4 mx-auto mb-1"></i>
+                                            <span class="text-xs font-medium">Não</span>
+                                        </div>
+                                    </div>
+                                </label>
+                                <label class="relative cursor-pointer group">
+                                    <input type="radio" name="turbo" value="25" class="sr-only peer" onchange="updateTurboBonus()">
+                                    <div class="flex items-center justify-center p-3 bg-slate-700/50 border-2 border-slate-600 rounded-xl peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-pink-600 peer-checked:border-purple-500 hover:bg-slate-600/50 transition-all duration-200 group-hover:scale-105 peer-checked:animate-pulse-soft">
+                                        <div class="text-center">
+                                            <i data-lucide="zap" class="w-4 h-4 mx-auto mb-1"></i>
+                                            <span class="text-xs font-medium">+25%</span>
+                                        </div>
+                                    </div>
+                                </label>
+                                <label class="relative cursor-pointer group">
+                                    <input type="radio" name="turbo" value="50" class="sr-only peer" onchange="updateTurboBonus()">
+                                    <div class="flex items-center justify-center p-3 bg-slate-700/50 border-2 border-slate-600 rounded-xl peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-pink-600 peer-checked:border-purple-500 hover:bg-slate-600/50 transition-all duration-200 group-hover:scale-105 peer-checked:animate-pulse-soft">
+                                        <div class="text-center">
+                                            <i data-lucide="zap" class="w-4 h-4 mx-auto mb-1"></i>
+                                            <span class="text-xs font-medium">+50%</span>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                            <div id="turbo-info" class="mt-3 p-2 bg-purple-500/10 rounded-lg hidden">
+                                <p class="text-purple-300 text-xs">
+                                    <i data-lucide="trending-up" class="w-3 h-3 inline mr-1"></i>
+                                    Lucro aumentado em <span id="turbo-percent">0%</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção 3: Categorias e Detalhes -->
+                <div class="glass-section bg-slate-800/30 rounded-2xl p-6 border border-slate-700/50 hover:border-purple-500/30 transition-all duration-300">
+                    <h4 class="text-lg font-semibold text-white mb-4 flex items-center">
+                        <div class="p-2 rounded-lg bg-purple-500/20 mr-3">
+                            <i data-lucide="tag" class="w-5 h-5 text-purple-400"></i>
+                        </div>
+                        Categorias e Detalhes
+                    </h4>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">
+                                Categoria
+                                <span class="ml-2 text-xs text-slate-500">(múltipla escolha)</span>
+                            </label>
+                            <select id="bet-categories" multiple class="w-full">
+                                <option value="Resultado">Resultado</option>
+                                <option value="Finalizações">Finalizações</option>
+                                <option value="Escanteios">Escanteios</option>
+                                <option value="HT">Intervalo (HT)</option>
+                                <option value="FT">Tempo Completo (FT)</option>
+                                <option value="Gols">Gols</option>
+                                <option value="Chance Dupla">Chance Dupla</option>
+                                <option value="Chutes ao Gol">Chutes ao Gol</option>
+                                <option value="Ambas Equipes">Ambas Marcam</option>
+                                <option value="Faltas">Faltas</option>
+                                <option value="Cartões">Cartões</option>
+                                <option value="Defesas">Defesas</option>
+                                <option value="Desarmes">Desarmes</option>
+                                <option value="Handicap">Handicap</option>
+                                <option value="Outros">Outros</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">
+                                Torneio/Campeonato
+                                <span class="ml-2 text-xs text-slate-500">(múltipla escolha)</span>
+                            </label>
+                            <select id="bet-tournaments" multiple class="w-full">
+                                <option value="Brasileirão A">Brasileirão Série A</option>
+                                <option value="Brasileirão B">Brasileirão Série B</option>
+                                <option value="Champions League">Champions League</option>
+                                <option value="Europa League">Europa League</option>
+                                <option value="Conference League">Conference League</option>
+                                <option value="Premier League">Premier League</option>
+                                <option value="La Liga">La Liga</option>
+                                <option value="Bundesliga">Bundesliga</option>
+                                <option value="Serie A">Serie A (Itália)</option>
+                                <option value="Ligue 1">Ligue 1</option>
+                                <option value="Copa do Brasil">Copa do Brasil</option>
+                                <option value="Libertadores">Copa Libertadores</option>
+                                <option value="Sul-Americana">Copa Sul-Americana</option>
+                                <option value="Liga Portugal">Liga Portugal</option>
+                                <option value="Estaduais">Campeonatos Estaduais</option>
+                                <option value="Outros">Outros</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group mt-6">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">
+                            Detalhes da Aposta
+                            <span class="ml-2 text-xs text-slate-500">(opcional)</span>
+                        </label>
+                        <div class="relative">
+                            <textarea id="bet-details" rows="4" 
+                                    placeholder="Descreva os mercados específicos da sua aposta...
+Ex: 
+• Manchester City - Over 2.5 Gols
+• Arsenal - Under 4.5 Cartões  
+• Ambas marcam - Sim"
+                                    oninput="autoResize(this)"
+                                    class="w-full pl-4 pr-10 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all resize-none"></textarea>
+                            <div class="absolute right-3 bottom-3 text-gray-400 hover:text-purple-400 transition-colors">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-2">
+                            <i data-lucide="info" class="w-3 h-3 inline mr-1"></i>
+                            Use este campo para detalhar mercados específicos, condições especiais ou observações
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Resumo da Aposta Animado -->
+                <div id="bet-summary" class="bg-gradient-to-r from-indigo-600/20 via-purple-600/20 to-pink-600/20 rounded-2xl p-6 border border-indigo-500/30 animate-pulse-soft hidden">
+                    <h4 class="text-lg font-semibold text-white mb-4 flex items-center">
+                        <div class="p-2 rounded-lg bg-indigo-500/20 mr-3">
+                            <i data-lucide="file-text" class="w-5 h-5 text-indigo-400"></i>
+                        </div>
+                        Resumo Final
+                    </h4>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="text-center p-3 bg-slate-800/50 rounded-xl">
+                            <p class="text-xs text-slate-400 mb-1">Valor Apostado</p>
+                            <p id="summary-stake" class="text-xl font-bold text-white">R$ 0,00</p>
+                        </div>
+                        <div class="text-center p-3 bg-slate-800/50 rounded-xl">
+                            <p class="text-xs text-slate-400 mb-1">Odd Total</p>
+                            <p id="summary-odd" class="text-xl font-bold text-indigo-400">0.00</p>
+                        </div>
+                        <div class="text-center p-3 bg-slate-800/50 rounded-xl">
+                            <p class="text-xs text-slate-400 mb-1">Retorno Potencial</p>
+                            <p id="summary-return" class="text-xl font-bold text-green-400">R$ 0,00</p>
+                        </div>
+                        <div class="text-center p-3 bg-slate-800/50 rounded-xl">
+                            <p class="text-xs text-slate-400 mb-1">Lucro Estimado</p>
+                            <p id="summary-profit" class="text-xl font-bold text-emerald-400">R$ 0,00</p>
+                        </div>
+                    </div>
+                    
+                    <div id="summary-warnings" class="mt-4 space-y-2 hidden">
+                        <!-- Avisos dinâmicos -->
+                    </div>
+                </div>
+
+                <!-- Botões de Ação Melhorados -->
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeNewBetModal()" 
+                            class="flex-1 px-6 py-4 bg-slate-700/50 hover:bg-red-600/20 text-white rounded-2xl transition-all flex items-center justify-center space-x-2 font-medium border border-slate-600 hover:border-red-500/50 group">
+                        <i data-lucide="x" class="w-5 h-5 group-hover:rotate-90 transition-transform duration-200"></i>
+                        <span>Cancelar</span>
+                    </button>
+                    <button type="submit" id="submit-bet-btn"
+                            class="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 px-6 rounded-2xl transition-all flex items-center justify-center space-x-2 font-medium shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i data-lucide="save" class="w-5 h-5"></i>
+                        <span>Salvar Aposta</span>
+                        <div id="saving-spinner" class="hidden">
+                            <svg class="animate-spin h-5 w-5 ml-2" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Cashout -->
+    <div id="cashout-modal" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
+        <div class="modal-content rounded-2xl md:rounded-3xl p-6 md:p-8 w-full max-w-md mx-4">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center">
+                        <i data-lucide="receipt" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold gradient-text">Realizar Cashout</h3>
+                </div>
+                <button onclick="closeCashoutModal()" class="text-slate-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-slate-700/50">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-6">
+                <div class="value-display rounded-xl p-4">
+                    <div class="flex items-center space-x-2 mb-3">
+                        <i data-lucide="info" class="w-4 h-4 text-cyan-400"></i>
+                        <span class="text-slate-300 text-sm font-medium">Informações da Aposta</span>
+                    </div>
+                    <div id="cashout-bet-info" class="text-white text-sm space-y-2">
+                        <!-- Informações da aposta serão inseridas aqui -->
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Valor do Cashout (R$)</label>
+                    <div class="relative">
+                        <i data-lucide="dollar-sign" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4"></i>
+                        <input type="number" id="cashout-value" step="0.01" min="0" 
+                               placeholder="Digite o valor do cashout"
+                               class="w-full bg-slate-800/50 border border-slate-600 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all">
+                    </div>
+                    <p class="text-slate-400 text-xs mt-2">Digite o valor que você recebeu pelo cashout</p>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button onclick="closeCashoutModal()" 
+                            class="flex-1 px-6 py-3 action-button-gray text-white rounded-xl transition-all duration-200 font-medium">
+                        Cancelar
+                    </button>
+                    <button onclick="confirmCashout()" 
+                            class="flex-1 px-6 py-3 action-button-cyan text-white rounded-xl transition-all duration-200 font-medium">
+                        Confirmar Cashout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="resultados.js"></script>
+</body>
+</html>

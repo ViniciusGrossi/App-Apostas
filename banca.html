@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BetTracker - Gestão de Banca</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Inicialização do Supabase -->
+    <script>
+        const SUPABASE_URL = 'https://cjlvcjfuntfbdrrkigwh.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqbHZjamZ1bnRmYmRycmtpZ3doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAyMzYyMDIsImV4cCI6MjA1NTgxMjIwMn0.FBSsXa2vVmrv78_XeLWZcpMKMUIeRe0mS9hBO7Cn45Y';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    </script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            min-height: 100vh;
+        }
+
+        .glass-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3);
+            border-color: rgba(99, 102, 241, 0.6);
+        }
+
+        .metric-card {
+            background: linear-gradient(145deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .metric-card:hover::before {
+            left: 100%;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3);
+            border-color: rgba(99, 102, 241, 0.6);
+        }
+
+        .bookie-card {
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.8));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bookie-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .bookie-card:hover::before {
+            left: 100%;
+        }
+
+        .bookie-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3);
+            border-color: rgba(99, 102, 241, 0.6);
+        }
+
+        .sidebar {
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-item {
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 0;
+            background: linear-gradient(180deg, #6366f1, #8b5cf6);
+            transition: height 0.3s ease;
+        }
+
+        .nav-item.active::before,
+        .nav-item:hover::before {
+            height: 100%;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.2), transparent);
+            border-right: 2px solid #6366f1;
+        }
+
+        .floating-header {
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .metric-icon {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+            backdrop-filter: blur(10px);
+        }
+
+        .action-button {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(99, 102, 241, 0.6);
+        }
+
+        .action-button:active {
+            transform: translateY(0);
+        }
+
+        .action-button-green {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        }
+
+        .action-button-green:hover {
+            box-shadow: 0 15px 35px rgba(16, 185, 129, 0.6);
+        }
+
+        .action-button-red {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        .action-button-red:hover {
+            box-shadow: 0 15px 35px rgba(239, 68, 68, 0.6);
+        }
+
+        .unit-card {
+            background: linear-gradient(145deg, rgba(51, 65, 85, 0.5), rgba(30, 41, 59, 0.5));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .unit-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 35px rgba(99, 102, 241, 0.3);
+            border-color: rgba(99, 102, 241, 0.5);
+        }
+
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-content {
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .transaction-button {
+            background: linear-gradient(145deg, rgba(51, 65, 85, 0.8), rgba(30, 41, 59, 0.8));
+            backdrop-filter: blur(10px);
+            border: 2px solid transparent;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .transaction-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .transaction-button.active-deposit {
+            border-color: #10b981;
+            background: linear-gradient(145deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
+        }
+
+        .transaction-button.active-withdraw {
+            border-color: #ef4444;
+            background: linear-gradient(145deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+        }
+
+        .loading-spinner {
+            border: 3px solid rgba(99, 102, 241, 0.3);
+            border-top: 3px solid #6366f1;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        /* Hamburger Menu */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 0.5rem;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 0.5rem;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .hamburger:hover {
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        .hamburger span {
+            width: 1.5rem;
+            height: 2px;
+            background: #ffffff;
+            margin: 2px 0;
+            transition: 0.3s;
+            border-radius: 1px;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 35;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .sidebar-hidden {
+            transform: translateX(-100%);
+        }
+
+        @media (max-width: 768px) {
+            .hamburger {
+                display: flex;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                width: 280px;
+                z-index: 40;
+                transition: transform 0.3s ease-in-out;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- Overlay para mobile -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 sidebar flex-shrink-0">
+            <div class="p-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center">
+                            <i data-lucide="trending-up" class="w-6 h-6 text-white"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold gradient-text">BetTracker</h1>
+                            <p class="text-sm text-slate-400 font-medium">Pro Analytics</p>
+                        </div>
+                    </div>
+                    <!-- Botão fechar para mobile -->
+                    <button id="close-sidebar" class="md:hidden p-2 rounded-lg hover:bg-slate-700/50 transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <nav class="px-4 pb-4 space-y-2">
+                <a href="teste.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="home" class="w-5 h-5"></i>
+                    <span class="font-medium">Início</span>
+                </a>
+                <a href="Apostas.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="target" class="w-5 h-5"></i>
+                    <span class="font-medium">Apostas</span>
+                </a>
+                <a href="resultados.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="check-circle" class="w-5 h-5"></i>
+                    <span class="font-medium">Resultados</span>
+                </a>
+                <a href="analises.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                    <span class="font-medium">Análises</span>
+                </a>
+                <a href="ia_insights.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="message-circle" class="w-5 h-5"></i>
+                    <span class="font-medium">IA Insights</span>
+                </a>
+                <a href="banca.html" class="nav-item active flex items-center space-x-3 px-6 py-4 rounded-2xl text-white">
+                    <i data-lucide="wallet" class="w-5 h-5"></i>
+                    <span class="font-medium">Gestão de Banca</span>
+                </a>
+                <a href="#" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                    <span class="font-medium">Configurações</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden main-content">
+            <!-- Header -->
+            <header class="floating-header px-4 md:px-8 py-4 md:py-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <!-- Botão hamburguer para mobile -->
+                        <button id="menu-toggle" class="hamburger md:hidden">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </button>
+                        <div>
+                            <h2 class="text-2xl md:text-4xl font-bold gradient-text mb-1 md:mb-2">Gestão de Banca</h2>
+                            <p class="text-slate-400 text-sm md:text-lg hidden sm:block">Controle sua banca e casas de apostas</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-4">
+                        <div id="loading-indicator" class="loading-spinner hidden"></div>
+                        <div class="pulse-dot w-3 h-3 bg-green-400 rounded-full"></div>
+                        
+                        <button onclick="showAddBookieModal()" 
+                                class="action-button px-4 py-2 md:px-6 md:py-3 rounded-xl text-white font-medium flex items-center space-x-2">
+                            <i data-lucide="plus" class="w-5 h-5"></i>
+                            <span class="hidden sm:inline">Nova Casa</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main content -->
+            <main class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
+                <!-- Resumo da Banca -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="metric-card rounded-2xl md:rounded-3xl p-4 md:p-8">
+                        <div class="flex items-center justify-between mb-4 md:mb-6">
+                            <div class="metric-icon p-3 md:p-4 rounded-xl md:rounded-2xl text-emerald-400">
+                                <i data-lucide="wallet" class="w-6 h-6 md:w-8 md:h-8"></i>
+                            </div>
+                        </div>
+                        <p class="text-2xl md:text-4xl font-bold mb-2" id="totalBankroll">R$ 0,00</p>
+                        <p class="text-slate-400 font-medium text-sm md:text-base">Banca Total</p>
+                    </div>
+
+                    <div class="metric-card rounded-2xl md:rounded-3xl p-4 md:p-8">
+                        <div class="flex items-center justify-between mb-4 md:mb-6">
+                            <div class="metric-icon p-3 md:p-4 rounded-xl md:rounded-2xl text-blue-400">
+                                <i data-lucide="trending-up" class="w-6 h-6 md:w-8 md:h-8"></i>
+                            </div>
+                        </div>
+                        <p class="text-2xl md:text-4xl font-bold mb-2" id="roiValue">0%</p>
+                        <p class="text-slate-400 font-medium text-sm md:text-base">ROI (Retorno)</p>
+                    </div>
+
+                    <div class="metric-card rounded-2xl md:rounded-3xl p-4 md:p-8">
+                        <div class="flex items-center justify-between mb-4 md:mb-6">
+                            <div class="metric-icon p-3 md:p-4 rounded-xl md:rounded-2xl text-yellow-400">
+                                <i data-lucide="badge-dollar-sign" class="w-6 h-6 md:w-8 md:h-8"></i>
+                            </div>
+                        </div>
+                        <p class="text-2xl md:text-4xl font-bold mb-2" id="profitValue">R$ 0,00</p>
+                        <p class="text-slate-400 font-medium text-sm md:text-base">Lucro/Prejuízo</p>
+                    </div>
+
+                    <div class="metric-card rounded-2xl md:rounded-3xl p-4 md:p-8">
+                        <div class="flex items-center justify-between mb-4 md:mb-6">
+                            <div class="metric-icon p-3 md:p-4 rounded-xl md:rounded-2xl text-purple-400">
+                                <i data-lucide="building" class="w-6 h-6 md:w-8 md:h-8"></i>
+                            </div>
+                        </div>
+                        <p class="text-2xl md:text-4xl font-bold mb-2" id="bookieCount">0</p>
+                        <p class="text-slate-400 font-medium text-sm md:text-base">Casas de Apostas</p>
+                    </div>
+                </div>
+
+                <!-- Unidades (Quartis) -->
+                <div class="glass-card rounded-2xl md:rounded-3xl p-4 md:p-8">
+                    <h3 class="text-lg md:text-xl font-bold mb-6 flex items-center">
+                        <div class="metric-icon p-2 rounded-xl mr-3">
+                            <i data-lucide="calculator" class="w-5 h-5"></i>
+                        </div>
+                        Distribuição de Unidades
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="unit-card p-4 rounded-xl">
+                            <p class="text-sm text-slate-400 mb-2">0.25u</p>
+                            <p class="text-xl font-bold text-emerald-400" id="quarterUnit">R$ 0,00</p>
+                        </div>
+                        <div class="unit-card p-4 rounded-xl">
+                            <p class="text-sm text-slate-400 mb-2">0.5u</p>
+                            <p class="text-xl font-bold text-blue-400" id="halfUnit">R$ 0,00</p>
+                        </div>
+                        <div class="unit-card p-4 rounded-xl">
+                            <p class="text-sm text-slate-400 mb-2">0.75u</p>
+                            <p class="text-xl font-bold text-yellow-400" id="threeQuarterUnit">R$ 0,00</p>
+                        </div>
+                        <div class="unit-card p-4 rounded-xl">
+                            <p class="text-sm text-slate-400 mb-2">1u</p>
+                            <p class="text-xl font-bold text-red-400" id="fullUnit">R$ 0,00</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de Casas de Apostas -->
+                <div id="bookiesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+                    <!-- Preenchido via JavaScript -->
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar Casa -->
+    <div id="addBookieModal" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
+        <div class="modal-content rounded-2xl md:rounded-3xl p-6 md:p-8 w-full max-w-md">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold gradient-text flex items-center">
+                    <div class="metric-icon p-2 rounded-xl mr-3">
+                        <i data-lucide="building" class="w-5 h-5"></i>
+                    </div>
+                    Nova Casa de Apostas
+                </h3>
+                <button onclick="closeAddBookieModal()" class="text-slate-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-slate-700/50">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Nome da Casa</label>
+                    <input type="text" id="bookieName" 
+                           placeholder="Ex: Bet365"
+                           class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Saldo Inicial</label>
+                    <div class="relative">
+                        <i data-lucide="dollar-sign" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4"></i>
+                        <input type="number" id="bookieInitialBalance" 
+                               placeholder="0.00"
+                               step="0.01"
+                               class="w-full bg-slate-800/50 border border-slate-600 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button onclick="closeAddBookieModal()" 
+                            class="px-6 py-3 text-slate-400 hover:text-white transition-colors rounded-xl hover:bg-slate-700/50">
+                        Cancelar
+                    </button>
+                    <button onclick="addNewBookie()" 
+                            class="px-6 py-3 action-button text-white rounded-xl font-medium">
+                        Adicionar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Transação -->
+    <div id="transactionModal" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
+        <div class="modal-content rounded-2xl md:rounded-3xl p-6 md:p-8 w-full max-w-md">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold gradient-text" id="transactionBookieName">Casa de Apostas</h3>
+                <button onclick="closeTransactionModal()" class="text-slate-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-slate-700/50">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <p class="text-sm text-slate-400 mb-4 text-center">Selecione o tipo de transação:</p>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <button id="depositButton" onclick="setTransactionType('deposit')" 
+                        class="transaction-button flex flex-col items-center p-4 rounded-xl">
+                    <i data-lucide="plus-circle" class="w-8 h-8 text-emerald-400 mb-2"></i>
+                    <span class="font-medium">Depositar</span>
+                </button>
+                <button id="withdrawButton" onclick="setTransactionType('withdraw')"
+                        class="transaction-button flex flex-col items-center p-4 rounded-xl">
+                    <i data-lucide="minus-circle" class="w-8 h-8 text-red-400 mb-2"></i>
+                    <span class="font-medium">Sacar</span>
+                </button>
+            </div>
+            <p id="transactionTypeMessage" class="text-sm text-yellow-400 mb-4 text-center hidden">
+                Selecione um tipo de transação antes de continuar
+            </p>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Valor</label>
+                    <div class="relative">
+                        <i data-lucide="dollar-sign" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4"></i>
+                        <input type="number" id="transactionAmount" 
+                               placeholder="0.00"
+                               step="0.01"
+                               class="w-full bg-slate-800/50 border border-slate-600 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                    </div>
+                </div>
+                <button onclick="processTransaction()" 
+                        class="w-full py-3 action-button text-white rounded-xl font-medium">
+                    Confirmar Transação
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variáveis globais
+        let bookies = [];
+        let currentBookieId = null;
+        let currentTransactionType = null;
+
+        // Sistema de navegação responsiva
+        function setupResponsiveNavigation() {
+            const menuToggle = document.getElementById('menu-toggle');
+            const closeSidebar = document.getElementById('close-sidebar');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+
+            function openSidebar() {
+                sidebar.classList.remove('sidebar-hidden');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeSidebarFunc() {
+                sidebar.classList.add('sidebar-hidden');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            if (menuToggle) {
+                menuToggle.addEventListener('click', openSidebar);
+            }
+
+            if (closeSidebar) {
+                closeSidebar.addEventListener('click', closeSidebarFunc);
+            }
+
+            if (overlay) {
+                overlay.addEventListener('click', closeSidebarFunc);
+            }
+
+            // Fechar sidebar ao redimensionar para desktop
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 768) {
+                    sidebar.classList.remove('sidebar-hidden');
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                } else {
+                    sidebar.classList.add('sidebar-hidden');
+                }
+            });
+
+            // Configurar estado inicial baseado no tamanho da tela
+            if (window.innerWidth < 768) {
+                sidebar.classList.add('sidebar-hidden');
+            }
+        }
+
+        function showLoading() {
+            const loader = document.getElementById('loading-indicator');
+            if (loader) loader.classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            const loader = document.getElementById('loading-indicator');
+            if (loader) loader.classList.add('hidden');
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(value);
+        }
+
+        function updateBankrollInfo() {
+            const totalBankroll = bookies.reduce((sum, bookie) => sum + bookie.balance, 0);
+            const unitValue = totalBankroll * 0.02;
+
+            document.getElementById('totalBankroll').textContent = formatCurrency(totalBankroll);
+            document.getElementById('roiValue').textContent = '0%';
+            document.getElementById('roiValue').className = 'text-2xl md:text-4xl font-bold mb-2 text-slate-400';
+            document.getElementById('profitValue').textContent = formatCurrency(0);
+            document.getElementById('profitValue').className = 'text-2xl md:text-4xl font-bold mb-2 text-slate-400';
+            document.getElementById('quarterUnit').textContent = formatCurrency(unitValue * 0.25);
+            document.getElementById('halfUnit').textContent = formatCurrency(unitValue * 0.5);
+            document.getElementById('threeQuarterUnit').textContent = formatCurrency(unitValue * 0.75);
+            document.getElementById('fullUnit').textContent = formatCurrency(unitValue);
+            document.getElementById('bookieCount').textContent = bookies.length;
+        }
+
+        function renderBookies() {
+            const container = document.getElementById('bookiesContainer');
+            // Ordena as casas de apostas por saldo (ordem decrescente)
+            const sortedBookies = [...bookies].sort((a, b) => b.balance - a.balance);
+            
+            if (sortedBookies.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center glass-card rounded-3xl p-12">
+                        <div class="metric-icon p-4 rounded-2xl mb-4">
+                            <i data-lucide="building" class="w-16 h-16 text-slate-400"></i>
+                        </div>
+                        <h3 class="text-xl font-bold gradient-text mb-2">Nenhuma casa cadastrada</h3>
+                        <p class="text-slate-400 text-center mb-6">Adicione sua primeira casa de apostas</p>
+                        <button onclick="showAddBookieModal()" class="action-button px-6 py-3 rounded-xl text-white font-medium flex items-center space-x-2">
+                            <i data-lucide="plus" class="w-5 h-5"></i>
+                            <span>Adicionar Casa</span>
+                        </button>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = sortedBookies.map(bookie => `
+                    <div class="bookie-card rounded-2xl md:rounded-3xl p-6 cursor-pointer"
+                         onclick="showTransactionModal(${bookie.id})">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="metric-icon p-3 rounded-xl">
+                                    <i data-lucide="building" class="w-6 h-6 text-indigo-400"></i>
+                                </div>
+                                <h3 class="text-lg font-semibold">${bookie.name}</h3>
+                            </div>
+                            <button onclick="deleteBookie(${bookie.id}); event.stopPropagation();" 
+                                    class="p-2 text-slate-400 hover:text-red-400 transition-colors rounded-lg hover:bg-slate-700/50">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-2xl font-bold ${bookie.balance >= 0 ? 'text-emerald-400' : 'text-red-400'}">${formatCurrency(bookie.balance)}</p>
+                                <p class="text-sm text-slate-400">Saldo Atual</p>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-700">
+                                <div>
+                                    <p class="text-xs text-slate-400 mb-1">Último Depósito</p>
+                                    <p class="text-sm text-white">${bookie.lastDeposit ? new Date(bookie.lastDeposit).toLocaleDateString('pt-BR') : '-'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-slate-400 mb-1">Último Saque</p>
+                                    <p class="text-sm text-white">${bookie.lastWithdraw ? new Date(bookie.lastWithdraw).toLocaleDateString('pt-BR') : '-'}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            lucide.createIcons();
+        }
+
+        function showAddBookieModal() {
+            document.getElementById('addBookieModal').classList.remove('hidden');
+        }
+
+        function closeAddBookieModal() {
+            document.getElementById('addBookieModal').classList.add('hidden');
+            document.getElementById('bookieName').value = '';
+            document.getElementById('bookieInitialBalance').value = '';
+        }
+
+        function showTransactionModal(bookieId) {
+            currentBookieId = bookieId;
+            const bookie = bookies.find(b => b.id === bookieId);
+            document.getElementById('transactionBookieName').textContent = bookie.name;
+            document.getElementById('transactionModal').classList.remove('hidden');
+            document.getElementById('transactionAmount').value = '';
+        }
+
+        function closeTransactionModal() {
+            currentBookieId = null;
+            currentTransactionType = null;
+            document.getElementById('transactionModal').classList.add('hidden');
+            document.getElementById('transactionTypeMessage').classList.add('hidden');
+            document.getElementById('depositButton').classList.remove('active-deposit');
+            document.getElementById('withdrawButton').classList.remove('active-withdraw');
+        }
+
+        function setTransactionType(type) {
+            currentTransactionType = type;
+            
+            // Reset both buttons
+            document.getElementById('depositButton').classList.remove('active-deposit');
+            document.getElementById('withdrawButton').classList.remove('active-withdraw');
+            
+            // Style selected button
+            if (type === 'deposit') {
+                document.getElementById('depositButton').classList.add('active-deposit');
+            } else {
+                document.getElementById('withdrawButton').classList.add('active-withdraw');
+            }
+
+            // Hide message when a type is selected
+            document.getElementById('transactionTypeMessage').classList.add('hidden');
+            document.getElementById('transactionAmount').focus();
+        }
+
+        // Função para carregar as casas de apostas do Supabase
+        async function loadBookies() {
+            showLoading();
+            try {
+                const { data, error } = await supabaseClient
+                    .from('bookies')
+                    .select('*')
+                    .order('balance', { ascending: false });
+
+                if (error) throw error;
+                
+                // Mapeia os dados do banco para o formato usado pela interface
+                bookies = data.map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    balance: Number(item.balance),
+                    lastDeposit: item.last_deposit,
+                    lastWithdraw: item.last_withdraw,
+                    lastUpdate: item.last_update
+                }));
+                
+                updateBankrollInfo();
+                renderBookies();
+            } catch (error) {
+                console.error('Erro ao carregar casas de apostas:', error);
+                alert('Erro ao carregar casas de apostas');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Função para adicionar nova casa de apostas
+        async function addNewBookie() {
+            const name = document.getElementById('bookieName').value;
+            const balance = parseFloat(document.getElementById('bookieInitialBalance').value);
+
+            if (!name || isNaN(balance)) {
+                alert('Por favor, preencha todos os campos corretamente.');
+                return;
+            }
+
+            showLoading();
+            try {
+                const now = new Date().toISOString();
+                const { data, error } = await supabaseClient
+                    .from('bookies')
+                    .insert([{
+                        name,
+                        balance,
+                        last_deposit: now,
+                        last_update: now
+                    }])
+                    .select();
+
+                if (error) throw error;
+
+                await loadBookies();
+                closeAddBookieModal();
+            } catch (error) {
+                console.error('Erro ao adicionar casa de apostas:', error);
+                alert('Erro ao adicionar casa de apostas');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Função para processar transações (depósito/saque)
+        async function processTransaction() {
+            if (!currentTransactionType) {
+                document.getElementById('transactionTypeMessage').classList.remove('hidden');
+                return;
+            }
+
+            const amount = parseFloat(document.getElementById('transactionAmount').value);
+
+            if (isNaN(amount) || amount <= 0) {
+                alert('Por favor, insira um valor válido.');
+                return;
+            }
+
+            const bookie = bookies.find(b => b.id === currentBookieId);
+            if (!bookie) return;
+
+            const newBalance = currentTransactionType === 'deposit' 
+                ? bookie.balance + amount 
+                : bookie.balance - amount;
+
+            if (currentTransactionType === 'withdraw' && amount > bookie.balance) {
+                alert('Saldo insuficiente para saque.');
+                return;
+            }
+
+            showLoading();
+            try {
+                const now = new Date().toISOString();
+                const { error } = await supabaseClient
+                    .from('bookies')
+                    .update({ 
+                        balance: newBalance,
+                        [currentTransactionType === 'deposit' ? 'last_deposit' : 'last_withdraw']: now,
+                        last_update: now
+                    })
+                    .eq('id', currentBookieId);
+
+                if (error) throw error;
+
+                await loadBookies();
+                closeTransactionModal();
+            } catch (error) {
+                console.error('Erro ao processar transação:', error);
+                alert('Erro ao processar transação');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Função para deletar casa de apostas
+        async function deleteBookie(bookieId) {
+            if (!confirm('Tem certeza que deseja excluir esta casa de apostas?')) return;
+            
+            showLoading();
+            try {
+                const { error } = await supabaseClient
+                    .from('bookies')
+                    .delete()
+                    .eq('id', bookieId);
+
+                if (error) throw error;
+
+                await loadBookies();
+            } catch (error) {
+                console.error('Erro ao deletar casa de apostas:', error);
+                alert('Erro ao deletar casa de apostas');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            setupResponsiveNavigation();
+            loadBookies();
+        });
+    </script>
+</body>
+</html>

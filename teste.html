@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BetTracker - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            min-height: 100vh;
+        }
+
+        .glass-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3);
+            border-color: rgba(99, 102, 241, 0.6);
+        }
+
+        .metric-card {
+            background: linear-gradient(145deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .metric-card:hover::before {
+            left: 100%;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3);
+            border-color: rgba(99, 102, 241, 0.6);
+        }
+
+        .sidebar {
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .sidebar-hidden {
+            transform: translateX(-100%);
+        }
+
+        .nav-item {
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 0;
+            background: linear-gradient(180deg, #6366f1, #8b5cf6);
+            transition: height 0.3s ease;
+        }
+
+        .nav-item.active::before,
+        .nav-item:hover::before {
+            height: 100%;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.2), transparent);
+            border-right: 2px solid #6366f1;
+        }
+
+        .floating-header {
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .metric-icon {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+            backdrop-filter: blur(10px);
+        }
+
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        .loading-spinner {
+            border: 3px solid rgba(99, 102, 241, 0.3);
+            border-top: 3px solid #6366f1;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-indicator {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-ganhou {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .status-perdeu {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .status-pendente {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        .status-cashout {
+            background: linear-gradient(135deg, #06b6d4, #0891b2);
+            color: white;
+        }
+
+        .bet-card {
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.8));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .bet-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            border-color: rgba(99, 102, 241, 0.5);
+        }
+
+        .action-button {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(99, 102, 241, 0.6);
+        }
+
+        .action-button:active {
+            transform: translateY(0);
+        }
+
+        /* Overlay para mobile quando sidebar está aberta */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 35;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Botão hamburguer */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 0.5rem;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 0.5rem;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .hamburger:hover {
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        .hamburger span {
+            width: 1.5rem;
+            height: 2px;
+            background: #ffffff;
+            margin: 2px 0;
+            transition: 0.3s;
+            border-radius: 1px;
+        }
+
+        /* Tom Select Styling */
+        .ts-control, .ts-dropdown { 
+            background-color: #374151 !important; 
+            color: #fff !important; 
+            border-radius: 0.75rem !important; 
+            border: 1px solid #4b5563 !important;
+            width: 100% !important;
+        }
+
+        .ts-dropdown .option:hover { 
+            background: rgba(99, 102, 241, 0.3) !important; 
+        }
+
+        .ts-wrapper { 
+            width: 100% !important; 
+            position: relative; 
+            z-index: 10; 
+        }
+
+        .ts-dropdown { 
+            z-index: 1000 !important; 
+            position: absolute !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .ts-control input {
+            color: white !important;
+        }
+
+        .ts-control .item {
+            background-color: rgb(37, 99, 235) !important;
+            color: white !important;
+            border-radius: 0.25rem !important;
+        }
+
+        /* Ajustes para mobile */
+        @media (max-width: 768px) {
+            .hamburger {
+                display: flex;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                width: 280px;
+                z-index: 40;
+            }
+
+            .metric-card {
+                padding: 1.5rem;
+            }
+
+            .floating-header {
+                padding: 1rem;
+            }
+
+            .floating-header h2 {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .metric-card {
+                padding: 1rem;
+            }
+
+            .floating-header {
+                padding: 0.75rem;
+            }
+
+            .floating-header h2 {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- Overlay para mobile -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 sidebar flex-shrink-0">
+            <div class="p-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center">
+                            <i data-lucide="trending-up" class="w-6 h-6 text-white"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold gradient-text">BetTracker</h1>
+                            <p class="text-sm text-slate-400 font-medium">Pro Analytics</p>
+                        </div>
+                    </div>
+                    <!-- Botão fechar para mobile -->
+                    <button id="close-sidebar" class="md:hidden p-2 rounded-lg hover:bg-slate-700/50 transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <nav class="px-4 pb-4 space-y-2">
+                <a href="#" class="nav-item active flex items-center space-x-3 px-6 py-4 rounded-2xl text-white">
+                    <i data-lucide="home" class="w-5 h-5"></i>
+                    <span class="font-medium">Início</span>
+                </a>
+                <a href="Apostas.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="target" class="w-5 h-5"></i>
+                    <span class="font-medium">Apostas</span>
+                </a>
+                <a href="resultados.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="check-circle" class="w-5 h-5"></i>
+                    <span class="font-medium">Resultados</span>
+                </a>
+                <a href="analises.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                    <span class="font-medium">Análises</span>
+                </a>
+                <a href="ia_insights.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="message-circle" class="w-5 h-5"></i>
+                    <span class="font-medium">IA Insights</span>
+                </a>
+                <a href="banca.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="wallet" class="w-5 h-5"></i>
+                    <span class="font-medium">Gestão de Banca</span>
+                </a>
+                <a href="#" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                    <span class="font-medium">Configurações</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <div class="flex-1 flex flex-col overflow-hidden main-content">
+            <!-- Header -->
+            <header class="floating-header px-4 md:px-8 py-4 md:py-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <!-- Botão hamburguer para mobile -->
+                        <button id="menu-toggle" class="hamburger md:hidden">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </button>
+                        <div>
+                            <h2 class="text-2xl md:text-4xl font-bold gradient-text mb-1 md:mb-2">Dashboard</h2>
+                            <p class="text-slate-400 text-sm md:text-lg hidden sm:block">Visão geral das suas apostas</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-4">
+                        <div class="relative hidden md:block">
+                            <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
+                            <input type="text" placeholder="Buscar apostas..." 
+                                   class="bg-slate-800/50 border border-slate-600 rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all w-40 focus:w-64">
+                        </div>
+                        
+                        <div id="loading-indicator" class="loading-spinner hidden"></div>
+                        <div class="pulse-dot w-3 h-3 bg-green-400 rounded-full"></div>
+                        
+                        <button class="relative p-2 metric-icon rounded-lg transition-all hover:bg-slate-600 active:scale-95">
+                            <i data-lucide="bell" class="w-5 h-5"></i>
+                            <span class="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"></span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="flex-1 overflow-y-auto p-4 md:p-8 space-y-8">
+                <!-- Métricas -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="metric-card rounded-2xl md:rounded-3xl p-4 md:p-8">
+                        <div class="flex items-center justify-between mb-4 md:mb-6">
+                            <div class="metric-icon p-3 md:p-4 rounded-xl md:rounded-2xl text-emerald-400">
+                                <i data-lucide="dollar-sign" class="w-6 h-6 md:w-8 md:h-8"></i>
+                            </div>
+                            <span class="text-sm font-medium text-green-400" id="total-change">+0%</span>
+                        </div>
+                        <p class="text-2xl md:text-4xl font-bold mb-2" id="total-apostado">R$ 0,00</p>
+                        <p class="text-slate-400 font-medium text-sm md:text-base">Total Apostado</p>
+                    </div>
+
+                    <div class="metric-card rounded-2xl md:rounded-3xl p-4 md:p-8">
+                        <div class="flex items-center justify-between mb-4 md:mb-6">
+                            <div class="metric-icon p-3 md:p-4 rounded-xl md:rounded-2xl text-green-400">
+                                <i data-lucide="trophy" class="w-6 h-6 md:w-8 md:h-8"></i>
+                            </div>
+                            <span class="text-sm font-medium text-green-400" id="taxa-change">+0%</span>
+                        </div>
+                        <p class="text-2xl md:text-4xl font-bold mb-2" id="taxa-acerto">0%</p>
+                        <p class="text-slate-400 font-medium text-sm md:text-base">Taxa de Acerto</p>
+                    </div>
+
+                    <div class="metric-card rounded-2xl md:rounded-3xl p-4 md:p-8">
+                        <div class="flex items-center justify-between mb-4 md:mb-6">
+                            <div class="metric-icon p-3 md:p-4 rounded-xl md:rounded-2xl text-blue-400">
+                                <i data-lucide="trending-up" class="w-6 h-6 md:w-8 md:h-8"></i>
+                            </div>
+                            <span class="text-sm font-medium" id="roi-change">+0%</span>
+                        </div>
+                        <p class="text-2xl md:text-4xl font-bold mb-2" id="roi-value">0%</p>
+                        <p class="text-slate-400 font-medium text-sm md:text-base">ROI</p>
+                    </div>
+
+                    <div class="metric-card rounded-2xl md:rounded-3xl p-4 md:p-8">
+                        <div class="flex items-center justify-between mb-4 md:mb-6">
+                            <div class="metric-icon p-3 md:p-4 rounded-xl md:rounded-2xl text-yellow-400">
+                                <i data-lucide="activity" class="w-6 h-6 md:w-8 md:h-8"></i>
+                            </div>
+                            <span class="text-sm font-medium text-yellow-400" id="ativas-change">-</span>
+                        </div>
+                        <p class="text-2xl md:text-4xl font-bold mb-2" id="apostas-ativas">0</p>
+                        <p class="text-slate-400 font-medium text-sm md:text-base">Apostas Ativas</p>
+                    </div>
+                </div>
+
+                <!-- Apostas recentes + Performance -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="glass-card rounded-2xl md:rounded-3xl p-4 md:p-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg md:text-xl font-bold flex items-center">
+                                <div class="metric-icon p-2 rounded-xl mr-3">
+                                    <i data-lucide="clock" class="w-4 h-4 md:w-5 md:h-5"></i>
+                                </div>
+                                Apostas Recentes
+                            </h3>
+                            <button class="text-sm text-blue-400 hover:text-blue-300 font-medium">
+                                Ver todas
+                            </button>
+                        </div>
+                        <div id="apostas-recentes" class="space-y-4">
+                            <div class="bet-card p-4 rounded-2xl flex justify-between items-center">
+                                <div>
+                                    <div class="w-4 h-4 bg-gray-600 rounded animate-pulse mb-2"></div>
+                                    <div class="w-20 h-3 bg-gray-600 rounded animate-pulse"></div>
+                                </div>
+                                <div class="w-16 h-6 bg-gray-600 rounded animate-pulse"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-2xl md:rounded-3xl p-4 md:p-8">
+                        <h3 class="text-lg md:text-xl font-bold mb-6 flex items-center">
+                            <div class="metric-icon p-2 rounded-xl mr-3">
+                                <i data-lucide="bar-chart-3" class="w-4 h-4 md:w-5 md:h-5"></i>
+                            </div>
+                            Estatísticas Rápidas
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-400 font-medium text-sm md:text-base">Total de Apostas:</span>
+                                <span class="text-lg md:text-xl font-bold" id="total-apostas">0</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-400 font-medium text-sm md:text-base">Lucro Total:</span>
+                                <span class="text-lg md:text-xl font-bold" id="lucro-total">R$ 0,00</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-400 font-medium text-sm md:text-base">Odd Média:</span>
+                                <span class="text-lg md:text-xl font-bold" id="odd-media">0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-400 font-medium text-sm md:text-base">Sequência Atual:</span>
+                                <span class="text-lg md:text-xl font-bold" id="sequencia-atual">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ações Rápidas -->
+                <div class="glass-card rounded-2xl md:rounded-3xl p-4 md:p-8">
+                    <h3 class="text-xl font-bold mb-6 flex items-center">
+                        <div class="metric-icon p-2 rounded-xl mr-3">
+                            <i data-lucide="zap" class="w-5 h-5"></i>
+                        </div>
+                        Ações Rápidas
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <button onclick="openNewBetModal()" 
+                                class="action-button flex items-center justify-center space-x-3 p-4 rounded-2xl text-white font-medium">
+                            <i data-lucide="target" class="w-5 h-5"></i>
+                            <span>Nova Aposta</span>
+                        </button>
+
+                        <button onclick="window.location.href='analises.html'" 
+                                class="action-button flex items-center justify-center space-x-3 p-4 rounded-2xl text-white font-medium">
+                            <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                            <span>Relatório Detalhado</span>
+                        </button>
+
+                        <button onclick="window.location.href='resultados.html'" 
+                                class="action-button flex items-center justify-center space-x-3 p-4 rounded-2xl text-white font-medium">
+                            <i data-lucide="users" class="w-5 h-5"></i>
+                            <span>Ver Resultados</span>
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal de Nova Aposta -->
+    <div id="new-bet-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center overflow-y-auto p-4">
+        <div class="glass-card rounded-2xl md:rounded-3xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-white flex items-center">
+                    <div class="metric-icon p-2 rounded-xl mr-3">
+                        <i data-lucide="target" class="w-5 h-5"></i>
+                    </div>
+                    Nova Aposta
+                </h3>
+                <button onclick="closeNewBetModal()" class="text-gray-400 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <form id="newBetForm" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Data -->
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Data</label>
+                        <div class="relative">
+                            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                                <i data-lucide="calendar" class="w-4 h-4 text-gray-400"></i>
+                            </div>
+                            <input type="date" id="bet-date" 
+                                   class="w-full bg-slate-800/50 border border-slate-600 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                        </div>
+                    </div>
+
+                    <!-- Casa de Apostas -->
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Casa de Apostas</label>
+                        <select id="bet-house">
+                            <option value="">Selecione uma casa</option>
+                            <option value="Bet 365">Bet 365</option>
+                            <option value="Superbet">Superbet</option>
+                            <option value="Betano">Betano</option>
+                            <option value="Betfair">Betfair</option>
+                            <option value="Novibet">Novibet</option>
+                            <option value="Bateubet">Bateubet</option>
+                            <option value="Betnacional">Betnacional</option>
+                            <option value="Bet MGM">Bet MGM</option>
+                            <option value="Betfast">Betfast</option>
+                            <option value="Estrela Bet">Estrela Bet</option>
+                            <option value="LotoGreen">LotoGreen</option>
+                            <option value="BR4 Bet">BR4 Bet</option>
+                            <option value="UX Bet">UX Bet</option>
+                            <option value="MC Games">MC Games</option>
+                            <option value="Seu Bet">Seu Bet</option>
+                            <option value="H2 Bet">H2 Bet</option>
+                            <option value="Bet Esporte">Bet Esporte</option>
+                            <option value="Seguro Bet">Seguro Bet</option>
+                            <option value="4Play">4Play</option>
+                            <option value="PixBet">PixBet</option>
+                            <option value="Sporting Bet">Sporting Bet</option>
+                        </select>
+
+                    </div>
+
+                    <!-- Tipo de Aposta -->
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Tipo de Aposta</label>
+                        <select id="bet-type">
+                            <option value="Simples">Simples</option>
+                            <option value="Dupla">Dupla</option>
+                            <option value="Tripla">Tripla</option>
+                            <option value="Múltipla">Múltipla</option>
+                            <option value="Super Odd">Super Odd</option>
+                        </select>
+                    </div>
+
+                    <!-- Valor Apostado -->
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Valor Apostado (R$)</label>
+                        <div class="relative">
+                            <i data-lucide="dollar-sign" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
+                            <input type="number" id="bet-amount" step="0.01" min="0" 
+                                   class="w-full bg-slate-800/50 border border-slate-600 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                        </div>
+                    </div>
+
+                    <!-- Odd -->
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Odd</label>
+                        <div class="relative">
+                            <i data-lucide="trending-up" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
+                            <input type="number" id="bet-odd" step="0.01" min="1" 
+                                   class="w-full bg-slate-800/50 border border-slate-600 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                        </div>
+                    </div>
+
+                    <!-- Categoria -->
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Categoria</label>
+                        <select id="bet-categories" multiple>
+                            <option value="Resultado">Resultado</option>
+                            <option value="Finalizações">Finalizações</option>
+                            <option value="Escanteios">Escanteios</option>
+                            <option value="HT">HT</option>
+                            <option value="FT">FT</option>
+                            <option value="Gols">Gols</option>
+                            <option value="Chutes ao Gol">Chutes ao Gol</option>
+                            <option value="Ambas Equipes">Ambas Equipes</option>
+                            <option value="Faltas cometidas">Faltas cometidas</option>
+                            <option value="Faltas Sofridas">Faltas Sofridas</option>
+                            <option value="Cartões">Cartões</option>
+                            <option value="Defesas">Defesas</option>
+                            <option value="Desarmes">Desarmes</option>
+                            <option value="Handicap">Handicap</option>
+                            <option value="Tiro de Linha">Tiro de Linha</option>
+                            <option value="Impedimentos">Impedimentos</option>
+                            <option value="Desempenho">Desempenho</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Partida -->
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Partida</label>
+                    <div class="relative">
+                        <i data-lucide="trophy" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
+                        <input type="text" id="bet-match" placeholder="Ex: Manchester City vs Arsenal"
+                               class="w-full bg-slate-800/50 border border-slate-600 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                    </div>
+                </div>
+
+                <!-- Detalhes -->
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Detalhes</label>
+                    <div class="relative">
+                        <textarea id="bet-details" rows="4" 
+                                  placeholder="Ex: Manchester City - Over 2.5 Gols, Arsenal - Under 4.5 Cartões, Ambas marcam - Sim"
+                                  class="w-full bg-slate-800/50 border border-slate-600 rounded-xl pl-4 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"></textarea>
+                        <div class="absolute right-2 bottom-2 text-gray-400">
+                            <i data-lucide="edit-3" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bônus -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-3">Aposta com Bônus?</label>
+                    <div class="flex items-center space-x-4">
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="bonus" value="1" class="form-radio text-blue-600">
+                            <span class="ml-2 text-white">Sim</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="bonus" value="0" class="form-radio text-blue-600" checked>
+                            <span class="ml-2 text-white">Não</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" 
+                        class="w-full action-button text-white py-3 px-6 rounded-2xl transition-all flex items-center justify-center space-x-2 font-medium">
+                    <i data-lucide="save" class="w-5 h-5"></i>
+                    <span>Salvar Aposta</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Configuração do Supabase
+        const SUPABASE_CONFIG = {
+            url: 'https://cjlvcjfuntfbdrrkigwh.supabase.co',
+            anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqbHZjamZ1bnRmYmRycmtpZ3doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAyMzYyMDIsImV4cCI6MjA1NTgxMjIwMn0.FBSsXa2vVmrv78_XeLWZcpMKMUIeRe0mS9hBO7Cn45Y'
+        };
+
+        // Variáveis globais
+        let supabase;
+        let apostas = [];
+
+        // Funções utilitárias
+        function formatarMoeda(valor) {
+            return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        function formatarPercentual(valor) {
+            return `${valor.toFixed(1)}%`;
+        }
+
+        function showLoading() {
+            const loader = document.getElementById('loading-indicator');
+            if (loader) loader.classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            const loader = document.getElementById('loading-indicator');
+            if (loader) loader.classList.add('hidden');
+        }
+
+        // Sistema de navegação responsiva
+        function setupResponsiveNavigation() {
+            const menuToggle = document.getElementById('menu-toggle');
+            const closeSidebar = document.getElementById('close-sidebar');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+
+            function openSidebar() {
+                sidebar.classList.remove('sidebar-hidden');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeSidebarFunc() {
+                sidebar.classList.add('sidebar-hidden');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            if (menuToggle) {
+                menuToggle.addEventListener('click', openSidebar);
+            }
+
+            if (closeSidebar) {
+                closeSidebar.addEventListener('click', closeSidebarFunc);
+            }
+
+            if (overlay) {
+                overlay.addEventListener('click', closeSidebarFunc);
+            }
+
+            // Fechar sidebar ao redimensionar para desktop
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 768) {
+                    sidebar.classList.remove('sidebar-hidden');
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                } else {
+                    sidebar.classList.add('sidebar-hidden');
+                }
+            });
+
+            // Configurar estado inicial baseado no tamanho da tela
+            if (window.innerWidth < 768) {
+                sidebar.classList.add('sidebar-hidden');
+            }
+        }
+
+        // Funções do Modal de Nova Aposta
+        function openNewBetModal() {
+            document.getElementById('new-bet-modal').classList.remove('hidden');
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('bet-date').value = today;
+        }
+
+        function closeNewBetModal() {
+            document.getElementById('new-bet-modal').classList.add('hidden');
+            document.getElementById('newBetForm').reset();
+        }
+
+        // Inicialização dos selects personalizados
+        function initializeSelects() {
+            new TomSelect('#bet-house', {
+                create: false,
+                sortField: {field: 'text', direction: 'asc'}
+            });
+
+            new TomSelect('#bet-type', {
+                create: false,
+                sortField: {field: 'text', direction: 'asc'}
+            });
+
+            new TomSelect('#bet-categories', {
+                plugins: ['remove_button'],
+                persist: false,
+                createOnBlur: false,
+                create: false,
+                maxItems: null
+            });
+        }
+
+        // Carregar dados do Supabase
+        async function carregarDados() {
+            showLoading();
+            
+            try {
+                console.log('Carregando dados do Supabase...');
+                
+                if (!supabase) {
+                    throw new Error('Supabase não inicializado');
+                }
+
+                const { data, error } = await supabase
+                    .from('aposta')
+                    .select('*')
+                    .order('data', { ascending: false });
+                
+                if (error) {
+                    console.error('Erro do Supabase:', error);
+                    throw error;
+                }
+
+                console.log('Dados carregados:', data?.length || 0, 'apostas');
+                apostas = data || [];
+                
+                atualizarDashboard();
+                
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                
+                // Usar dados de exemplo se houver erro
+                criarDadosExemplo();
+                atualizarDashboard();
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function criarDadosExemplo() {
+            const hoje = new Date();
+            apostas = [];
+            
+            // Criar algumas apostas de exemplo
+            for (let i = 0; i < 10; i++) {
+                const data = new Date(hoje);
+                data.setDate(data.getDate() - i);
+                
+                const resultado = Math.random() > 0.4 ? 'Ganhou' : 'Perdeu';
+                if (Math.random() > 0.8) resultado = 'Pendente';
+                
+                const valorApostado = 50 + Math.random() * 200;
+                const odd = 1.5 + Math.random() * 3;
+                
+                apostas.push({
+                    id: i + 1,
+                    data: data.toISOString().split('T')[0],
+                    resultado: resultado,
+                    valor_apostado: valorApostado.toFixed(2),
+                    valor_final: resultado === 'Ganhou' ? (valorApostado * odd - valorApostado).toFixed(2) : resultado === 'Perdeu' ? (-valorApostado).toFixed(2) : '0',
+                    odd_inicial: odd.toFixed(2),
+                    odd_final: odd.toFixed(2),
+                    casa_de_apostas: ['Bet365', 'Betano', 'Sportingbet'][Math.floor(Math.random() * 3)],
+                    tipo_aposta: ['Simples', 'Múltipla'][Math.floor(Math.random() * 2)],
+                    categoria: ['Futebol', 'Tênis', 'Basquete'][Math.floor(Math.random() * 3)],
+                    partida: ['Manchester City vs Arsenal', 'Flamengo vs Palmeiras', 'Real Madrid vs Barcelona'][Math.floor(Math.random() * 3)],
+                    detalhes: 'Aposta de exemplo'
+                });
+            }
+            
+            console.log('Dados de exemplo criados:', apostas.length, 'apostas');
+        }
+
+        function atualizarDashboard() {
+            try {
+                // Calcular métricas
+                const totalApostado = apostas.reduce((sum, a) => sum + parseFloat(a.valor_apostado), 0);
+                const ganhas = apostas.filter(a => a.resultado === 'Ganhou').length;
+                const perdidas = apostas.filter(a => a.resultado === 'Perdeu').length;
+                const pendentes = apostas.filter(a => a.resultado === 'Pendente').length;
+                const total = apostas.length;
+                
+                const taxaAcerto = total > 0 ? (ganhas / (ganhas + perdidas)) * 100 : 0;
+                
+                const lucroTotal = apostas.reduce((sum, a) => {
+                    if (a.resultado === 'Ganhou' || a.resultado === 'Perdeu') {
+                        return sum + parseFloat(a.valor_final);
+                    }
+                    return sum;
+                }, 0);
+                
+                const roi = totalApostado > 0 ? (lucroTotal / totalApostado) * 100 : 0;
+                
+                const odds = apostas.map(a => parseFloat(a.odd_inicial)).filter(o => o > 0);
+                const oddMedia = odds.length > 0 ? odds.reduce((a, b) => a + b, 0) / odds.length : 0;
+
+                // Atualizar elementos do DOM
+                document.getElementById('total-apostado').textContent = formatarMoeda(totalApostado);
+                document.getElementById('taxa-acerto').textContent = formatarPercentual(taxaAcerto);
+                document.getElementById('roi-value').textContent = formatarPercentual(roi);
+                document.getElementById('apostas-ativas').textContent = pendentes;
+                document.getElementById('total-apostas').textContent = total;
+                document.getElementById('lucro-total').textContent = formatarMoeda(lucroTotal);
+                document.getElementById('odd-media').textContent = oddMedia.toFixed(2);
+
+                // Atualizar mudanças
+                document.getElementById('total-change').textContent = '+12%';
+                document.getElementById('taxa-change').textContent = '+5.2%';
+                document.getElementById('roi-change').textContent = roi >= 0 ? `+${formatarPercentual(Math.abs(roi))}` : `-${formatarPercentual(Math.abs(roi))}`;
+                document.getElementById('roi-change').className = roi >= 0 ? 'text-sm font-medium text-green-400' : 'text-sm font-medium text-red-400';
+                document.getElementById('ativas-change').textContent = pendentes > 0 ? `${pendentes}` : '-';
+
+                // Calcular sequência atual
+                const apostasOrdenadas = [...apostas].sort((a, b) => new Date(b.data) - new Date(a.data));
+                let sequencia = 0;
+                let tipo = null;
+                
+                for (const aposta of apostasOrdenadas) {
+                    if (aposta.resultado === 'Pendente') continue;
+                    
+                    if (tipo === null) {
+                        tipo = aposta.resultado;
+                        sequencia = 1;
+                    } else if (aposta.resultado === tipo) {
+                        sequencia++;
+                    } else {
+                        break;
+                    }
+                }
+                
+                document.getElementById('sequencia-atual').textContent = sequencia > 0 ? 
+                    (tipo === 'Ganhou' ? `+${sequencia}` : `-${sequencia}`) : '-';
+
+                // Atualizar apostas recentes
+                atualizarApostasRecentes();
+                
+                console.log('Dashboard atualizado');
+            } catch (error) {
+                console.error('Erro ao atualizar dashboard:', error);
+            }
+        }
+
+        function atualizarApostasRecentes() {
+            const container = document.getElementById('apostas-recentes');
+            const apostasRecentes = apostas.slice(0, 4);
+            
+            if (apostasRecentes.length === 0) {
+                container.innerHTML = '<p class="text-gray-400 text-center py-8">Nenhuma aposta encontrada</p>';
+                return;
+            }
+            
+            container.innerHTML = apostasRecentes.map(aposta => {
+                const statusClass = {
+                    'Ganhou': 'status-ganhou',
+                    'Perdeu': 'status-perdeu',
+                    'Pendente': 'status-pendente',
+                    'Cashout': 'status-cashout'
+                }[aposta.resultado] || 'status-pendente';
+                
+                return `
+                    <div class="bet-card p-4 rounded-2xl flex justify-between items-center">
+                        <div>
+                            <p class="font-medium text-white">${aposta.partida || 'Partida não informada'}</p>
+                            <p class="text-sm text-gray-400">Odd: ${aposta.odd_inicial} • ${formatarMoeda(parseFloat(aposta.valor_apostado))}</p>
+                        </div>
+                        <span class="status-indicator ${statusClass}">${aposta.resultado}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Salvar nova aposta
+        async function salvarAposta(formData) {
+            try {
+                const apostas = Array.from(document.getElementById('bet-categories').selectedOptions).map(opt => opt.value);
+                
+                const novaAposta = {
+                    data: formData.date,
+                    casa_de_apostas: formData.house,
+                    tipo_aposta: formData.type,
+                    categoria: apostas.join(', '),
+                    valor_apostado: formData.amount,
+                    odd_inicial: formData.odd,
+                    odd_final: formData.odd,
+                    partida: formData.match,
+                    detalhes: formData.details,
+                    bonus: formData.bonus,
+                    resultado: 'Pendente',
+                    valor_final: 0
+                };
+
+                const { data, error } = await supabase
+                    .from('aposta')
+                    .insert([novaAposta])
+                    .select();
+
+                if (error) {
+                    throw error;
+                }
+
+                console.log('Aposta salva:', data);
+                
+                // Recarregar dados
+                await carregarDados();
+                
+                return { success: true, data };
+                
+            } catch (error) {
+                console.error('Erro ao salvar aposta:', error);
+                return { success: false, error: error.message };
+            }
+        }
+
+        // Inicialização do formulário de nova aposta
+        document.getElementById('newBetForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = {
+                date: document.getElementById('bet-date').value,
+                house: document.getElementById('bet-house').value,
+                type: document.getElementById('bet-type').value,
+                amount: parseFloat(document.getElementById('bet-amount').value),
+                odd: parseFloat(document.getElementById('bet-odd').value),
+                match: document.getElementById('bet-match').value,
+                details: document.getElementById('bet-details').value,
+                bonus: document.querySelector('input[name="bonus"]:checked').value === '1'
+            };
+
+            // Validação básica
+            if (!formData.date || !formData.house || !formData.amount || !formData.odd) {
+                alert('Por favor, preencha todos os campos obrigatórios.');
+                return;
+            }
+
+            showLoading();
+            
+            try {
+                const resultado = await salvarAposta(formData);
+                
+                if (resultado.success) {
+                    alert('Aposta salva com sucesso!');
+                    closeNewBetModal();
+                } else {
+                    alert('Erro ao salvar aposta: ' + resultado.error);
+                }
+            } catch (error) {
+                alert('Erro ao salvar aposta: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                console.log('Inicializando BetTracker Dashboard...');
+                
+                // Inicializar Lucide Icons
+                if (window.lucide) {
+                    lucide.createIcons();
+                }
+
+                // Inicializar Supabase
+                try {
+                    if (window.supabase) {
+                        supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+                        console.log('Supabase inicializado');
+                    } else {
+                        console.warn('Supabase não disponível');
+                    }
+                } catch (error) {
+                    console.error('Erro ao inicializar Supabase:', error);
+                }
+
+                // Configurar navegação responsiva
+                setupResponsiveNavigation();
+                
+                // Inicializar selects
+                initializeSelects();
+                
+                // Carregar dados
+                await carregarDados();
+                
+                console.log('Dashboard inicializado com sucesso!');
+            } catch (error) {
+                console.error('Erro na inicialização:', error);
+            }
+        });
+    </script>
+</body>
+</html>
