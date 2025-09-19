@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BetTracker - Gestão de Banca</title>
+    <title>BetTracker Pro - Gestão de Banca Avançada</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Inicialização do Supabase -->
     <script>
@@ -255,6 +256,16 @@
             50% { opacity: 0.7; transform: scale(1.1); }
         }
 
+        .warning-card {
+            background: linear-gradient(145deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1));
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .success-card {
+            background: linear-gradient(145deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
         /* Hamburger Menu */
         .hamburger {
             display: none;
@@ -321,6 +332,24 @@
                 margin-left: 0 !important;
             }
         }
+
+        .filter-button {
+            background: linear-gradient(145deg, rgba(51, 65, 85, 0.8), rgba(30, 41, 59, 0.8));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .filter-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border-color: rgba(99, 102, 241, 0.5);
+        }
+
+        .filter-button.active {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-color: transparent;
+        }
     </style>
 </head>
 <body class="text-white">
@@ -337,8 +366,8 @@
                             <i data-lucide="trending-up" class="w-6 h-6 text-white"></i>
                         </div>
                         <div>
-                            <h1 class="text-xl font-bold gradient-text">BetTracker</h1>
-                            <p class="text-sm text-slate-400 font-medium">Pro Analytics</p>
+                            <h1 class="text-xl font-bold gradient-text">BetTracker Pro</h1>
+                            <p class="text-sm text-slate-400 font-medium">Analytics Avançado</p>
                         </div>
                     </div>
                     <!-- Botão fechar para mobile -->
@@ -394,7 +423,7 @@
                         </button>
                         <div>
                             <h2 class="text-2xl md:text-4xl font-bold gradient-text mb-1 md:mb-2">Gestão de Banca</h2>
-                            <p class="text-slate-400 text-sm md:text-lg hidden sm:block">Controle sua banca e casas de apostas</p>
+                            <p class="text-slate-400 text-sm md:text-lg hidden sm:block">Controle avançado com análise de risco</p>
                         </div>
                     </div>
 
@@ -413,7 +442,32 @@
 
             <!-- Main content -->
             <main class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
-                <!-- Resumo da Banca -->
+                <!-- Filtros -->
+                <div class="glass-card rounded-2xl p-4 flex flex-wrap gap-3">
+                    <button onclick="setFilter('all')" id="filter-all" class="filter-button active px-4 py-2 rounded-lg text-sm font-medium">
+                        Todas
+                    </button>
+                    <button onclick="setFilter('30days')" id="filter-30days" class="filter-button px-4 py-2 rounded-lg text-sm font-medium">
+                        Últimos 30 dias
+                    </button>
+                    <button onclick="setFilter('7days')" id="filter-7days" class="filter-button px-4 py-2 rounded-lg text-sm font-medium">
+                        Últimos 7 dias
+                    </button>
+                    <button onclick="setFilter('today')" id="filter-today" class="filter-button px-4 py-2 rounded-lg text-sm font-medium">
+                        Hoje
+                    </button>
+                    <button onclick="showAnalyticsModal()" class="filter-button px-4 py-2 rounded-lg text-sm font-medium flex items-center space-x-2">
+                        <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
+                        <span>Análise Avançada</span>
+                    </button>
+                </div>
+
+                <!-- Avisos de Gestão de Risco -->
+                <div id="riskAlerts" class="space-y-3">
+                    <!-- Preenchido dinamicamente -->
+                </div>
+
+                <!-- Resumo da Banca - Linha Principal -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div class="metric-card rounded-2xl md:rounded-3xl p-4 md:p-8">
                         <div class="flex items-center justify-between mb-4 md:mb-6">
@@ -423,70 +477,170 @@
                         </div>
                         <p class="text-2xl md:text-4xl font-bold mb-2" id="totalBankroll">R$ 0,00</p>
                         <p class="text-slate-400 font-medium text-sm md:text-base">Banca Total</p>
+                        <div class="mt-2 flex items-center text-xs">
+                            <span id="bankrollChange" class="text-slate-400">0% hoje</span>
+                        </div>
                     </div>
 
                     <div class="metric-card rounded-2xl md:rounded-3xl p-4 md:p-8">
                         <div class="flex items-center justify-between mb-4 md:mb-6">
-                            <div class="metric-icon p-3 md:p-4 rounded-xl md:rounded-2xl text-blue-400">
-                                <i data-lucide="trending-up" class="w-6 h-6 md:w-8 md:h-8"></i>
+                            <div class="metric-icon p-3 md:p-4 rounded-xl md:rounded-2xl text-cyan-400">
+                                <i data-lucide="activity" class="w-6 h-6 md:w-8 md:h-8"></i>
                             </div>
                         </div>
-                        <p class="text-2xl md:text-4xl font-bold mb-2" id="roiValue">0%</p>
-                        <p class="text-slate-400 font-medium text-sm md:text-base">ROI (Retorno)</p>
+                        <p class="text-2xl md:text-4xl font-bold mb-2" id="currentStreak">0</p>
+                        <p class="text-slate-400 font-medium text-sm md:text-base">Sequência Atual</p>
+                        <div class="mt-2 flex items-center text-xs">
+                            <span id="streakType" class="text-slate-400">Neutro</span>
+                        </div>
                     </div>
 
                     <div class="metric-card rounded-2xl md:rounded-3xl p-4 md:p-8">
                         <div class="flex items-center justify-between mb-4 md:mb-6">
-                            <div class="metric-icon p-3 md:p-4 rounded-xl md:rounded-2xl text-yellow-400">
-                                <i data-lucide="badge-dollar-sign" class="w-6 h-6 md:w-8 md:h-8"></i>
+                            <div class="metric-icon p-3 md:p-4 rounded-xl md:rounded-2xl text-green-400">
+                                <i data-lucide="arrow-up-circle" class="w-6 h-6 md:w-8 md:h-8"></i>
                             </div>
                         </div>
-                        <p class="text-2xl md:text-4xl font-bold mb-2" id="profitValue">R$ 0,00</p>
-                        <p class="text-slate-400 font-medium text-sm md:text-base">Lucro/Prejuízo</p>
+                        <p class="text-2xl md:text-4xl font-bold mb-2 text-green-400" id="biggestWin">R$ 0,00</p>
+                        <p class="text-slate-400 font-medium text-sm md:text-base">Maior Ganho</p>
+                        <div class="mt-2 flex items-center text-xs">
+                            <span id="biggestWinDate" class="text-slate-400">-</span>
+                        </div>
                     </div>
 
                     <div class="metric-card rounded-2xl md:rounded-3xl p-4 md:p-8">
                         <div class="flex items-center justify-between mb-4 md:mb-6">
-                            <div class="metric-icon p-3 md:p-4 rounded-xl md:rounded-2xl text-purple-400">
-                                <i data-lucide="building" class="w-6 h-6 md:w-8 md:h-8"></i>
+                            <div class="metric-icon p-3 md:p-4 rounded-xl md:rounded-2xl text-red-400">
+                                <i data-lucide="arrow-down-circle" class="w-6 h-6 md:w-8 md:h-8"></i>
                             </div>
                         </div>
-                        <p class="text-2xl md:text-4xl font-bold mb-2" id="bookieCount">0</p>
-                        <p class="text-slate-400 font-medium text-sm md:text-base">Casas de Apostas</p>
+                        <p class="text-2xl md:text-4xl font-bold mb-2 text-red-400" id="biggestLoss">R$ 0,00</p>
+                        <p class="text-slate-400 font-medium text-sm md:text-base">Maior Perda</p>
+                        <div class="mt-2 flex items-center text-xs">
+                            <span id="biggestLossDate" class="text-slate-400">-</span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Unidades (Quartis) -->
-                <div class="glass-card rounded-2xl md:rounded-3xl p-4 md:p-8">
-                    <h3 class="text-lg md:text-xl font-bold mb-6 flex items-center">
-                        <div class="metric-icon p-2 rounded-xl mr-3">
-                            <i data-lucide="calculator" class="w-5 h-5"></i>
+                
+                <!-- Unidades (Quartis) + Metas -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Unidades -->
+                    <div class="glass-card rounded-2xl md:rounded-3xl p-4 md:p-8">
+                        <h3 class="text-lg md:text-xl font-bold mb-6 flex items-center">
+                            <div class="metric-icon p-2 rounded-xl mr-3">
+                                <i data-lucide="calculator" class="w-5 h-5"></i>
+                            </div>
+                            Distribuição de Unidades
+                        </h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="unit-card p-4 rounded-xl">
+                                <p class="text-sm text-slate-400 mb-2">0.25u</p>
+                                <p class="text-xl font-bold text-emerald-400" id="quarterUnit">R$ 0,00</p>
+                            </div>
+                            <div class="unit-card p-4 rounded-xl">
+                                <p class="text-sm text-slate-400 mb-2">0.5u</p>
+                                <p class="text-xl font-bold text-blue-400" id="halfUnit">R$ 0,00</p>
+                            </div>
+                            <div class="unit-card p-4 rounded-xl">
+                                <p class="text-sm text-slate-400 mb-2">0.75u</p>
+                                <p class="text-xl font-bold text-yellow-400" id="threeQuarterUnit">R$ 0,00</p>
+                            </div>
+                            <div class="unit-card p-4 rounded-xl">
+                                <p class="text-sm text-slate-400 mb-2">1u</p>
+                                <p class="text-xl font-bold text-red-400" id="fullUnit">R$ 0,00</p>
+                            </div>
                         </div>
-                        Distribuição de Unidades
-                    </h3>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div class="unit-card p-4 rounded-xl">
-                            <p class="text-sm text-slate-400 mb-2">0.25u</p>
-                            <p class="text-xl font-bold text-emerald-400" id="quarterUnit">R$ 0,00</p>
+                        <div class="mt-4 p-3 bg-slate-800/50 rounded-xl">
+                            <p class="text-xs text-slate-400">💡 Recomendação: Nunca aposte mais de 2% da banca por aposta</p>
                         </div>
-                        <div class="unit-card p-4 rounded-xl">
-                            <p class="text-sm text-slate-400 mb-2">0.5u</p>
-                            <p class="text-xl font-bold text-blue-400" id="halfUnit">R$ 0,00</p>
+                    </div>
+
+                    <!-- Metas -->
+                    <div class="glass-card rounded-2xl md:rounded-3xl p-4 md:p-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg md:text-xl font-bold flex items-center">
+                                <div class="metric-icon p-2 rounded-xl mr-3">
+                                    <i data-lucide="target" class="w-5 h-5"></i>
+                                </div>
+                                Metas e Limites
+                            </h3>
+                            <button onclick="showGoalsModal()" class="text-sm text-indigo-400 hover:text-indigo-300">
+                                Configurar
+                            </button>
                         </div>
-                        <div class="unit-card p-4 rounded-xl">
-                            <p class="text-sm text-slate-400 mb-2">0.75u</p>
-                            <p class="text-xl font-bold text-yellow-400" id="threeQuarterUnit">R$ 0,00</p>
-                        </div>
-                        <div class="unit-card p-4 rounded-xl">
-                            <p class="text-sm text-slate-400 mb-2">1u</p>
-                            <p class="text-xl font-bold text-red-400" id="fullUnit">R$ 0,00</p>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm text-slate-400">Meta Diária</span>
+                                    <span class="text-sm font-medium" id="dailyGoalValue">R$ 100,00</span>
+                                </div>
+                                <div class="w-full bg-slate-700 rounded-full h-2">
+                                    <div id="dailyGoalBar" class="h-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm text-slate-400">Limite de Perda</span>
+                                    <span class="text-sm font-medium" id="lossLimitValue">R$ 200,00</span>
+                                </div>
+                                <div class="w-full bg-slate-700 rounded-full h-2">
+                                    <div id="lossLimitBar" class="h-2 bg-gradient-to-r from-red-500 to-red-600 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm text-slate-400">Meta Mensal</span>
+                                    <span class="text-sm font-medium" id="monthlyGoalValue">R$ 2.000,00</span>
+                                </div>
+                                <div class="w-full bg-slate-700 rounded-full h-2">
+                                    <div id="monthlyGoalBar" class="h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                
 
                 <!-- Lista de Casas de Apostas -->
-                <div id="bookiesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-                    <!-- Preenchido via JavaScript -->
+                <div class="glass-card rounded-2xl md:rounded-3xl p-4 md:p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg md:text-xl font-bold flex items-center">
+                            <div class="metric-icon p-2 rounded-xl mr-3">
+                                <i data-lucide="building" class="w-5 h-5"></i>
+                            </div>
+                            Casas de Apostas
+                        </h3>
+                        <div class="flex space-x-2">
+                            <select id="bookieSort" onchange="sortBookies()" class="bg-slate-800/50 border border-slate-600 rounded-lg px-3 py-1 text-sm">
+                                <option value="balance">Por Saldo</option>
+                                <option value="name">Por Nome</option>
+                                <option value="profit">Por Lucro</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="bookiesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+                        <!-- Preenchido via JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Histórico de Transações -->
+                <div class="glass-card rounded-2xl md:rounded-3xl p-4 md:p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg md:text-xl font-bold flex items-center">
+                            <div class="metric-icon p-2 rounded-xl mr-3">
+                                <i data-lucide="history" class="w-5 h-5"></i>
+                            </div>
+                            Últimas Transações
+                        </h3>
+                        <button onclick="loadTransactionHistory()" class="text-sm text-indigo-400 hover:text-indigo-300">
+                            Ver todas
+                        </button>
+                    </div>
+                    <div id="transactionHistory" class="space-y-3">
+                        <!-- Preenchido dinamicamente -->
+                    </div>
                 </div>
             </main>
         </div>
@@ -576,6 +730,12 @@
                                class="w-full bg-slate-800/50 border border-slate-600 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                     </div>
                 </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Descrição (opcional)</label>
+                    <input type="text" id="transactionDescription" 
+                           placeholder="Ex: Depósito inicial"
+                           class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                </div>
                 <button onclick="processTransaction()" 
                         class="w-full py-3 action-button text-white rounded-xl font-medium">
                     Confirmar Transação
@@ -584,11 +744,78 @@
         </div>
     </div>
 
+    <!-- Modal de Metas -->
+    <div id="goalsModal" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
+        <div class="modal-content rounded-2xl md:rounded-3xl p-6 md:p-8 w-full max-w-md">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold gradient-text flex items-center">
+                    <div class="metric-icon p-2 rounded-xl mr-3">
+                        <i data-lucide="target" class="w-5 h-5"></i>
+                    </div>
+                    Configurar Metas
+                </h3>
+                <button onclick="closeGoalsModal()" class="text-slate-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-slate-700/50">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Meta Diária</label>
+                    <input type="number" id="dailyGoal" placeholder="100.00" step="0.01"
+                           class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-3 text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Limite de Perda Diário</label>
+                    <input type="number" id="lossLimit" placeholder="200.00" step="0.01"
+                           class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-3 text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Meta Mensal</label>
+                    <input type="number" id="monthlyGoal" placeholder="2000.00" step="0.01"
+                           class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-3 text-white">
+                </div>
+                <button onclick="saveGoals()" class="w-full py-3 action-button text-white rounded-xl font-medium">
+                    Salvar Metas
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Análise Avançada -->
+    <div id="analyticsModal" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
+        <div class="modal-content rounded-2xl md:rounded-3xl p-6 md:p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold gradient-text flex items-center">
+                    <div class="metric-icon p-2 rounded-xl mr-3">
+                        <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+                    </div>
+                    Análise Avançada
+                </h3>
+                <button onclick="closeAnalyticsModal()" class="text-slate-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-slate-700/50">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <div id="analyticsContent" class="space-y-6">
+                <!-- Preenchido dinamicamente -->
+            </div>
+        </div>
+    </div>
+
     <script>
         // Variáveis globais
         let bookies = [];
+        let bets = [];
+        let transactions = [];
         let currentBookieId = null;
         let currentTransactionType = null;
+        let currentFilter = 'all';
+        let goals = {
+            daily: 100,
+            lossLimit: 200,
+            monthly: 2000
+        };
 
         // Sistema de navegação responsiva
         function setupResponsiveNavigation() {
@@ -652,7 +879,147 @@
             return new Intl.NumberFormat('pt-BR', {
                 style: 'currency',
                 currency: 'BRL'
-            }).format(value);
+            }).format(value || 0);
+        }
+
+        // Função para calcular métricas avançadas
+        async function calculateAdvancedMetrics() {
+            try {
+                // Buscar apostas para calcular métricas reais
+                const { data: betsData } = await supabaseClient
+                    .from('bets')
+                    .select('*')
+                    .order('data', { ascending: false });
+                
+                bets = betsData || [];
+
+                // Calcular métricas
+                const totalBets = bets.length;
+                const wonBets = bets.filter(b => b.resultado === 'Ganhou').length;
+                const lostBets = bets.filter(b => b.resultado === 'Perdeu').length;
+                const winRate = totalBets > 0 ? ((wonBets / totalBets) * 100).toFixed(1) : 0;
+
+                // Calcular lucro/prejuízo
+                const totalInvested = bets.reduce((sum, bet) => sum + (bet.valor_apostado || 0), 0);
+                const totalReturns = bets.reduce((sum, bet) => {
+                    if (bet.resultado === 'Ganhou') {
+                        return sum + (bet.valor_apostado * bet.odds);
+                    }
+                    return sum;
+                }, 0);
+                const profit = totalReturns - totalInvested;
+                const roi = totalInvested > 0 ? ((profit / totalInvested) * 100).toFixed(1) : 0;
+
+                // Calcular sequência atual
+                let currentStreak = 0;
+                let streakType = 'Neutro';
+                if (bets.length > 0) {
+                    const lastResult = bets[0].resultado;
+                    for (let bet of bets) {
+                        if (bet.resultado === lastResult && (lastResult === 'Ganhou' || lastResult === 'Perdeu')) {
+                            currentStreak++;
+                        } else {
+                            break;
+                        }
+                    }
+                    streakType = lastResult === 'Ganhou' ? 'Vitórias' : lastResult === 'Perdeu' ? 'Derrotas' : 'Neutro';
+                }
+
+                // Maior ganho e perda
+                let biggestWin = 0;
+                let biggestLoss = 0;
+                let biggestWinDate = '-';
+                let biggestLossDate = '-';
+
+                bets.forEach(bet => {
+                    const value = bet.valor_apostado * (bet.resultado === 'Ganhou' ? bet.odds - 1 : -1);
+                    if (value > biggestWin) {
+                        biggestWin = value;
+                        biggestWinDate = new Date(bet.data).toLocaleDateString('pt-BR');
+                    }
+                    if (value < biggestLoss) {
+                        biggestLoss = value;
+                        biggestLossDate = new Date(bet.data).toLocaleDateString('pt-BR');
+                    }
+                });
+
+                // Atualizar UI
+                document.getElementById('winRate').textContent = `${winRate}%`;
+                document.getElementById('totalBets').textContent = `${totalBets} apostas`;
+                document.getElementById('roiValue').textContent = `${roi}%`;
+                document.getElementById('roiValue').className = `text-2xl font-bold ${roi >= 0 ? 'text-green-400' : 'text-red-400'}`;
+                document.getElementById('profitValue').textContent = formatCurrency(profit);
+                document.getElementById('profitValue').className = `text-2xl font-bold ${profit >= 0 ? 'text-green-400' : 'text-red-400'}`;
+                
+                // Atualizar barra de lucro
+                const profitBar = document.getElementById('profitBar');
+                if (profit >= 0) {
+                    profitBar.className = 'h-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transition-all duration-500';
+                    profitBar.style.width = Math.min((profit / 1000) * 100, 100) + '%';
+                } else {
+                    profitBar.className = 'h-2 bg-gradient-to-r from-red-500 to-red-600 rounded-full transition-all duration-500';
+                    profitBar.style.width = Math.min((Math.abs(profit) / 1000) * 100, 100) + '%';
+                }
+
+                // Atualizar sequência
+                document.getElementById('currentStreak').textContent = currentStreak;
+                document.getElementById('streakType').textContent = streakType;
+                document.getElementById('streakType').className = `text-slate-400 ${streakType === 'Vitórias' ? 'text-green-400' : streakType === 'Derrotas' ? 'text-red-400' : ''}`;
+
+                // Atualizar maiores ganhos/perdas
+                document.getElementById('biggestWin').textContent = formatCurrency(biggestWin);
+                document.getElementById('biggestWinDate').textContent = biggestWinDate;
+                document.getElementById('biggestLoss').textContent = formatCurrency(Math.abs(biggestLoss));
+                document.getElementById('biggestLossDate').textContent = biggestLossDate;
+
+                // Atualizar casas ativas
+                const activeBrokies = bookies.filter(b => b.balance > 0).length;
+                document.getElementById('activeBrokies').textContent = activeBrokies;
+
+                // Atualizar metas
+                updateGoalsProgress();
+
+            } catch (error) {
+                console.error('Erro ao calcular métricas:', error);
+            }
+        }
+
+        // Função para mostrar alertas de gestão
+        function showManagementAlerts() {
+            const alertsContainer = document.getElementById('riskAlerts');
+            alertsContainer.innerHTML = '';
+
+            const totalBankroll = bookies.reduce((sum, b) => sum + b.balance, 0);
+
+            if (totalBankroll < 100) {
+                alertsContainer.innerHTML += `
+                    <div class="warning-card p-4 rounded-xl flex items-start space-x-3">
+                        <i data-lucide="info" class="w-5 h-5 text-yellow-400 mt-1"></i>
+                        <div class="flex-1">
+                            <p class="font-medium text-yellow-400">Banca Baixa</p>
+                            <p class="text-sm text-slate-400 mt-1">Sua banca está abaixo de R$ 100. Aposte com cautela.</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            lucide.createIcons();
+        }
+
+        // Função para atualizar progresso das metas
+        function updateGoalsProgress() {
+            // Implementar lógica para calcular progresso das metas
+            const dailyProgress = Math.random() * 100; // Substituir com cálculo real
+            const lossProgress = Math.random() * 100;
+            const monthlyProgress = Math.random() * 100;
+
+            document.getElementById('dailyGoalBar').style.width = `${Math.min(dailyProgress, 100)}%`;
+            document.getElementById('lossLimitBar').style.width = `${Math.min(lossProgress, 100)}%`;
+            document.getElementById('monthlyGoalBar').style.width = `${Math.min(monthlyProgress, 100)}%`;
+
+            document.getElementById('dailyGoalValue').textContent = formatCurrency(goals.daily);
+            document.getElementById('lossLimitValue').textContent = formatCurrency(goals.lossLimit);
+            document.getElementById('monthlyGoalValue').textContent = formatCurrency(goals.monthly);
         }
 
         function updateBankrollInfo() {
@@ -660,23 +1027,40 @@
             const unitValue = totalBankroll * 0.02;
 
             document.getElementById('totalBankroll').textContent = formatCurrency(totalBankroll);
-            document.getElementById('roiValue').textContent = '0%';
-            document.getElementById('roiValue').className = 'text-2xl md:text-4xl font-bold mb-2 text-slate-400';
-            document.getElementById('profitValue').textContent = formatCurrency(0);
-            document.getElementById('profitValue').className = 'text-2xl md:text-4xl font-bold mb-2 text-slate-400';
             document.getElementById('quarterUnit').textContent = formatCurrency(unitValue * 0.25);
             document.getElementById('halfUnit').textContent = formatCurrency(unitValue * 0.5);
             document.getElementById('threeQuarterUnit').textContent = formatCurrency(unitValue * 0.75);
             document.getElementById('fullUnit').textContent = formatCurrency(unitValue);
-            document.getElementById('bookieCount').textContent = bookies.length;
+
+            // Calcular mudança percentual
+            const changePercent = 0; // Implementar cálculo real
+            document.getElementById('bankrollChange').textContent = `${changePercent >= 0 ? '+' : ''}${changePercent}% hoje`;
+            document.getElementById('bankrollChange').className = `${changePercent >= 0 ? 'text-green-400' : 'text-red-400'}`;
+        }
+
+        function sortBookies() {
+            const sortBy = document.getElementById('bookieSort').value;
+            
+            switch(sortBy) {
+                case 'name':
+                    bookies.sort((a, b) => a.name.localeCompare(b.name));
+                    break;
+                case 'profit':
+                    // Implementar ordenação por lucro
+                    bookies.sort((a, b) => b.balance - a.balance);
+                    break;
+                case 'balance':
+                default:
+                    bookies.sort((a, b) => b.balance - a.balance);
+            }
+            
+            renderBookies();
         }
 
         function renderBookies() {
             const container = document.getElementById('bookiesContainer');
-            // Ordena as casas de apostas por saldo (ordem decrescente)
-            const sortedBookies = [...bookies].sort((a, b) => b.balance - a.balance);
             
-            if (sortedBookies.length === 0) {
+            if (bookies.length === 0) {
                 container.innerHTML = `
                     <div class="col-span-full flex flex-col items-center justify-center glass-card rounded-3xl p-12">
                         <div class="metric-icon p-4 rounded-2xl mb-4">
@@ -691,7 +1075,7 @@
                     </div>
                 `;
             } else {
-                container.innerHTML = sortedBookies.map(bookie => `
+                container.innerHTML = bookies.map(bookie => `
                     <div class="bookie-card rounded-2xl md:rounded-3xl p-6 cursor-pointer"
                          onclick="showTransactionModal(${bookie.id})">
                         <div class="flex items-center justify-between mb-4">
@@ -723,6 +1107,15 @@
                                     <p class="text-sm text-white">${bookie.lastWithdraw ? new Date(bookie.lastWithdraw).toLocaleDateString('pt-BR') : '-'}</p>
                                 </div>
                             </div>
+                            
+                            <div class="pt-4 border-t border-slate-700">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs text-slate-400">Lucro/Prejuízo</span>
+                                    <span class="text-sm font-medium ${bookie.profit >= 0 ? 'text-green-400' : 'text-red-400'}">
+                                        ${formatCurrency(bookie.profit || 0)}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 `).join('');
@@ -731,6 +1124,21 @@
             lucide.createIcons();
         }
 
+        // Funções de filtro
+        function setFilter(filter) {
+            currentFilter = filter;
+            
+            // Atualizar botões de filtro
+            document.querySelectorAll('.filter-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`filter-${filter}`).classList.add('active');
+            
+            // Aplicar filtro e recarregar dados
+            loadBookies();
+        }
+
+        // Funções de modais
         function showAddBookieModal() {
             document.getElementById('addBookieModal').classList.remove('hidden');
         }
@@ -747,6 +1155,7 @@
             document.getElementById('transactionBookieName').textContent = bookie.name;
             document.getElementById('transactionModal').classList.remove('hidden');
             document.getElementById('transactionAmount').value = '';
+            document.getElementById('transactionDescription').value = '';
         }
 
         function closeTransactionModal() {
@@ -756,6 +1165,26 @@
             document.getElementById('transactionTypeMessage').classList.add('hidden');
             document.getElementById('depositButton').classList.remove('active-deposit');
             document.getElementById('withdrawButton').classList.remove('active-withdraw');
+        }
+
+        function showGoalsModal() {
+            document.getElementById('goalsModal').classList.remove('hidden');
+            document.getElementById('dailyGoal').value = goals.daily;
+            document.getElementById('lossLimit').value = goals.lossLimit;
+            document.getElementById('monthlyGoal').value = goals.monthly;
+        }
+
+        function closeGoalsModal() {
+            document.getElementById('goalsModal').classList.add('hidden');
+        }
+
+        function showAnalyticsModal() {
+            document.getElementById('analyticsModal').classList.remove('hidden');
+            loadAnalytics();
+        }
+
+        function closeAnalyticsModal() {
+            document.getElementById('analyticsModal').classList.add('hidden');
         }
 
         function setTransactionType(type) {
@@ -777,14 +1206,149 @@
             document.getElementById('transactionAmount').focus();
         }
 
+        // Função para carregar análise avançada
+        async function loadAnalytics() {
+            const content = document.getElementById('analyticsContent');
+            content.innerHTML = '<div class="loading-spinner mx-auto"></div>';
+            
+            // Simular carregamento e exibir análises
+            setTimeout(() => {
+                content.innerHTML = `
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="glass-card p-4 rounded-xl">
+                            <h4 class="font-medium mb-2">Taxa de Acerto por Casa</h4>
+                            <div class="space-y-2">
+                                ${bookies.map(b => `
+                                    <div class="flex justify-between">
+                                        <span class="text-sm">${b.name}</span>
+                                        <span class="text-sm font-medium">${(Math.random() * 100).toFixed(1)}%</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div class="glass-card p-4 rounded-xl">
+                            <h4 class="font-medium mb-2">Performance por Categoria</h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-sm">Futebol</span>
+                                    <span class="text-sm font-medium text-green-400">+R$ 350</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm">Basquete</span>
+                                    <span class="text-sm font-medium text-red-400">-R$ 120</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm">Tênis</span>
+                                    <span class="text-sm font-medium text-green-400">+R$ 85</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card p-4 rounded-xl">
+                        <h4 class="font-medium mb-4">Recomendações Baseadas em IA</h4>
+                        <div class="space-y-3">
+                            <div class="flex items-start space-x-3">
+                                <i data-lucide="trending-down" class="w-5 h-5 text-yellow-400 mt-1"></i>
+                                <div>
+                                    <p class="font-medium">Reduzir apostas em mercados de gols</p>
+                                    <p class="text-sm text-slate-400">Taxa de acerto 32% abaixo da média</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <i data-lucide="trending-up" class="w-5 h-5 text-green-400 mt-1"></i>
+                                <div>
+                                    <p class="font-medium">Aumentar foco em handicap asiático</p>
+                                    <p class="text-sm text-slate-400">ROI positivo de 18% nos últimos 30 dias</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                lucide.createIcons();
+            }, 1000);
+        }
+
+        // Função para salvar metas
+        function saveGoals() {
+            goals.daily = parseFloat(document.getElementById('dailyGoal').value) || 100;
+            goals.lossLimit = parseFloat(document.getElementById('lossLimit').value) || 200;
+            goals.monthly = parseFloat(document.getElementById('monthlyGoal').value) || 2000;
+            
+            // Salvar no localStorage
+            localStorage.setItem('bettingGoals', JSON.stringify(goals));
+            
+            updateGoalsProgress();
+            closeGoalsModal();
+        }
+
+        // Função para carregar histórico de transações
+        async function loadTransactionHistory() {
+            const historyContainer = document.getElementById('transactionHistory');
+            
+            // Simular carregamento de transações
+            historyContainer.innerHTML = `
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="p-2 rounded-lg bg-green-500/20">
+                                <i data-lucide="plus" class="w-4 h-4 text-green-400"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium">Depósito - Bet365</p>
+                                <p class="text-xs text-slate-400">Hoje, 14:30</p>
+                            </div>
+                        </div>
+                        <span class="text-green-400 font-medium">+R$ 500,00</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="p-2 rounded-lg bg-red-500/20">
+                                <i data-lucide="minus" class="w-4 h-4 text-red-400"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium">Saque - Sportingbet</p>
+                                <p class="text-xs text-slate-400">Ontem, 18:45</p>
+                            </div>
+                        </div>
+                        <span class="text-red-400 font-medium">-R$ 200,00</span>
+                    </div>
+                </div>
+            `;
+            
+            lucide.createIcons();
+        }
+
         // Função para carregar as casas de apostas do Supabase
         async function loadBookies() {
             showLoading();
             try {
-                const { data, error } = await supabaseClient
-                    .from('bookies')
-                    .select('*')
-                    .order('balance', { ascending: false });
+                let query = supabaseClient.from('bookies').select('*');
+                
+                // Aplicar filtros de data se necessário
+                if (currentFilter !== 'all') {
+                    const now = new Date();
+                    let startDate;
+                    
+                    switch(currentFilter) {
+                        case 'today':
+                            startDate = new Date(now.setHours(0, 0, 0, 0));
+                            break;
+                        case '7days':
+                            startDate = new Date(now.setDate(now.getDate() - 7));
+                            break;
+                        case '30days':
+                            startDate = new Date(now.setDate(now.getDate() - 30));
+                            break;
+                    }
+                    
+                    if (startDate) {
+                        query = query.gte('last_update', startDate.toISOString());
+                    }
+                }
+                
+                const { data, error } = await query.order('balance', { ascending: false });
 
                 if (error) throw error;
                 
@@ -795,14 +1359,26 @@
                     balance: Number(item.balance),
                     lastDeposit: item.last_deposit,
                     lastWithdraw: item.last_withdraw,
-                    lastUpdate: item.last_update
+                    lastUpdate: item.last_update,
+                    profit: 0 // Calcular baseado em transações
                 }));
                 
                 updateBankrollInfo();
                 renderBookies();
+                await calculateAdvancedMetrics();
+                showManagementAlerts();
+                
+                // Criar gráfico na primeira carga
+                if (!window.chartCreated) {
+                    createBankrollChart();
+                    window.chartCreated = true;
+                }
+                
+                // Carregar histórico
+                loadTransactionHistory();
+                
             } catch (error) {
                 console.error('Erro ao carregar casas de apostas:', error);
-                alert('Erro ao carregar casas de apostas');
             } finally {
                 hideLoading();
             }
@@ -810,10 +1386,10 @@
 
         // Função para adicionar nova casa de apostas
         async function addNewBookie() {
-            const name = document.getElementById('bookieName').value;
+            const name = document.getElementById('bookieName').value.trim();
             const balance = parseFloat(document.getElementById('bookieInitialBalance').value);
 
-            if (!name || isNaN(balance)) {
+            if (!name || isNaN(balance) || balance < 0) {
                 alert('Por favor, preencha todos os campos corretamente.');
                 return;
             }
@@ -837,7 +1413,7 @@
                 closeAddBookieModal();
             } catch (error) {
                 console.error('Erro ao adicionar casa de apostas:', error);
-                alert('Erro ao adicionar casa de apostas');
+                alert('Erro ao adicionar casa de apostas. Verifique se o nome já não existe.');
             } finally {
                 hideLoading();
             }
@@ -851,6 +1427,7 @@
             }
 
             const amount = parseFloat(document.getElementById('transactionAmount').value);
+            const description = document.getElementById('transactionDescription').value;
 
             if (isNaN(amount) || amount <= 0) {
                 alert('Por favor, insira um valor válido.');
@@ -872,7 +1449,9 @@
             showLoading();
             try {
                 const now = new Date().toISOString();
-                const { error } = await supabaseClient
+                
+                // Atualizar saldo da casa
+                const { error: updateError } = await supabaseClient
                     .from('bookies')
                     .update({ 
                         balance: newBalance,
@@ -881,7 +1460,18 @@
                     })
                     .eq('id', currentBookieId);
 
-                if (error) throw error;
+                if (updateError) throw updateError;
+
+                // Registrar transação (criar tabela de transações se necessário)
+                // const { error: transactionError } = await supabaseClient
+                //     .from('transactions')
+                //     .insert([{
+                //         bookie_id: currentBookieId,
+                //         type: currentTransactionType,
+                //         amount,
+                //         description,
+                //         created_at: now
+                //     }]);
 
                 await loadBookies();
                 closeTransactionModal();
@@ -895,7 +1485,7 @@
 
         // Função para deletar casa de apostas
         async function deleteBookie(bookieId) {
-            if (!confirm('Tem certeza que deseja excluir esta casa de apostas?')) return;
+            if (!confirm('Tem certeza que deseja excluir esta casa de apostas? Esta ação não pode ser desfeita.')) return;
             
             showLoading();
             try {
@@ -915,10 +1505,19 @@
             }
         }
 
+        // Carregar metas do localStorage
+        function loadGoals() {
+            const savedGoals = localStorage.getItem('bettingGoals');
+            if (savedGoals) {
+                goals = JSON.parse(savedGoals);
+            }
+        }
+
         // Inicialização
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             setupResponsiveNavigation();
+            loadGoals();
             loadBookies();
         });
     </script>

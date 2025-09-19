@@ -36,7 +36,7 @@
             border: 1px solid rgba(99, 102, 241, 0.3);
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
-            overflow: hidden;
+            overflow: visible;
         }
 
         .metric-card::before {
@@ -48,6 +48,8 @@
             height: 100%;
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
             transition: left 0.6s;
+            z-index: 1;
+            pointer-events: none;
         }
 
         .metric-card:hover::before {
@@ -115,6 +117,8 @@
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
         }
 
         .chart-container:hover {
@@ -192,6 +196,8 @@
             background: linear-gradient(145deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.8));
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 10;
         }
 
         .insight-card {
@@ -243,23 +249,61 @@
             background: rgba(99, 102, 241, 0.3) !important; 
         }
 
-        .ts-wrapper { 
-            width: 100% !important; 
-            position: relative; 
-            z-index: 10; 
-        }
-        .ts-dropdown { 
-            z-index: 1000 !important; 
-            position: absolute !important;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
-        }
-        .filter-section {
+        /* SISTEMA DE TOOLTIPS CORRIGIDO */
+        .tooltip {
             position: relative;
-            z-index: 100;
+            display: inline-block;
         }
-        .tab-buttons {
-            position: relative;
-            z-index: 50;
+
+        .tooltip-portal {
+            position: fixed;
+            z-index: 999999;
+            pointer-events: none;
+        }
+
+        .tooltip-content {
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
+            color: #ffffff;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            width: 280px;
+            backdrop-filter: blur(10px);
+            font-size: 0.875rem;
+            line-height: 1.4;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+
+        .tooltip-portal.show .tooltip-content {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .info-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            border-radius: 50%;
+            cursor: help;
+            transition: all 0.3s ease;
+            margin-left: 8px;
+        }
+
+        .info-icon:hover {
+            background: rgba(99, 102, 241, 0.3);
+            transform: scale(1.1);
+        }
+
+        .info-icon i {
+            width: 12px;
+            height: 12px;
         }
 
         /* Estilos para tabelas */
@@ -337,17 +381,17 @@
                 <span class="font-medium">Apostas</span>
             </a>
             <a href="resultados.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
-                    <i data-lucide="check-circle" class="w-5 h-5"></i>
-                    <span class="font-medium">Resultados</span>
-                </a>
-                <a href="analises.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
-                    <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
-                    <span class="font-medium">Análises</span>
-                </a>
-                <a href="ia_insights.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
-                    <i data-lucide="message-circle" class="w-5 h-5"></i>
-                    <span class="font-medium">IA Insights</span>
-                </a>
+                <i data-lucide="check-circle" class="w-5 h-5"></i>
+                <span class="font-medium">Resultados</span>
+            </a>
+            <a href="analises.html" class="nav-item active flex items-center space-x-3 px-6 py-4 rounded-2xl text-white transition-all">
+                <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                <span class="font-medium">Análises</span>
+            </a>
+            <a href="ia_insights.html" class="nav-item flex items-center space-x-3 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+                <i data-lucide="message-circle" class="w-5 h-5"></i>
+                <span class="font-medium">IA Insights</span>
+            </a>
             <a href="banca.html" class="nav-item flex items-center space-x-4 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
                 <i data-lucide="wallet" class="w-5 h-5"></i>
                 <span class="font-medium">Gestão de Banca</span>
@@ -413,36 +457,36 @@
             </div>
 
             <!-- Filtros Inteligentes -->
-            <div class="filter-section rounded-3xl p-8">
+            <div class="filter-section rounded-3xl p-6 mb-6">
                 <h3 class="text-xl font-bold mb-6 flex items-center">
                     <div class="metric-icon p-2 rounded-xl mr-3">
                         <i data-lucide="filter" class="w-5 h-5"></i>
                     </div>
                     Filtros Inteligentes
                 </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-6">
-                    <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">Data Inicial</label>
-                        <input type="date" id="filter-date-start" class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <div class="col-span-1">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Data Inicial</label>
+                        <input type="date" id="filter-date-start" class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                     </div>
-                    <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">Data Final</label>
-                        <input type="date" id="filter-date-end" class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                    <div class="col-span-1">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Data Final</label>
+                        <input type="date" id="filter-date-end" class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                     </div>
-                    <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">Casa de Apostas</label>
+                    <div class="col-span-1">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Casa de Apostas</label>
                         <select id="filter-house" class="w-full" multiple></select>
                     </div>
-                    <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">Tipo de Aposta</label>
+                    <div class="col-span-1">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Tipo de Aposta</label>
                         <select id="filter-type" class="w-full" multiple></select>
                     </div>
-                    <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">Categoria/Torneio</label>
+                    <div class="col-span-1">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Categoria/Torneio</label>
                         <select id="filter-tournament" class="w-full" multiple></select>
                     </div>
-                    <div class="flex flex-col justify-end">
-                        <button id="btn-clear-filters" class="px-6 py-3 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl text-slate-300 hover:text-white transition-all duration-300">
+                    <div class="col-span-1 flex items-end">
+                        <button id="btn-clear-filters" class="w-full px-4 py-2.5 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl text-slate-300 hover:text-white transition-all duration-300">
                             Limpar Filtros
                         </button>
                     </div>
@@ -459,7 +503,14 @@
                                 <i data-lucide="dollar-sign" class="w-8 h-8"></i>
                             </div>
                             <div class="text-right">
-                                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Investido</p>
+                                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider flex items-center justify-end">
+                                    Total Investido
+                                    <div class="tooltip" data-tooltip="Total Apostado|Soma de todos os valores investidos em apostas no período selecionado">
+                                        <div class="info-icon">
+                                            <i data-lucide="info" class="w-3 h-3"></i>
+                                        </div>
+                                    </div>
+                                </p>
                                 <div class="status-indicator status-excellent mt-1" id="metric-total-variation">-</div>
                             </div>
                         </div>
@@ -473,7 +524,14 @@
                                 <i data-lucide="trending-up" class="w-8 h-8"></i>
                             </div>
                             <div class="text-right">
-                                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Meta: 5%+</p>
+                                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider flex items-center justify-end">
+                                    Meta: 5%+
+                                    <div class="tooltip" data-tooltip="ROI - Return on Investment|Percentual de retorno sobre o investimento. Valores positivos indicam lucro">
+                                        <div class="info-icon">
+                                            <i data-lucide="info" class="w-3 h-3"></i>
+                                        </div>
+                                    </div>
+                                </p>
                                 <div class="status-indicator status-good mt-1" id="metric-roi-status">-</div>
                             </div>
                         </div>
@@ -487,7 +545,14 @@
                                 <i data-lucide="badge-dollar-sign" class="w-8 h-8"></i>
                             </div>
                             <div class="text-right">
-                                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Maior Ganho</p>
+                                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider flex items-center justify-end">
+                                    Maior Ganho
+                                    <div class="tooltip" data-tooltip="Lucro/Prejuízo|Resultado financeiro líquido. Soma dos ganhos menos perdas">
+                                        <div class="info-icon">
+                                            <i data-lucide="info" class="w-3 h-3"></i>
+                                        </div>
+                                    </div>
+                                </p>
                                 <p class="text-sm font-bold text-emerald-400 mt-1" id="metric-maior-ganho">R$ 0,00</p>
                             </div>
                         </div>
@@ -501,7 +566,14 @@
                                 <i data-lucide="activity" class="w-8 h-8"></i>
                             </div>
                             <div class="text-right">
-                                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Meta: 60%+</p>
+                                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider flex items-center justify-end">
+                                    Meta: 60%+
+                                    <div class="tooltip" data-tooltip="Taxa de Acerto|Percentual de apostas vencedoras em relação ao total">
+                                        <div class="info-icon">
+                                            <i data-lucide="info" class="w-3 h-3"></i>
+                                        </div>
+                                    </div>
+                                </p>
                                 <div class="status-indicator status-excellent mt-1" id="metric-taxa-status">-</div>
                             </div>
                         </div>
@@ -518,6 +590,11 @@
                                 <i data-lucide="line-chart" class="w-5 h-5"></i>
                             </div>
                             Evolução do Retorno Acumulado
+                            <div class="tooltip" data-tooltip="Retorno Acumulado|Mostra a evolução do seu capital ao longo do tempo, considerando ganhos e perdas">
+                                <div class="info-icon">
+                                    <i data-lucide="info" class="w-3 h-3"></i>
+                                </div>
+                            </div>
                         </h3>
                         <div class="h-80 flex items-center justify-center">
                             <canvas id="chart-retorno-acumulado" width="400" height="300"></canvas>
@@ -529,6 +606,11 @@
                                 <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
                             </div>
                             Evolução do Lucro Diário
+                            <div class="tooltip" data-tooltip="Lucro Diário|Resultado financeiro de cada dia. Barras verdes = lucro, vermelhas = prejuízo">
+                                <div class="info-icon">
+                                    <i data-lucide="info" class="w-3 h-3"></i>
+                                </div>
+                            </div>
                         </h3>
                         <div class="h-80 flex items-center justify-center">
                             <canvas id="chart-lucro-diario" width="400" height="300"></canvas>
@@ -616,6 +698,11 @@
                                 <i data-lucide="bar-chart" class="w-5 h-5"></i>
                             </div>
                             Distribuição de Valores Apostados
+                            <div class="tooltip" data-tooltip="Distribuição de Valores|Mostra como seus investimentos estão distribuídos por faixas de valor">
+                                <div class="info-icon">
+                                    <i data-lucide="info" class="w-3 h-3"></i>
+                                </div>
+                            </div>
                         </h3>
                         <div class="h-80 flex items-center justify-center">
                             <canvas id="chart-distribuicao-valores" width="400" height="300"></canvas>
@@ -627,6 +714,11 @@
                                 <i data-lucide="pie-chart" class="w-5 h-5"></i>
                             </div>
                             Lucratividade por Tipo
+                            <div class="tooltip" data-tooltip="Lucratividade por Tipo|Análise de qual tipo de aposta está gerando mais lucro">
+                                <div class="info-icon">
+                                    <i data-lucide="info" class="w-3 h-3"></i>
+                                </div>
+                            </div>
                         </h3>
                         <div class="h-80 flex items-center justify-center">
                             <canvas id="chart-lucratividade-tipo" width="300" height="300"></canvas>
@@ -667,6 +759,11 @@
                             <div class="metric-icon p-4 rounded-2xl text-blue-400">
                                 <i data-lucide="percent" class="w-8 h-8"></i>
                             </div>
+                            <div class="tooltip" data-tooltip="Yield|Rentabilidade média por aposta, calculada como lucro total dividido pelo valor total apostado">
+                                <div class="info-icon">
+                                    <i data-lucide="info" class="w-3 h-3"></i>
+                                </div>
+                            </div>
                         </div>
                         <p class="text-4xl font-bold mb-2" id="perf-yield">0%</p>
                         <p class="text-slate-400 font-medium">Yield</p>
@@ -676,6 +773,11 @@
                         <div class="flex items-center justify-between mb-6">
                             <div class="metric-icon p-4 rounded-2xl text-green-400">
                                 <i data-lucide="trending-up" class="w-8 h-8"></i>
+                            </div>
+                            <div class="tooltip" data-tooltip="Consistência ROI|Mede a regularidade dos retornos positivos ao longo do tempo">
+                                <div class="info-icon">
+                                    <i data-lucide="info" class="w-3 h-3"></i>
+                                </div>
                             </div>
                         </div>
                         <p class="text-4xl font-bold mb-2" id="perf-roi-consistencia">0%</p>
@@ -687,6 +789,11 @@
                             <div class="metric-icon p-4 rounded-2xl text-purple-400">
                                 <i data-lucide="target" class="w-8 h-8"></i>
                             </div>
+                            <div class="tooltip" data-tooltip="Strike Rate|Taxa de sucesso em apostas de odds altas (acima de 2.5)">
+                                <div class="info-icon">
+                                    <i data-lucide="info" class="w-3 h-3"></i>
+                                </div>
+                            </div>
                         </div>
                         <p class="text-4xl font-bold mb-2" id="perf-strike-rate">0%</p>
                         <p class="text-slate-400 font-medium">Strike Rate</p>
@@ -697,6 +804,11 @@
                             <div class="metric-icon p-4 rounded-2xl text-yellow-400">
                                 <i data-lucide="calendar" class="w-8 h-8"></i>
                             </div>
+                            <div class="tooltip" data-tooltip="Apostas/Mês|Volume médio mensal de atividade de apostas">
+                                <div class="info-icon">
+                                    <i data-lucide="info" class="w-3 h-3"></i>
+                                </div>
+                            </div>
                         </div>
                         <p class="text-4xl font-bold mb-2" id="perf-apostas-mes">0</p>
                         <p class="text-slate-400 font-medium">Apostas/Mês</p>
@@ -706,13 +818,27 @@
                 <!-- Gráficos de Performance -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div class="chart-container rounded-3xl p-8">
-                        <h3 class="text-2xl font-bold mb-6">Tendência de Performance</h3>
+                        <h3 class="text-2xl font-bold mb-6 flex items-center">
+                            Tendência de Performance
+                            <div class="tooltip" data-tooltip="Tendência de Performance|Evolução dos seus indicadores de performance ao longo do tempo">
+                                <div class="info-icon">
+                                    <i data-lucide="info" class="w-3 h-3"></i>
+                                </div>
+                            </div>
+                        </h3>
                         <div class="h-80 flex items-center justify-center">
                             <canvas id="chart-tendencia-performance" width="400" height="300"></canvas>
                         </div>
                     </div>
                     <div class="chart-container rounded-3xl p-8">
-                        <h3 class="text-2xl font-bold mb-6">Performance por Casa</h3>
+                        <h3 class="text-2xl font-bold mb-6 flex items-center">
+                            Performance por Casa
+                            <div class="tooltip" data-tooltip="Performance por Casa|Comparação de desempenho entre diferentes casas de apostas">
+                                <div class="info-icon">
+                                    <i data-lucide="info" class="w-3 h-3"></i>
+                                </div>
+                            </div>
+                        </h3>
                         <div class="h-80 flex items-center justify-center">
                             <canvas id="chart-performance-casa" width="400" height="300"></canvas>
                         </div>
@@ -781,19 +907,47 @@
                     <h3 class="text-2xl font-bold mb-6">Indicadores-Chave de Performance</h3>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
                         <div class="text-center">
-                            <p class="text-3xl font-bold text-blue-400" id="kpi-sharpe">0.00</p>
+                            <p class="text-3xl font-bold text-blue-400 flex items-center justify-center" id="kpi-sharpe">
+                                0.00
+                                <div class="tooltip" data-tooltip="Sharpe Ratio|Mede o retorno ajustado ao risco. Valores acima de 1.0 são considerados bons">
+                                    <div class="info-icon ml-2">
+                                        <i data-lucide="info" class="w-3 h-3"></i>
+                                    </div>
+                                </div>
+                            </p>
                             <p class="text-sm text-slate-400 mt-2">Sharpe Ratio</p>
                         </div>
                         <div class="text-center">
-                            <p class="text-3xl font-bold text-green-400" id="kpi-sortino">0.00</p>
+                            <p class="text-3xl font-bold text-green-400 flex items-center justify-center" id="kpi-sortino">
+                                0.00
+                                <div class="tooltip" data-tooltip="Sortino Ratio|Similar ao Sharpe, mas considera apenas a volatilidade negativa (downside deviation)">
+                                    <div class="info-icon ml-2">
+                                        <i data-lucide="info" class="w-3 h-3"></i>
+                                    </div>
+                                </div>
+                            </p>
                             <p class="text-sm text-slate-400 mt-2">Sortino Ratio</p>
                         </div>
                         <div class="text-center">
-                            <p class="text-3xl font-bold text-purple-400" id="kpi-calmar">0.00</p>
+                            <p class="text-3xl font-bold text-purple-400 flex items-center justify-center" id="kpi-calmar">
+                                0.00
+                                <div class="tooltip" data-tooltip="Calmar Ratio|Retorno anualizado dividido pelo drawdown máximo. Indica qualidade dos retornos">
+                                    <div class="info-icon ml-2">
+                                        <i data-lucide="info" class="w-3 h-3"></i>
+                                    </div>
+                                </div>
+                            </p>
                             <p class="text-sm text-slate-400 mt-2">Calmar Ratio</p>
                         </div>
                         <div class="text-center">
-                            <p class="text-3xl font-bold text-yellow-400" id="kpi-win-loss">0.00</p>
+                            <p class="text-3xl font-bold text-yellow-400 flex items-center justify-center" id="kpi-win-loss">
+                                0.00
+                                <div class="tooltip" data-tooltip="Win/Loss Ratio|Proporção entre vitórias e derrotas. Valores acima de 1.0 indicam mais vitórias">
+                                    <div class="info-icon ml-2">
+                                        <i data-lucide="info" class="w-3 h-3"></i>
+                                    </div>
+                                </div>
+                            </p>
                             <p class="text-sm text-slate-400 mt-2">Win/Loss Ratio</p>
                         </div>
                     </div>
@@ -867,6 +1021,11 @@
                             <div class="metric-icon p-4 rounded-2xl text-blue-400">
                                 <i data-lucide="target" class="w-8 h-8"></i>
                             </div>
+                            <div class="tooltip" data-tooltip="Value Bets|Percentual de apostas com valor esperado positivo (ROI superior a 10%)">
+                                <div class="info-icon">
+                                    <i data-lucide="info" class="w-3 h-3"></i>
+                                </div>
+                            </div>
                         </div>
                         <p class="text-4xl font-bold mb-2" id="odds-value-bet">0%</p>
                         <p class="text-slate-400 font-medium">Value Bets</p>
@@ -876,6 +1035,11 @@
                         <div class="flex items-center justify-between mb-6">
                             <div class="metric-icon p-4 rounded-2xl text-green-400">
                                 <i data-lucide="check-circle" class="w-8 h-8"></i>
+                            </div>
+                            <div class="tooltip" data-tooltip="Acerto Odds Baixas|Taxa de acerto em apostas com odds entre 1.00 e 1.50">
+                                <div class="info-icon">
+                                    <i data-lucide="info" class="w-3 h-3"></i>
+                                </div>
                             </div>
                         </div>
                         <p class="text-4xl font-bold mb-2" id="odds-acerto-baixas">0%</p>
@@ -887,6 +1051,11 @@
                             <div class="metric-icon p-4 rounded-2xl text-purple-400">
                                 <i data-lucide="zap" class="w-8 h-8"></i>
                             </div>
+                            <div class="tooltip" data-tooltip="Acerto Odds Altas|Taxa de acerto em apostas com odds acima de 3.00">
+                                <div class="info-icon">
+                                    <i data-lucide="info" class="w-3 h-3"></i>
+                                </div>
+                            </div>
                         </div>
                         <p class="text-4xl font-bold mb-2" id="odds-acerto-altas">0%</p>
                         <p class="text-slate-400 font-medium">Acerto Odds Altas</p>
@@ -896,6 +1065,11 @@
                         <div class="flex items-center justify-between mb-6">
                             <div class="metric-icon p-4 rounded-2xl text-yellow-400">
                                 <i data-lucide="bar-chart-2" class="w-8 h-8"></i>
+                            </div>
+                            <div class="tooltip" data-tooltip="Odd Média Vencedora|Valor médio das odds nas apostas ganhas">
+                                <div class="info-icon">
+                                    <i data-lucide="info" class="w-3 h-3"></i>
+                                </div>
                             </div>
                         </div>
                         <p class="text-4xl font-bold mb-2" id="odds-media-ganhadoras">0.00</p>
@@ -945,29 +1119,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Indicadores de Odds -->
-                <div class="glass-card rounded-3xl p-8">
-                    <h3 class="text-2xl font-bold mb-6">Indicadores-Chave de Odds</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-                        <div>
-                            <p class="text-sm text-slate-400">Melhor Faixa ROI</p>
-                            <p class="text-2xl font-bold text-green-400" id="melhor-faixa-roi">-</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-slate-400">Faixa Mais Apostada</p>
-                            <p class="text-2xl font-bold text-blue-400" id="faixa-mais-apostada">-</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-slate-400">Expected Value Médio</p>
-                            <p class="text-2xl font-bold text-purple-400" id="ev-medio">0%</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-slate-400">Closing Line Value</p>
-                            <p class="text-2xl font-bold text-yellow-400" id="clv">0%</p>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- Aba Análise de Risco -->
@@ -979,6 +1130,11 @@
                             <div class="metric-icon p-4 rounded-2xl text-red-400">
                                 <i data-lucide="trending-down" class="w-8 h-8"></i>
                             </div>
+                            <div class="tooltip" data-tooltip="Max Drawdown|Maior queda percentual do saldo do pico até o vale mais baixo">
+                                <div class="info-icon">
+                                    <i data-lucide="info" class="w-3 h-3"></i>
+                                </div>
+                            </div>
                         </div>
                         <p class="text-4xl font-bold mb-2 text-red-400" id="risk-drawdown">0%</p>
                         <p class="text-slate-400 font-medium">Max Drawdown</p>
@@ -988,6 +1144,11 @@
                         <div class="flex items-center justify-between mb-6">
                             <div class="metric-icon p-4 rounded-2xl text-yellow-400">
                                 <i data-lucide="activity" class="w-8 h-8"></i>
+                            </div>
+                            <div class="tooltip" data-tooltip="Volatilidade|Medida de variação dos resultados. Valores altos indicam maior instabilidade">
+                                <div class="info-icon">
+                                    <i data-lucide="info" class="w-3 h-3"></i>
+                                </div>
                             </div>
                         </div>
                         <p class="text-4xl font-bold mb-2" id="risk-volatility">0%</p>
@@ -999,6 +1160,11 @@
                             <div class="metric-icon p-4 rounded-2xl text-purple-400">
                                 <i data-lucide="shield" class="w-8 h-8"></i>
                             </div>
+                            <div class="tooltip" data-tooltip="Score de Risco|Avaliação geral de risco de 0-100. Valores baixos indicam menor risco">
+                                <div class="info-icon">
+                                    <i data-lucide="info" class="w-3 h-3"></i>
+                                </div>
+                            </div>
                         </div>
                         <p class="text-4xl font-bold mb-2" id="risk-score">0</p>
                         <p class="text-slate-400 font-medium">Score de Risco</p>
@@ -1008,6 +1174,11 @@
                         <div class="flex items-center justify-between mb-6">
                             <div class="metric-icon p-4 rounded-2xl text-green-400">
                                 <i data-lucide="calculator" class="w-8 h-8"></i>
+                            </div>
+                            <div class="tooltip" data-tooltip="Kelly %|Percentual ideal do bankroll para apostar segundo o Critério de Kelly">
+                                <div class="info-icon">
+                                    <i data-lucide="info" class="w-3 h-3"></i>
+                                </div>
                             </div>
                         </div>
                         <p class="text-4xl font-bold mb-2 text-green-400" id="risk-kelly">0%</p>
@@ -1050,26 +1221,6 @@
                         <div>
                             <p class="text-sm text-slate-400">Risk-Adjusted Return</p>
                             <p class="text-2xl font-bold text-green-400" id="risk-adjusted-return">0%</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recomendações de Risco -->
-                <div class="glass-card rounded-3xl p-8">
-                    <h3 class="text-2xl font-bold mb-6 flex items-center">
-                        <div class="metric-icon p-2 rounded-xl mr-3">
-                            <i data-lucide="alert-triangle" class="w-5 h-5"></i>
-                        </div>
-                        Recomendações de Gestão de Risco
-                    </h3>
-                    <div id="risk-recommendations" class="space-y-4">
-                        <div class="insight-card p-6 rounded-2xl">
-                            <div class="flex items-center space-x-4">
-                                <div class="metric-icon p-2 rounded-xl">
-                                    <i data-lucide="info" class="w-5 h-5 text-blue-400"></i>
-                                </div>
-                                <span class="font-semibold">Carregando análise de risco...</span>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -1143,50 +1294,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Análise de Melhor/Pior Período -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="glass-card rounded-3xl p-8">
-                        <h3 class="text-xl font-bold mb-6 text-green-400">📈 Melhores Períodos</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <p class="text-sm text-slate-400">Melhor Dia</p>
-                                <p class="text-xl font-bold" id="best-day">-</p>
-                                <p class="text-sm text-green-400" id="best-day-profit">R$ 0</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-slate-400">Melhor Semana</p>
-                                <p class="text-xl font-bold" id="best-week">-</p>
-                                <p class="text-sm text-green-400" id="best-week-profit">R$ 0</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-slate-400">Melhor Mês</p>
-                                <p class="text-xl font-bold" id="best-month">-</p>
-                                <p class="text-sm text-green-400" id="best-month-profit">R$ 0</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="glass-card rounded-3xl p-8">
-                        <h3 class="text-xl font-bold mb-6 text-red-400">📉 Piores Períodos</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <p class="text-sm text-slate-400">Pior Dia</p>
-                                <p class="text-xl font-bold" id="worst-day">-</p>
-                                <p class="text-sm text-red-400" id="worst-day-loss">R$ 0</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-slate-400">Pior Semana</p>
-                                <p class="text-xl font-bold" id="worst-week">-</p>
-                                <p class="text-sm text-red-400" id="worst-week-loss">R$ 0</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-slate-400">Pior Mês</p>
-                                <p class="text-xl font-bold" id="worst-month">-</p>
-                                <p class="text-sm text-red-400" id="worst-month-loss">R$ 0</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- Aba Padrões & Tendências -->
@@ -1242,30 +1349,6 @@
                     </div>
                 </div>
 
-                <!-- Palavras-Chave Vencedoras -->
-                <div class="glass-card rounded-3xl p-8">
-                    <h3 class="text-2xl font-bold mb-6">Palavras-Chave nas Apostas Vencedoras</h3>
-                    <div id="keywords-container" class="flex flex-wrap gap-3">
-                        <div class="text-center text-slate-500">Analisando palavras-chave...</div>
-                    </div>
-                </div>
-
-                <!-- Gráficos de Tendências -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div class="chart-container rounded-3xl p-8">
-                        <h3 class="text-2xl font-bold mb-6">Tendência de ROI (Moving Average)</h3>
-                        <div class="h-80 flex items-center justify-center">
-                            <canvas id="chart-tendencia-roi" width="400" height="300"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-container rounded-3xl p-8">
-                        <h3 class="text-2xl font-bold mb-6">Análise de Momentum</h3>
-                        <div class="h-80 flex items-center justify-center">
-                            <canvas id="chart-momentum" width="400" height="300"></canvas>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Indicadores de Bônus -->
                 <div class="glass-card rounded-3xl p-8">
                     <h3 class="text-2xl font-bold mb-6">Utilização de Bônus</h3>
@@ -1292,3043 +1375,111 @@
         </main>
     </div>
 
+    <!-- JavaScript para Tooltips -->
     <script>
-        // Configuração do Supabase
-        const SUPABASE_CONFIG = {
-            url: 'https://cjlvcjfuntfbdrrkigwh.supabase.co',
-            anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqbHZjamZ1bnRmYmRycmtpZ3doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAyMzYyMDIsImV4cCI6MjA1NTgxMjIwMn0.FBSsXa2vVmrv78_XeLWZcpMKMUIeRe0mS9hBO7Cn45Y'
-        };
+    // Sistema de Tooltips que funciona fora dos cards
+    document.addEventListener('DOMContentLoaded', function() {
+        // Criar container para portais de tooltip
+        const portalContainer = document.createElement('div');
+        portalContainer.id = 'tooltip-portal-container';
+        document.body.appendChild(portalContainer);
         
-        // Variáveis globais
-        let supabase;
-        let apostas = [];
-        let apostasFiltradas = [];
-        let charts = {};
-        let tomSelects = {};
-
-        // Funções utilitárias
-        function formatarMoeda(valor) {
-            return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        }
-
-        function formatarPercentual(valor) {
-            return `${valor.toFixed(1)}%`;
-        }
-
-        function calcularROI(lucro, totalApostado) {
-            if (totalApostado === 0) return 0;
-            return (lucro / totalApostado) * 100;
-        }
-
-        function calcularTaxaAcerto(ganhas, total) {
-            if (total === 0) return 0;
-            return (ganhas / total) * 100;
-        }
-
-        function showLoading() {
-            const loader = document.getElementById('loading-indicator');
-            if (loader) loader.classList.remove('hidden');
-        }
-
-        function hideLoading() {
-            const loader = document.getElementById('loading-indicator');
-            if (loader) loader.classList.add('hidden');
-        }
-
-        // Função auxiliar para verificar se elemento existe antes de atualizar
-        function updateElementSafely(id, value, isHtml = false) {
-            const element = document.getElementById(id);
-            if (element) {
-                if (isHtml) {
-                    element.innerHTML = value;
-                } else {
-                    element.textContent = value;
-                }
-                return true;
-            }
-            return false;
-        }
-
-        // Sistema de abas
-        function configurarAbas() {
-            const tabButtons = document.querySelectorAll('.tab-button');
-            const tabContents = document.querySelectorAll('.tab-content');
-
-            tabButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const targetTab = this.getAttribute('data-tab');
-                    
-                    tabButtons.forEach(btn => btn.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    tabContents.forEach(content => content.classList.remove('active'));
-                    
-                    const targetContent = document.getElementById(`tab-${targetTab}`);
-                    if (targetContent) {
-                        targetContent.classList.add('active');
-                    }
-                    
-                    // Carregar conteúdo específico da aba
-                    setTimeout(() => {
-                        carregarConteudoAba(targetTab);
-                    }, 100);
-                });
-            });
-        }
-
-        function carregarConteudoAba(aba) {
-            try {
-                console.log(`Carregando aba: ${aba}`);
-                
-                switch (aba) {
-                    case 'dashboard':
-                        atualizarAnalises();
-                        criarGraficosAdicionais();
-                        break;
-                    case 'performance':
-                        atualizarPerformance();
-                        criarGraficosPerformance();
-                        break;
-                    case 'casas':
-                        atualizarCasasDeApostas();
-                        criarGraficosCasas();
-                        break;
-                    case 'odds':
-                        atualizarAnaliseOdds();
-                        criarGraficosOdds();
-                        break;
-                    case 'risk':
-                        atualizarAnaliseRisco();
-                        criarGraficosRisco();
-                        break;
-                    case 'temporal':
-                        atualizarAnaliseTemporal();
-                        criarGraficosTemporais();
-                        break;
-                    case 'patterns':
-                        atualizarPadroesTendencias();
-                        criarGraficosPadroes();
-                        break;
-                }
-                
-                // Recriar ícones Lucide
-                if (window.lucide) {
-                    lucide.createIcons();
-                }
-            } catch (error) {
-                console.error(`Erro ao carregar aba ${aba}:`, error);
-            }
-        }
-
-        // Funções para criar gráficos adicionais
-        function criarGraficosAdicionais() {
-            criarGraficoRetornoAcumulado();
-            criarGraficoLucroDiario();
-            criarGraficoDistribuicaoValores();
-            criarGraficoLucratividadeTipo();
-        }
-
-        function criarGraficoRetornoAcumulado() {
-            const canvas = document.getElementById('chart-retorno-acumulado');
-            if (!canvas) return;
-
-            const ctx = canvas.getContext('2d');
-            
-            if (typeof Chart !== 'undefined') {
-                if (charts.retornoAcumulado) {
-                    charts.retornoAcumulado.destroy();
-                }
-
-                const apostasOrdenadas = [...apostasFiltradas].sort((a, b) => new Date(a.data) - new Date(b.data));
-                let saldoAcumulado = 0;
-                let investimentoAcumulado = 0;
-                
-                const dados = apostasOrdenadas.map((aposta) => {
-                    investimentoAcumulado += parseFloat(aposta.valor_apostado) || 0;
-                    if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu' || aposta.resultado === 'Cashout') {
-                        saldoAcumulado += parseFloat(aposta.valor_final) || 0;
-                    }
-                    const retorno = investimentoAcumulado > 0 ? (saldoAcumulado / investimentoAcumulado) * 100 : 0;
-                    
-                    return {
-                        x: new Date(aposta.data).getTime(),
-                        y: retorno
-                    };
-                });
-
-                charts.retornoAcumulado = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        datasets: [{
-                            label: 'Retorno Acumulado (%)',
-                            data: dados,
-                            borderColor: '#8b5cf6',
-                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                            fill: true,
-                            tension: 0.4,
-                            borderWidth: 3
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return `Retorno: ${context.parsed.y.toFixed(2)}%`;
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            x: { 
-                                type: 'time',
-                                time: { unit: 'day' },
-                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                                ticks: { color: '#6b7280' }
-                            },
-                            y: { 
-                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                                ticks: { 
-                                    color: '#6b7280',
-                                    callback: function(value) {
-                                        return value + '%';
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        function criarGraficoLucroDiario() {
-            const canvas = document.getElementById('chart-lucro-diario');
-            if (!canvas) return;
-
-            const ctx = canvas.getContext('2d');
-            
-            if (typeof Chart !== 'undefined') {
-                if (charts.lucroDiario) {
-                    charts.lucroDiario.destroy();
-                }
-
-                // Agrupar por dia
-                const lucroPorDia = {};
-                apostasFiltradas.forEach(aposta => {
-                    const data = aposta.data;
-                    if (!lucroPorDia[data]) {
-                        lucroPorDia[data] = 0;
-                    }
-                    if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu' || aposta.resultado === 'Cashout') {
-                        lucroPorDia[data] += parseFloat(aposta.valor_final) || 0;
-                    }
-                });
-
-                const dados = Object.entries(lucroPorDia).map(([data, lucro]) => ({
-                    x: new Date(data).getTime(),
-                    y: lucro
-                }));
-
-                charts.lucroDiario = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        datasets: [{
-                            label: 'Lucro Diário',
-                            data: dados,
-                            backgroundColor: dados.map(d => d.y >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)'),
-                            borderColor: dados.map(d => d.y >= 0 ? '#10b981' : '#ef4444'),
-                            borderWidth: 2
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return `Lucro: ${formatarMoeda(context.parsed.y)}`;
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            x: { 
-                                type: 'time',
-                                time: { unit: 'day' },
-                                grid: { display: false },
-                                ticks: { color: '#6b7280' }
-                            },
-                            y: { 
-                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                                ticks: { 
-                                    color: '#6b7280',
-                                    callback: function(value) {
-                                        return formatarMoeda(value);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        function criarGraficoDistribuicaoValores() {
-            const canvas = document.getElementById('chart-distribuicao-valores');
-            if (!canvas) return;
-
-            const ctx = canvas.getContext('2d');
-            
-            if (typeof Chart !== 'undefined') {
-                if (charts.distribuicaoValores) {
-                    charts.distribuicaoValores.destroy();
-                }
-
-                // Criar faixas de valores
-                const faixas = {
-                    '0-50': 0,
-                    '51-100': 0,
-                    '101-200': 0,
-                    '201-500': 0,
-                    '500+': 0
-                };
-
-                apostasFiltradas.forEach(aposta => {
-                    const valor = parseFloat(aposta.valor_apostado) || 0;
-                    if (valor <= 50) faixas['0-50']++;
-                    else if (valor <= 100) faixas['51-100']++;
-                    else if (valor <= 200) faixas['101-200']++;
-                    else if (valor <= 500) faixas['201-500']++;
-                    else faixas['500+']++;
-                });
-
-                charts.distribuicaoValores = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: Object.keys(faixas),
-                        datasets: [{
-                            label: 'Quantidade de Apostas',
-                            data: Object.values(faixas),
-                            backgroundColor: 'rgba(99, 102, 241, 0.8)',
-                            borderColor: '#6366f1',
-                            borderWidth: 2
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false }
-                        },
-                        scales: {
-                            x: {
-                                grid: { display: false },
-                                ticks: { color: '#9ca3af' },
-                                title: {
-                                    display: true,
-                                    text: 'Faixa de Valor (R$)',
-                                    color: '#9ca3af'
-                                }
-                            },
-                            y: {
-                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                                ticks: { color: '#9ca3af' },
-                                title: {
-                                    display: true,
-                                    text: 'Quantidade',
-                                    color: '#9ca3af'
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        function criarGraficoLucratividadeTipo() {
-            const canvas = document.getElementById('chart-lucratividade-tipo');
-            if (!canvas) return;
-
-            const ctx = canvas.getContext('2d');
-            
-            if (typeof Chart !== 'undefined') {
-                if (charts.lucratividadeTipo) {
-                    charts.lucratividadeTipo.destroy();
-                }
-
-                // Agrupar por tipo
-                const dadosPorTipo = {};
-                apostasFiltradas.forEach(aposta => {
-                    const tipo = aposta.tipo_aposta || 'Não especificado';
-                    if (!dadosPorTipo[tipo]) {
-                        dadosPorTipo[tipo] = { investido: 0, lucro: 0 };
-                    }
-                    dadosPorTipo[tipo].investido += parseFloat(aposta.valor_apostado) || 0;
-                    if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu' || aposta.resultado === 'Cashout') {
-                        dadosPorTipo[tipo].lucro += parseFloat(aposta.valor_final) || 0;
-                    }
-                });
-
-                const tipos = Object.keys(dadosPorTipo);
-                const lucros = tipos.map(tipo => dadosPorTipo[tipo].lucro);
-
-                charts.lucratividadeTipo = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: tipos,
-                        datasets: [{
-                            data: lucros.map(Math.abs),
-                            backgroundColor: lucros.map(l => l >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)'),
-                            borderColor: lucros.map(l => l >= 0 ? '#10b981' : '#ef4444'),
-                            borderWidth: 2
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: { color: '#9ca3af' }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const tipo = context.label;
-                                        const lucro = dadosPorTipo[tipo].lucro;
-                                        const roi = calcularROI(lucro, dadosPorTipo[tipo].investido);
-                                        return [`Lucro: ${formatarMoeda(lucro)}`, `ROI: ${formatarPercentual(roi)}`];
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        // Funções para análise de Odds
-        function atualizarAnaliseOdds() {
-            const apostasValidas = apostasFiltradas.filter(a => a.resultado === 'Ganhou' || a.resultado === 'Perdeu');
-            
-            // Calcular métricas por faixa de odd
-            const faixas = {
-                '1-1.5': { ganhas: 0, total: 0, lucro: 0, investido: 0 },
-                '1.5-2': { ganhas: 0, total: 0, lucro: 0, investido: 0 },
-                '2-3': { ganhas: 0, total: 0, lucro: 0, investido: 0 },
-                '3+': { ganhas: 0, total: 0, lucro: 0, investido: 0 }
-            };
-
-            let totalValueBets = 0;
-            let oddMediaGanhadoras = 0;
-            let countGanhadoras = 0;
-
-            apostasValidas.forEach(aposta => {
-                const odd = parseFloat(aposta.odd_final || aposta.odd_inicial) || 0;
-                const valor = parseFloat(aposta.valor_apostado) || 0;
-                const lucro = parseFloat(aposta.valor_final) || 0;
-                
-                let faixa;
-                if (odd <= 1.5) faixa = '1-1.5';
-                else if (odd <= 2) faixa = '1.5-2';
-                else if (odd <= 3) faixa = '2-3';
-                else faixa = '3+';
-                
-                faixas[faixa].total++;
-                faixas[faixa].investido += valor;
-                faixas[faixa].lucro += lucro;
-                
-                if (aposta.resultado === 'Ganhou') {
-                    faixas[faixa].ganhas++;
-                    oddMediaGanhadoras += odd;
-                    countGanhadoras++;
-                    
-                    // Considerar value bet se ROI > 10%
-                    const roiAposta = calcularROI(lucro, valor);
-                    if (roiAposta > 10) totalValueBets++;
-                }
-            });
-
-            // Atualizar métricas
-            const valueBetPercentage = apostasValidas.length > 0 ? (totalValueBets / apostasValidas.length) * 100 : 0;
-            updateElementSafely('odds-value-bet', formatarPercentual(valueBetPercentage));
-            
-            const taxaBaixas = faixas['1-1.5'].total > 0 ? (faixas['1-1.5'].ganhas / faixas['1-1.5'].total) * 100 : 0;
-            updateElementSafely('odds-acerto-baixas', formatarPercentual(taxaBaixas));
-            
-            const taxaAltas = faixas['3+'].total > 0 ? (faixas['3+'].ganhas / faixas['3+'].total) * 100 : 0;
-            updateElementSafely('odds-acerto-altas', formatarPercentual(taxaAltas));
-            
-            const mediaGanhadoras = countGanhadoras > 0 ? oddMediaGanhadoras / countGanhadoras : 0;
-            updateElementSafely('odds-media-ganhadoras', mediaGanhadoras.toFixed(2));
-
-            // Atualizar eficiência por faixa
-            updateElementSafely('faixa-1-15', formatarPercentual(faixas['1-1.5'].total > 0 ? (faixas['1-1.5'].ganhas / faixas['1-1.5'].total) * 100 : 0));
-            updateElementSafely('faixa-15-2', formatarPercentual(faixas['1.5-2'].total > 0 ? (faixas['1.5-2'].ganhas / faixas['1.5-2'].total) * 100 : 0));
-            updateElementSafely('faixa-2-3', formatarPercentual(faixas['2-3'].total > 0 ? (faixas['2-3'].ganhas / faixas['2-3'].total) * 100 : 0));
-            updateElementSafely('faixa-3-plus', formatarPercentual(faixas['3+'].total > 0 ? (faixas['3+'].ganhas / faixas['3+'].total) * 100 : 0));
-
-            // Determinar melhor faixa ROI
-            let melhorFaixa = '';
-            let melhorROI = -100;
-            Object.entries(faixas).forEach(([nome, dados]) => {
-                if (dados.investido > 0) {
-                    const roi = calcularROI(dados.lucro, dados.investido);
-                    if (roi > melhorROI) {
-                        melhorROI = roi;
-                        melhorFaixa = nome;
-                    }
-                }
-            });
-            
-            updateElementSafely('melhor-faixa-roi', melhorFaixa || '-');
-            
-            // Faixa mais apostada
-            const faixaMaisApostada = Object.entries(faixas).reduce((a, b) => 
-                b[1].total > a[1].total ? b : a
-            )[0];
-            updateElementSafely('faixa-mais-apostada', faixaMaisApostada || '-');
-        }
-
-        function criarGraficosOdds() {
-            criarGraficoOddPerformance();
-            criarGraficoDistribuicaoOdds();
-        }
-
-        function criarGraficoOddPerformance() {
-            const canvas = document.getElementById('chart-odd-performance');
-            if (!canvas) return;
-
-            const ctx = canvas.getContext('2d');
-            
-            if (typeof Chart !== 'undefined') {
-                if (charts.oddPerformance) {
-                    charts.oddPerformance.destroy();
-                }
-
-                const apostasValidas = apostasFiltradas.filter(a => a.resultado === 'Ganhou' || a.resultado === 'Perdeu');
-                const dados = apostasValidas.map(aposta => ({
-                    x: parseFloat(aposta.odd_final || aposta.odd_inicial) || 0,
-                    y: parseFloat(aposta.valor_final) || 0,
-                    r: 5 + Math.sqrt(Math.abs(parseFloat(aposta.valor_apostado) || 0)) / 2
-                }));
-
-                charts.oddPerformance = new Chart(ctx, {
-                    type: 'scatter',
-                    data: {
-                        datasets: [{
-                            label: 'Odd vs Lucro',
-                            data: dados,
-                            backgroundColor: dados.map(d => d.y >= 0 ? 'rgba(16, 185, 129, 0.6)' : 'rgba(239, 68, 68, 0.6)'),
-                            borderColor: dados.map(d => d.y >= 0 ? '#10b981' : '#ef4444'),
-                            borderWidth: 2
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return [
-                                            `Odd: ${context.parsed.x.toFixed(2)}`,
-                                            `Lucro: ${formatarMoeda(context.parsed.y)}`
-                                        ];
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: 'Odd',
-                                    color: '#9ca3af'
-                                },
-                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                                ticks: { color: '#6b7280' }
-                            },
-                            y: {
-                                title: {
-                                    display: true,
-                                    text: 'Lucro/Prejuízo (R$)',
-                                    color: '#9ca3af'
-                                },
-                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                                ticks: { 
-                                    color: '#6b7280',
-                                    callback: function(value) {
-                                        return formatarMoeda(value);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        function criarGraficoDistribuicaoOdds() {
-            const canvas = document.getElementById('chart-distribuicao-odds');
-            if (!canvas) return;
-
-            const ctx = canvas.getContext('2d');
-            
-            if (typeof Chart !== 'undefined') {
-                if (charts.distribuicaoOdds) {
-                    charts.distribuicaoOdds.destroy();
-                }
-
-                // Criar histograma de odds
-                const faixas = {};
-                apostasFiltradas.forEach(aposta => {
-                    const odd = Math.floor(parseFloat(aposta.odd_final || aposta.odd_inicial) || 0);
-                    const faixa = `${odd}.00-${odd}.99`;
-                    if (!faixas[faixa]) {
-                        faixas[faixa] = { ganhas: 0, perdidas: 0 };
-                    }
-                    if (aposta.resultado === 'Ganhou') {
-                        faixas[faixa].ganhas++;
-                    } else if (aposta.resultado === 'Perdeu') {
-                        faixas[faixa].perdidas++;
-                    }
-                });
-
-                const labels = Object.keys(faixas).sort();
-                
-                charts.distribuicaoOdds = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [
-                            {
-                                label: 'Ganhas',
-                                data: labels.map(l => faixas[l].ganhas),
-                                backgroundColor: 'rgba(16, 185, 129, 0.8)',
-                                borderColor: '#10b981',
-                                borderWidth: 1
-                            },
-                            {
-                                label: 'Perdidas',
-                                data: labels.map(l => faixas[l].perdidas),
-                                backgroundColor: 'rgba(239, 68, 68, 0.8)',
-                                borderColor: '#ef4444',
-                                borderWidth: 1
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'top',
-                                labels: { color: '#9ca3af' }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                stacked: true,
-                                grid: { display: false },
-                                ticks: { color: '#6b7280' },
-                                title: {
-                                    display: true,
-                                    text: 'Faixa de Odd',
-                                    color: '#9ca3af'
-                                }
-                            },
-                            y: {
-                                stacked: true,
-                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                                ticks: { color: '#6b7280' },
-                                title: {
-                                    display: true,
-                                    text: 'Quantidade',
-                                    color: '#9ca3af'
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        // Funções para análise temporal
-        function atualizarAnaliseTemporal() {
-            analisarMelhoresPioresPeriodos();
-            criarHeatmapMensal();
-            analisarPadroesDiaSemana();
-        }
-
-        function analisarMelhoresPioresPeriodos() {
-            const periodos = {
-                dias: {},
-                semanas: {},
-                meses: {}
-            };
-
-            apostasFiltradas.forEach(aposta => {
-                const data = new Date(aposta.data);
-                const dia = aposta.data;
-                const semana = `${data.getFullYear()}-W${Math.ceil((data.getDate() + data.getDay()) / 7)}`;
-                const mes = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
-                
-                // Inicializar períodos
-                if (!periodos.dias[dia]) periodos.dias[dia] = 0;
-                if (!periodos.semanas[semana]) periodos.semanas[semana] = 0;
-                if (!periodos.meses[mes]) periodos.meses[mes] = 0;
-                
-                // Adicionar lucro/prejuízo
-                if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu' || aposta.resultado === 'Cashout') {
-                    const lucro = parseFloat(aposta.valor_final) || 0;
-                    periodos.dias[dia] += lucro;
-                    periodos.semanas[semana] += lucro;
-                    periodos.meses[mes] += lucro;
-                }
-            });
-
-            // Encontrar melhores e piores
-            const melhorDia = Object.entries(periodos.dias).reduce((a, b) => b[1] > a[1] ? b : a, ['', -Infinity]);
-            const piorDia = Object.entries(periodos.dias).reduce((a, b) => b[1] < a[1] ? b : a, ['', Infinity]);
-            
-            const melhorSemana = Object.entries(periodos.semanas).reduce((a, b) => b[1] > a[1] ? b : a, ['', -Infinity]);
-            const piorSemana = Object.entries(periodos.semanas).reduce((a, b) => b[1] < a[1] ? b : a, ['', Infinity]);
-            
-            const melhorMes = Object.entries(periodos.meses).reduce((a, b) => b[1] > a[1] ? b : a, ['', -Infinity]);
-            const piorMes = Object.entries(periodos.meses).reduce((a, b) => b[1] < a[1] ? b : a, ['', Infinity]);
-
-            // Atualizar elementos
-            updateElementSafely('best-day', melhorDia[0] || '-');
-            updateElementSafely('best-day-profit', formatarMoeda(melhorDia[1]));
-            updateElementSafely('worst-day', piorDia[0] || '-');
-            updateElementSafely('worst-day-loss', formatarMoeda(piorDia[1]));
-            
-            updateElementSafely('best-week', melhorSemana[0] || '-');
-            updateElementSafely('best-week-profit', formatarMoeda(melhorSemana[1]));
-            updateElementSafely('worst-week', piorSemana[0] || '-');
-            updateElementSafely('worst-week-loss', formatarMoeda(piorSemana[1]));
-            
-            updateElementSafely('best-month', melhorMes[0] || '-');
-            updateElementSafely('best-month-profit', formatarMoeda(melhorMes[1]));
-            updateElementSafely('worst-month', piorMes[0] || '-');
-            updateElementSafely('worst-month-loss', formatarMoeda(piorMes[1]));
-        }
-
-        function criarHeatmapMensal() {
-            const container = document.getElementById('heatmap-mensal');
-            if (!container) return;
-
-            // Agrupar dados por mês
-            const dadosPorMes = {};
-            apostasFiltradas.forEach(aposta => {
-                const data = new Date(aposta.data);
-                const mesAno = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
-                
-                if (!dadosPorMes[mesAno]) {
-                    dadosPorMes[mesAno] = { lucro: 0, apostas: 0, ganhas: 0 };
-                }
-                
-                dadosPorMes[mesAno].apostas++;
-                if (aposta.resultado === 'Ganhou') {
-                    dadosPorMes[mesAno].ganhas++;
-                }
-                if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu' || aposta.resultado === 'Cashout') {
-                    dadosPorMes[mesAno].lucro += parseFloat(aposta.valor_final) || 0;
-                }
-            });
-
-            // Criar HTML do heatmap
-            const meses = Object.keys(dadosPorMes).sort();
-            if (meses.length === 0) {
-                container.innerHTML = '<div class="text-center text-slate-500">Sem dados para exibir</div>';
-                return;
-            }
-
-            const maxLucro = Math.max(...Object.values(dadosPorMes).map(d => Math.abs(d.lucro)));
-            
-            let html = '<div class="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-2">';
-            
-            meses.forEach(mes => {
-                const dados = dadosPorMes[mes];
-                const intensidade = maxLucro > 0 ? Math.abs(dados.lucro) / maxLucro : 0;
-                const cor = dados.lucro >= 0 
-                    ? `rgba(16, 185, 129, ${0.2 + intensidade * 0.8})`
-                    : `rgba(239, 68, 68, ${0.2 + intensidade * 0.8})`;
-                
-                const [ano, mesNum] = mes.split('-');
-                const nomeMes = new Date(ano, parseInt(mesNum) - 1).toLocaleDateString('pt-BR', { month: 'short' });
-                
-                html += `
-                    <div class="heatmap-cell" style="background-color: ${cor};" 
-                         title="${nomeMes}/${ano}: ${formatarMoeda(dados.lucro)}">
-                        <div class="text-xs">${nomeMes}</div>
-                        <div class="text-xs font-bold">${dados.lucro >= 0 ? '+' : ''}${formatarPercentual(dados.lucro)}</div>
-                    </div>
-                `;
-            });
-            
-            html += '</div>';
-            container.innerHTML = html;
-        }
-
-        function analisarPadroesDiaSemana() {
-            const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-            const dadosPorDia = {};
-            
-            diasSemana.forEach(dia => {
-                dadosPorDia[dia] = { lucro: 0, apostas: 0, ganhas: 0 };
-            });
-
-            apostasFiltradas.forEach(aposta => {
-                const data = new Date(aposta.data);
-                const diaSemana = diasSemana[data.getDay()];
-                
-                dadosPorDia[diaSemana].apostas++;
-                if (aposta.resultado === 'Ganhou') {
-                    dadosPorDia[diaSemana].ganhas++;
-                }
-                if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu' || aposta.resultado === 'Cashout') {
-                    dadosPorDia[diaSemana].lucro += parseFloat(aposta.valor_final) || 0;
-                }
-            });
-
-            // Encontrar melhor dia
-            const melhorDia = Object.entries(dadosPorDia).reduce((a, b) => 
-                b[1].lucro > a[1].lucro ? b : a
-            );
-            
-            updateElementSafely('melhor-dia-semana', melhorDia[0] || '-');
-        }
-
-        function criarGraficosTemporais() {
-            criarGraficoDiaSemana();
-            criarGraficoEvolucaoMensal();
-        }
-
-        function criarGraficoDiaSemana() {
-            const canvas = document.getElementById('chart-dia-semana');
-            if (!canvas) return;
-
-            const ctx = canvas.getContext('2d');
-            
-            if (typeof Chart !== 'undefined') {
-                if (charts.diaSemana) {
-                    charts.diaSemana.destroy();
-                }
-
-                const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-                const dadosPorDia = {};
-                
-                diasSemana.forEach(dia => {
-                    dadosPorDia[dia] = { lucro: 0, roi: 0, investido: 0 };
-                });
-
-                apostasFiltradas.forEach(aposta => {
-                    const data = new Date(aposta.data);
-                    const diaSemana = diasSemana[data.getDay()];
-                    
-                    dadosPorDia[diaSemana].investido += parseFloat(aposta.valor_apostado) || 0;
-                    if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu' || aposta.resultado === 'Cashout') {
-                        dadosPorDia[diaSemana].lucro += parseFloat(aposta.valor_final) || 0;
-                    }
-                });
-
-                // Calcular ROI
-                Object.keys(dadosPorDia).forEach(dia => {
-                    if (dadosPorDia[dia].investido > 0) {
-                        dadosPorDia[dia].roi = (dadosPorDia[dia].lucro / dadosPorDia[dia].investido) * 100;
-                    }
-                });
-
-                charts.diaSemana = new Chart(ctx, {
-                    type: 'radar',
-                    data: {
-                        labels: diasSemana,
-                        datasets: [{
-                            label: 'ROI por Dia (%)',
-                            data: diasSemana.map(dia => dadosPorDia[dia].roi),
-                            borderColor: '#6366f1',
-                            backgroundColor: 'rgba(99, 102, 241, 0.2)',
-                            borderWidth: 2,
-                            pointBackgroundColor: '#6366f1',
-                            pointBorderColor: '#fff',
-                            pointHoverBackgroundColor: '#fff',
-                            pointHoverBorderColor: '#6366f1'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false }
-                        },
-                        scales: {
-                            r: {
-                                angleLines: { color: 'rgba(148, 163, 184, 0.2)' },
-                                grid: { color: 'rgba(148, 163, 184, 0.2)' },
-                                pointLabels: { color: '#9ca3af' },
-                                ticks: { 
-                                    color: '#6b7280',
-                                    callback: function(value) {
-                                        return value + '%';
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        function criarGraficoEvolucaoMensal() {
-            const canvas = document.getElementById('chart-evolucao-mensal');
-            if (!canvas) return;
-
-            const ctx = canvas.getContext('2d');
-            
-            if (typeof Chart !== 'undefined') {
-                if (charts.evolucaoMensal) {
-                    charts.evolucaoMensal.destroy();
-                }
-
-                // Agrupar por mês
-                const dadosPorMes = {};
-                apostasFiltradas.forEach(aposta => {
-                    const data = new Date(aposta.data);
-                    const mesAno = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
-                    
-                    if (!dadosPorMes[mesAno]) {
-                        dadosPorMes[mesAno] = { lucro: 0, investido: 0 };
-                    }
-                    
-                    dadosPorMes[mesAno].investido += parseFloat(aposta.valor_apostado) || 0;
-                    if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu' || aposta.resultado === 'Cashout') {
-                        dadosPorMes[mesAno].lucro += parseFloat(aposta.valor_final) || 0;
-                    }
-                });
-
-                const meses = Object.keys(dadosPorMes).sort();
-                const lucros = meses.map(mes => dadosPorMes[mes].lucro);
-                const rois = meses.map(mes => 
-                    dadosPorMes[mes].investido > 0 ? (dadosPorMes[mes].lucro / dadosPorMes[mes].investido) * 100 : 0
-                );
-
-                charts.evolucaoMensal = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: meses.map(mes => {
-                            const [ano, mesNum] = mes.split('-');
-                            return new Date(ano, parseInt(mesNum) - 1).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
-                        }),
-                        datasets: [
-                            {
-                                label: 'Lucro Mensal',
-                                data: lucros,
-                                borderColor: '#10b981',
-                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                                yAxisID: 'y',
-                                tension: 0.4
-                            },
-                            {
-                                label: 'ROI Mensal (%)',
-                                data: rois,
-                                borderColor: '#6366f1',
-                                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                                yAxisID: 'y1',
-                                tension: 0.4
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        interaction: {
-                            mode: 'index',
-                            intersect: false,
-                        },
-                        plugins: {
-                            legend: {
-                                position: 'top',
-                                labels: { color: '#9ca3af' }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                                ticks: { color: '#6b7280' }
-                            },
-                            y: {
-                                type: 'linear',
-                                display: true,
-                                position: 'left',
-                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                                ticks: { 
-                                    color: '#6b7280',
-                                    callback: function(value) {
-                                        return formatarMoeda(value);
-                                    }
-                                }
-                            },
-                            y1: {
-                                type: 'linear',
-                                display: true,
-                                position: 'right',
-                                grid: { drawOnChartArea: false },
-                                ticks: { 
-                                    color: '#6b7280',
-                                    callback: function(value) {
-                                        return value + '%';
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        // Funções para análise de risco
-        function criarGraficosRisco() {
-            criarGraficoDrawdown();
-            criarGraficoRiscoRetorno();
-        }
-
-        function criarGraficoDrawdown() {
-            const canvas = document.getElementById('chart-drawdown');
-            if (!canvas) return;
-
-            const ctx = canvas.getContext('2d');
-            
-            if (typeof Chart !== 'undefined') {
-                if (charts.drawdown) {
-                    charts.drawdown.destroy();
-                }
-
-                const apostasOrdenadas = [...apostasFiltradas].sort((a, b) => new Date(a.data) - new Date(b.data));
-                let saldo = 0;
-                let picoSaldo = 0;
-                const dadosDrawdown = [];
-                
-                apostasOrdenadas.forEach(aposta => {
-                    if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu' || aposta.resultado === 'Cashout') {
-                        saldo += parseFloat(aposta.valor_final) || 0;
-                        
-                        if (saldo > picoSaldo) {
-                            picoSaldo = saldo;
-                        }
-                        
-                        const drawdown = picoSaldo > 0 ? ((picoSaldo - saldo) / picoSaldo) * 100 : 0;
-                        
-                        dadosDrawdown.push({
-                            x: new Date(aposta.data).getTime(),
-                            y: -drawdown
-                        });
-                    }
-                });
-
-                charts.drawdown = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        datasets: [{
-                            label: 'Drawdown (%)',
-                            data: dadosDrawdown,
-                            borderColor: '#ef4444',
-                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                            fill: true,
-                            tension: 0.4,
-                            borderWidth: 2
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return `Drawdown: ${Math.abs(context.parsed.y).toFixed(2)}%`;
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                type: 'time',
-                                time: { unit: 'day' },
-                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                                ticks: { color: '#6b7280' }
-                            },
-                            y: {
-                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                                ticks: { 
-                                    color: '#6b7280',
-                                    callback: function(value) {
-                                        return Math.abs(value) + '%';
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        function criarGraficoRiscoRetorno() {
-            const canvas = document.getElementById('chart-risco-retorno');
-            if (!canvas) return;
-
-            const ctx = canvas.getContext('2d');
-            
-            if (typeof Chart !== 'undefined') {
-                if (charts.riscoRetorno) {
-                    charts.riscoRetorno.destroy();
-                }
-
-                // Agrupar por categoria
-                const dadosPorCategoria = {};
-                apostasFiltradas.forEach(aposta => {
-                    const categoria = aposta.categoria || 'Sem Categoria';
-                    if (!dadosPorCategoria[categoria]) {
-                        dadosPorCategoria[categoria] = {
-                            retornos: [],
-                            investido: 0,
-                            lucro: 0
-                        };
-                    }
-                    
-                    const valor = parseFloat(aposta.valor_apostado) || 0;
-                    const lucro = parseFloat(aposta.valor_final) || 0;
-                    
-                    dadosPorCategoria[categoria].investido += valor;
-                    dadosPorCategoria[categoria].lucro += lucro;
-                    
-                    if (valor > 0) {
-                        dadosPorCategoria[categoria].retornos.push(lucro / valor);
-                    }
-                });
-
-                // Calcular risco (desvio padrão) e retorno (média) para cada categoria
-                const dados = Object.entries(dadosPorCategoria).map(([categoria, info]) => {
-                    const retornoMedio = info.investido > 0 ? (info.lucro / info.investido) * 100 : 0;
-                    
-                    let risco = 0;
-                    if (info.retornos.length > 1) {
-                        const media = info.retornos.reduce((a, b) => a + b, 0) / info.retornos.length;
-                        const variancia = info.retornos.reduce((acc, ret) => acc + Math.pow(ret - media, 2), 0) / info.retornos.length;
-                        risco = Math.sqrt(variancia) * 100;
-                    }
-                    
-                    return {
-                        x: risco,
-                        y: retornoMedio,
-                        label: categoria
-                    };
-                });
-
-                charts.riscoRetorno = new Chart(ctx, {
-                    type: 'scatter',
-                    data: {
-                        datasets: [{
-                            label: 'Risco vs Retorno',
-                            data: dados,
-                            backgroundColor: 'rgba(99, 102, 241, 0.6)',
-                            borderColor: '#6366f1',
-                            borderWidth: 2,
-                            pointRadius: 8,
-                            pointHoverRadius: 10
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const point = dados[context.dataIndex];
-                                        return [
-                                            point.label,
-                                            `Risco: ${context.parsed.x.toFixed(2)}%`,
-                                            `Retorno: ${context.parsed.y.toFixed(2)}%`
-                                        ];
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: 'Risco (Volatilidade %)',
-                                    color: '#9ca3af'
-                                },
-                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                                ticks: { color: '#6b7280' }
-                            },
-                            y: {
-                                title: {
-                                    display: true,
-                                    text: 'Retorno Médio (%)',
-                                    color: '#9ca3af'
-                                },
-                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                                ticks: { color: '#6b7280' }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        // Funções para análise de casas
-        function criarGraficosCasas() {
-            criarGraficoROICasa();
-            criarGraficoVolumePerformance();
-            analisarMercadosPorCasa();
-        }
-
-        function criarGraficoROICasa() {
-            const canvas = document.getElementById('chart-roi-casa');
-            if (!canvas) return;
-
-            const ctx = canvas.getContext('2d');
-            
-            if (typeof Chart !== 'undefined') {
-                if (charts.roiCasa) {
-                    charts.roiCasa.destroy();
-                }
-
-                // Calcular ROI por casa
-                const dadosPorCasa = {};
-                apostasFiltradas.forEach(aposta => {
-                    const casa = aposta.casa_de_apostas || 'Não especificada';
-                    if (!dadosPorCasa[casa]) {
-                        dadosPorCasa[casa] = { investido: 0, lucro: 0 };
-                    }
-                    
-                    dadosPorCasa[casa].investido += parseFloat(aposta.valor_apostado) || 0;
-                    if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu' || aposta.resultado === 'Cashout') {
-                        dadosPorCasa[casa].lucro += parseFloat(aposta.valor_final) || 0;
-                    }
-                });
-
-                const casas = Object.keys(dadosPorCasa);
-                const rois = casas.map(casa => 
-                    dadosPorCasa[casa].investido > 0 ? (dadosPorCasa[casa].lucro / dadosPorCasa[casa].investido) * 100 : 0
-                );
-
-                charts.roiCasa = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: casas,
-                        datasets: [{
-                            label: 'ROI (%)',
-                            data: rois,
-                            backgroundColor: rois.map(roi => roi >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)'),
-                            borderColor: rois.map(roi => roi >= 0 ? '#10b981' : '#ef4444'),
-                            borderWidth: 2
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false }
-                        },
-                        scales: {
-                            x: {
-                                grid: { display: false },
-                                ticks: { color: '#9ca3af' }
-                            },
-                            y: {
-                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                                ticks: { 
-                                    color: '#9ca3af',
-                                    callback: function(value) {
-                                        return value + '%';
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        function criarGraficoVolumePerformance() {
-            const canvas = document.getElementById('chart-volume-performance');
-            if (!canvas) return;
-
-            const ctx = canvas.getContext('2d');
-            
-            if (typeof Chart !== 'undefined') {
-                if (charts.volumePerformance) {
-                    charts.volumePerformance.destroy();
-                }
-
-                // Calcular volume e taxa de acerto por casa
-                const dadosPorCasa = {};
-                apostasFiltradas.forEach(aposta => {
-                    const casa = aposta.casa_de_apostas || 'Não especificada';
-                    if (!dadosPorCasa[casa]) {
-                        dadosPorCasa[casa] = { volume: 0, ganhas: 0, total: 0 };
-                    }
-                    
-                    dadosPorCasa[casa].volume += parseFloat(aposta.valor_apostado) || 0;
-                    dadosPorCasa[casa].total++;
-                    
-                    if (aposta.resultado === 'Ganhou') {
-                        dadosPorCasa[casa].ganhas++;
-                    }
-                });
-
-                const dados = Object.entries(dadosPorCasa).map(([casa, info]) => ({
-                    x: info.volume,
-                    y: info.total > 0 ? (info.ganhas / info.total) * 100 : 0,
-                    label: casa,
-                    r: Math.sqrt(info.total) * 3
-                }));
-
-                charts.volumePerformance = new Chart(ctx, {
-                    type: 'bubble',
-                    data: {
-                        datasets: [{
-                            label: 'Volume vs Taxa de Acerto',
-                            data: dados,
-                            backgroundColor: 'rgba(99, 102, 241, 0.6)',
-                            borderColor: '#6366f1',
-                            borderWidth: 2
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const point = dados[context.dataIndex];
-                                        return [
-                                            point.label,
-                                            `Volume: ${formatarMoeda(context.parsed.x)}`,
-                                            `Taxa de Acerto: ${context.parsed.y.toFixed(1)}%`
-                                        ];
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: 'Volume Apostado (R$)',
-                                    color: '#9ca3af'
-                                },
-                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                                ticks: { 
-                                    color: '#6b7280',
-                                    callback: function(value) {
-                                        return formatarMoeda(value);
-                                    }
-                                }
-                            },
-                            y: {
-                                title: {
-                                    display: true,
-                                    text: 'Taxa de Acerto (%)',
-                                    color: '#9ca3af'
-                                },
-                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                                ticks: { 
-                                    color: '#6b7280',
-                                    callback: function(value) {
-                                        return value + '%';
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        function analisarMercadosPorCasa() {
-            const container = document.getElementById('mercados-casa-container');
-            if (!container) return;
-
-            const mercadosPorCasa = {};
-            
-            apostasFiltradas.forEach(aposta => {
-                const casa = aposta.casa_de_apostas || 'Não especificada';
-                const mercado = aposta.mercado || aposta.tipo_aposta || 'Não especificado';
-                
-                if (!mercadosPorCasa[casa]) {
-                    mercadosPorCasa[casa] = {};
-                }
-                
-                if (!mercadosPorCasa[casa][mercado]) {
-                    mercadosPorCasa[casa][mercado] = { total: 0, ganhas: 0, lucro: 0, investido: 0 };
-                }
-                
-                mercadosPorCasa[casa][mercado].total++;
-                mercadosPorCasa[casa][mercado].investido += parseFloat(aposta.valor_apostado) || 0;
-                
-                if (aposta.resultado === 'Ganhou') {
-                    mercadosPorCasa[casa][mercado].ganhas++;
-                }
-                
-                if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu' || aposta.resultado === 'Cashout') {
-                    mercadosPorCasa[casa][mercado].lucro += parseFloat(aposta.valor_final) || 0;
-                }
-            });
-
-            // Criar cards para cada casa
-            let html = '';
-            Object.entries(mercadosPorCasa).forEach(([casa, mercados]) => {
-                // Encontrar melhor mercado para esta casa
-                let melhorMercado = '';
-                let melhorROI = -100;
-                
-                Object.entries(mercados).forEach(([mercado, dados]) => {
-                    if (dados.investido > 0) {
-                        const roi = (dados.lucro / dados.investido) * 100;
-                        if (roi > melhorROI) {
-                            melhorROI = roi;
-                            melhorMercado = mercado;
-                        }
-                    }
-                });
-                
-                html += `
-                    <div class="bg-slate-800/50 rounded-2xl p-6">
-                        <h4 class="font-bold text-white mb-4">${casa}</h4>
-                        <div class="space-y-2">
-                            <p class="text-sm text-slate-400">Melhor Mercado:</p>
-                            <p class="text-lg font-semibold text-green-400">${melhorMercado}</p>
-                            <p class="text-sm text-slate-400">ROI: ${formatarPercentual(melhorROI)}</p>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html || '<div class="text-center text-slate-500">Sem dados suficientes</div>';
-        }
-
-        // Funções para análise de performance
-        function criarGraficosPerformance() {
-            criarGraficoTendenciaPerformance();
-            criarGraficoPerformanceCasa();
-            calcularKPIs();
-        }
-
-        function criarGraficoTendenciaPerformance() {
-            const canvas = document.getElementById('chart-tendencia-performance');
-            if (!canvas) return;
-
-            const ctx = canvas.getContext('2d');
-            
-            if (typeof Chart !== 'undefined') {
-                if (charts.tendenciaPerformance) {
-                    charts.tendenciaPerformance.destroy();
-                }
-
-                // Calcular média móvel de ROI
-                const apostasOrdenadas = [...apostasFiltradas].sort((a, b) => new Date(a.data) - new Date(b.data));
-                const janela = 10; // Média móvel de 10 apostas
-                const dadosROI = [];
-                
-                for (let i = janela - 1; i < apostasOrdenadas.length; i++) {
-                    let investido = 0;
-                    let lucro = 0;
-                    
-                    for (let j = i - janela + 1; j <= i; j++) {
-                        investido += parseFloat(apostasOrdenadas[j].valor_apostado) || 0;
-                        if (apostasOrdenadas[j].resultado === 'Ganhou' || apostasOrdenadas[j].resultado === 'Perdeu' || apostasOrdenadas[j].resultado === 'Cashout') {
-                            lucro += parseFloat(apostasOrdenadas[j].valor_final) || 0;
-                        }
-                    }
-                    
-                    const roi = investido > 0 ? (lucro / investido) * 100 : 0;
-                    dadosROI.push({
-                        x: new Date(apostasOrdenadas[i].data).getTime(),
-                        y: roi
-                    });
-                }
-
-                charts.tendenciaPerformance = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        datasets: [{
-                            label: 'ROI (Média Móvel 10)',
-                            data: dadosROI,
-                            borderColor: '#06b6d4',
-                            backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                            fill: true,
-                            tension: 0.4,
-                            borderWidth: 3
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return `ROI: ${context.parsed.y.toFixed(2)}%`;
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                type: 'time',
-                                time: { unit: 'day' },
-                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                                ticks: { color: '#6b7280' }
-                            },
-                            y: {
-                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                                ticks: { 
-                                    color: '#6b7280',
-                                    callback: function(value) {
-                                        return value + '%';
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        function criarGraficoPerformanceCasa() {
-            const canvas = document.getElementById('chart-performance-casa');
-            if (!canvas) return;
-
-            const ctx = canvas.getContext('2d');
-            
-            if (typeof Chart !== 'undefined') {
-                if (charts.performanceCasa) {
-                    charts.performanceCasa.destroy();
-                }
-
-                // Calcular performance por casa
-                const dadosPorCasa = {};
-                apostasFiltradas.forEach(aposta => {
-                    const casa = aposta.casa_de_apostas || 'Não especificada';
-                    if (!dadosPorCasa[casa]) {
-                        dadosPorCasa[casa] = { ganhas: 0, total: 0 };
-                    }
-                    
-                    dadosPorCasa[casa].total++;
-                    if (aposta.resultado === 'Ganhou') {
-                        dadosPorCasa[casa].ganhas++;
-                    }
-                });
-
-                const casas = Object.keys(dadosPorCasa);
-                const taxasAcerto = casas.map(casa => 
-                    dadosPorCasa[casa].total > 0 ? (dadosPorCasa[casa].ganhas / dadosPorCasa[casa].total) * 100 : 0
-                );
-                const totais = casas.map(casa => dadosPorCasa[casa].total);
-
-                charts.performanceCasa = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: casas,
-                        datasets: [
-                            {
-                                label: 'Taxa de Acerto (%)',
-                                data: taxasAcerto,
-                                backgroundColor: 'rgba(99, 102, 241, 0.8)',
-                                borderColor: '#6366f1',
-                                borderWidth: 2,
-                                yAxisID: 'y'
-                            },
-                            {
-                                label: 'Total de Apostas',
-                                data: totais,
-                                type: 'line',
-                                borderColor: '#f59e0b',
-                                backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                                borderWidth: 2,
-                                yAxisID: 'y1'
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'top',
-                                labels: { color: '#9ca3af' }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                grid: { display: false },
-                                ticks: { color: '#9ca3af' }
-                            },
-                            y: {
-                                type: 'linear',
-                                display: true,
-                                position: 'left',
-                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                                ticks: { 
-                                    color: '#9ca3af',
-                                    callback: function(value) {
-                                        return value + '%';
-                                    }
-                                }
-                            },
-                            y1: {
-                                type: 'linear',
-                                display: true,
-                                position: 'right',
-                                grid: { drawOnChartArea: false },
-                                ticks: { color: '#9ca3af' }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        function calcularKPIs() {
-            const apostasValidas = apostasFiltradas.filter(a => a.resultado === 'Ganhou' || a.resultado === 'Perdeu');
-            
-            if (apostasValidas.length === 0) {
-                updateElementSafely('kpi-sharpe', '0.00');
-                updateElementSafely('kpi-sortino', '0.00');
-                updateElementSafely('kpi-calmar', '0.00');
-                updateElementSafely('kpi-win-loss', '0.00');
-                return;
-            }
-
-            // Calcular retornos
-            const retornos = apostasValidas.map(aposta => {
-                const valor = parseFloat(aposta.valor_apostado) || 0;
-                const lucro = parseFloat(aposta.valor_final) || 0;
-                return valor > 0 ? (lucro / valor) - 1 : 0;
-            });
-
-            // Sharpe Ratio
-            const mediaRetorno = retornos.reduce((a, b) => a + b, 0) / retornos.length;
-            const desvioPadrao = Math.sqrt(retornos.reduce((acc, ret) => acc + Math.pow(ret - mediaRetorno, 2), 0) / retornos.length);
-            const sharpe = desvioPadrao > 0 ? (mediaRetorno / desvioPadrao) * Math.sqrt(252) : 0; // Anualizado
-
-            // Sortino Ratio
-            const retornosNegativos = retornos.filter(r => r < 0);
-            const desvioNegativo = retornosNegativos.length > 0 ? 
-                Math.sqrt(retornosNegativos.reduce((acc, ret) => acc + Math.pow(ret, 2), 0) / retornosNegativos.length) : 0;
-            const sortino = desvioNegativo > 0 ? (mediaRetorno / desvioNegativo) * Math.sqrt(252) : 0;
-
-            // Calmar Ratio
-            const { drawdown } = calcularMetricasRisco(apostasValidas);
-            const retornoAnual = mediaRetorno * 252;
-            const calmar = drawdown > 0 ? Math.abs(retornoAnual / (drawdown / 100)) : 0;
-
-            // Win/Loss Ratio
-            const ganhas = apostasValidas.filter(a => a.resultado === 'Ganhou').length;
-            const perdidas = apostasValidas.filter(a => a.resultado === 'Perdeu').length;
-            const winLoss = perdidas > 0 ? ganhas / perdidas : ganhas;
-
-            // Atualizar elementos
-            updateElementSafely('kpi-sharpe', sharpe.toFixed(2));
-            updateElementSafely('kpi-sortino', sortino.toFixed(2));
-            updateElementSafely('kpi-calmar', calmar.toFixed(2));
-            updateElementSafely('kpi-win-loss', winLoss.toFixed(2));
-        }
-
-        // Funções para padrões e tendências
-        function atualizarPadroesTendencias() {
-            analisarPadroesCategorias();
-            analisarPalavrasChave();
-            analisarBonus();
-            calcularIndicadoresPadroes();
-        }
-
-        function analisarPadroesCategorias() {
-            const container = document.getElementById('patterns-categoria');
-            if (!container) return;
-
-            const padroesPorCategoria = {};
-            
-            apostasFiltradas.forEach(aposta => {
-                const categoria = aposta.categoria || 'Sem Categoria';
-                if (!padroesPorCategoria[categoria]) {
-                    padroesPorCategoria[categoria] = {
-                        sequenciaAtual: 0,
-                        maiorSequencia: 0,
-                        ultimoResultado: '',
-                        tendencia: []
-                    };
-                }
-                
-                const dados = padroesPorCategoria[categoria];
-                dados.tendencia.push(aposta.resultado === 'Ganhou' ? 1 : 0);
-                
-                if (aposta.resultado === dados.ultimoResultado) {
-                    dados.sequenciaAtual++;
-                } else {
-                    dados.sequenciaAtual = 1;
-                    dados.ultimoResultado = aposta.resultado;
-                }
-                
-                dados.maiorSequencia = Math.max(dados.maiorSequencia, dados.sequenciaAtual);
-            });
-
-            // Criar cards de padrões
-            let html = '';
-            Object.entries(padroesPorCategoria).forEach(([categoria, dados]) => {
-                const tendenciaRecente = dados.tendencia.slice(-10);
-                const taxaRecente = tendenciaRecente.length > 0 ? 
-                    (tendenciaRecente.filter(v => v === 1).length / tendenciaRecente.length) * 100 : 0;
-                
-                const cor = taxaRecente >= 60 ? 'green' : taxaRecente >= 40 ? 'yellow' : 'red';
-                
-                html += `
-                    <div class="bg-slate-800/50 rounded-2xl p-6">
-                        <h4 class="font-bold text-white mb-4">${categoria}</h4>
-                        <div class="space-y-3">
-                            <div class="flex justify-between">
-                                <span class="text-sm text-slate-400">Taxa Recente:</span>
-                                <span class="text-${cor}-400 font-semibold">${formatarPercentual(taxaRecente)}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-sm text-slate-400">Maior Sequência:</span>
-                                <span class="text-white font-semibold">${dados.maiorSequencia}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-sm text-slate-400">Sequência Atual:</span>
-                                <span class="text-white font-semibold">${dados.sequenciaAtual}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html || '<div class="text-center text-slate-500">Sem dados suficientes</div>';
-        }
-
-        function analisarPalavrasChave() {
-            const container = document.getElementById('keywords-container');
-            if (!container) return;
-
-            const palavrasFrequencia = {};
-            const apostasGanhas = apostasFiltradas.filter(a => a.resultado === 'Ganhou');
-            
-            apostasGanhas.forEach(aposta => {
-                // Extrair palavras de descrição, categoria, etc
-                const texto = `${aposta.descricao || ''} ${aposta.categoria || ''} ${aposta.mercado || ''}`.toLowerCase();
-                const palavras = texto.match(/\b[a-záàâãéèêíïóôõöúçñ]+\b/gi) || [];
-                
-                palavras.forEach(palavra => {
-                    if (palavra.length > 3) { // Ignorar palavras muito curtas
-                        palavrasFrequencia[palavra] = (palavrasFrequencia[palavra] || 0) + 1;
-                    }
-                });
-            });
-
-            // Ordenar por frequência e pegar top 10
-            const topPalavras = Object.entries(palavrasFrequencia)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 10);
-
-            if (topPalavras.length === 0) {
-                container.innerHTML = '<div class="text-center text-slate-500">Sem palavras-chave identificadas</div>';
-                return;
-            }
-
-            const maxFreq = topPalavras[0][1];
-            
-            container.innerHTML = topPalavras.map(([palavra, freq]) => {
-                const tamanho = 0.8 + (freq / maxFreq) * 1.2;
-                const opacidade = 0.5 + (freq / maxFreq) * 0.5;
-                
-                return `
-                    <span class="inline-block px-4 py-2 m-1 rounded-full bg-gradient-to-r from-blue-500 to-purple-500"
-                          style="font-size: ${tamanho}rem; opacity: ${opacidade};">
-                        ${palavra} (${freq})
-                    </span>
-                `;
-            }).join('');
-        }
-
-        function analisarBonus() {
-            const apostasComBonus = apostasFiltradas.filter(a => a.bonus || a.usou_bonus);
-            const totalComBonus = apostasComBonus.length;
-            
-            if (totalComBonus === 0) {
-                updateElementSafely('bonus-count', '0');
-                updateElementSafely('bonus-roi', '0%');
-                updateElementSafely('bonus-winrate', '0%');
-                updateElementSafely('bonus-profit', 'R$ 0');
-                return;
-            }
-
-            let investidoBonus = 0;
-            let lucroBonus = 0;
-            let ganhasBonus = 0;
-
-            apostasComBonus.forEach(aposta => {
-                investidoBonus += parseFloat(aposta.valor_apostado) || 0;
-                if (aposta.resultado === 'Ganhou') {
-                    ganhasBonus++;
-                }
-                if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu' || aposta.resultado === 'Cashout') {
-                    lucroBonus += parseFloat(aposta.valor_final) || 0;
-                }
-            });
-
-            const roiBonus = investidoBonus > 0 ? (lucroBonus / investidoBonus) * 100 : 0;
-            const winrateBonus = totalComBonus > 0 ? (ganhasBonus / totalComBonus) * 100 : 0;
-
-            updateElementSafely('bonus-count', totalComBonus.toString());
-            updateElementSafely('bonus-roi', formatarPercentual(roiBonus));
-            updateElementSafely('bonus-winrate', formatarPercentual(winrateBonus));
-            updateElementSafely('bonus-profit', formatarMoeda(lucroBonus));
-        }
-
-        function calcularIndicadoresPadroes() {
-            const apostasValidas = apostasFiltradas.filter(a => a.resultado === 'Ganhou' || a.resultado === 'Perdeu');
-            
-            if (apostasValidas.length === 0) {
-                updateElementSafely('pattern-consistency', '0%');
-                updateElementSafely('pattern-momentum', 'Neutro');
-                updateElementSafely('pattern-cycle', '-');
-                updateElementSafely('pattern-direction', '-');
-                return;
-            }
-
-            // Consistência (desvio padrão dos resultados)
-            const resultados = apostasValidas.map(a => a.resultado === 'Ganhou' ? 1 : 0);
-            const mediaResultados = resultados.reduce((a, b) => a + b, 0) / resultados.length;
-            const variancia = resultados.reduce((acc, res) => acc + Math.pow(res - mediaResultados, 2), 0) / resultados.length;
-            const consistencia = 100 - (Math.sqrt(variancia) * 100);
-
-            // Momentum (tendência recente vs histórica)
-            const metadeRecente = resultados.slice(-Math.floor(resultados.length / 2));
-            const metadeAnterior = resultados.slice(0, Math.floor(resultados.length / 2));
-            const taxaRecente = metadeRecente.filter(r => r === 1).length / metadeRecente.length;
-            const taxaAnterior = metadeAnterior.filter(r => r === 1).length / metadeAnterior.length;
-            
-            let momentum = 'Neutro';
-            if (taxaRecente > taxaAnterior * 1.1) momentum = 'Positivo';
-            else if (taxaRecente < taxaAnterior * 0.9) momentum = 'Negativo';
-
-            // Ciclo dominante (análise simplificada)
-            let ciclo = 'Irregular';
-            const sequencias = [];
-            let sequenciaAtual = { tipo: '', tamanho: 0 };
-            
-            apostasValidas.forEach(aposta => {
-                const tipo = aposta.resultado === 'Ganhou' ? 'G' : 'P';
-                if (tipo === sequenciaAtual.tipo) {
-                    sequenciaAtual.tamanho++;
-                } else {
-                    if (sequenciaAtual.tamanho > 0) {
-                        sequencias.push(sequenciaAtual.tamanho);
-                    }
-                    sequenciaAtual = { tipo, tamanho: 1 };
-                }
-            });
-            
-            if (sequencias.length > 0) {
-                const mediaSequencia = sequencias.reduce((a, b) => a + b, 0) / sequencias.length;
-                if (mediaSequencia < 2) ciclo = 'Alternado';
-                else if (mediaSequencia < 4) ciclo = 'Curto';
-                else ciclo = 'Longo';
-            }
-
-            // Direção
-            const lucroTotal = calcularLucroTotal();
-            const direcao = lucroTotal > 0 ? 'Ascendente' : lucroTotal < 0 ? 'Descendente' : 'Lateral';
-
-            updateElementSafely('pattern-consistency', formatarPercentual(consistencia));
-            updateElementSafely('pattern-momentum', momentum);
-            updateElementSafely('pattern-cycle', ciclo);
-            updateElementSafely('pattern-direction', direcao);
-        }
-
-        function criarGraficosPadroes() {
-            criarGraficoTendenciaROI();
-            criarGraficoMomentum();
-        }
-
-        function criarGraficoTendenciaROI() {
-            const canvas = document.getElementById('chart-tendencia-roi');
-            if (!canvas) return;
-
-            const ctx = canvas.getContext('2d');
-            
-            if (typeof Chart !== 'undefined') {
-                if (charts.tendenciaROI) {
-                    charts.tendenciaROI.destroy();
-                }
-
-                // Calcular ROI acumulado e média móvel
-                const apostasOrdenadas = [...apostasFiltradas].sort((a, b) => new Date(a.data) - new Date(b.data));
-                let investidoAcum = 0;
-                let lucroAcum = 0;
-                const dadosROI = [];
-                const dadosMA = [];
-                const janela = 5;
-
-                apostasOrdenadas.forEach((aposta, index) => {
-                    investidoAcum += parseFloat(aposta.valor_apostado) || 0;
-                    if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu' || aposta.resultado === 'Cashout') {
-                        lucroAcum += parseFloat(aposta.valor_final) || 0;
-                    }
-                    
-                    const roi = investidoAcum > 0 ? (lucroAcum / investidoAcum) * 100 : 0;
-                    dadosROI.push({
-                        x: new Date(aposta.data).getTime(),
-                        y: roi
-                    });
-                    
-                    // Média móvel
-                    if (index >= janela - 1) {
-                        const ultimosROI = dadosROI.slice(-janela).map(d => d.y);
-                        const mediaROI = ultimosROI.reduce((a, b) => a + b, 0) / janela;
-                        dadosMA.push({
-                            x: new Date(aposta.data).getTime(),
-                            y: mediaROI
-                        });
-                    }
-                });
-
-                charts.tendenciaROI = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        datasets: [
-                            {
-                                label: 'ROI Acumulado',
-                                data: dadosROI,
-                                borderColor: '#6366f1',
-                                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                                borderWidth: 2,
-                                tension: 0.1
-                            },
-                            {
-                                label: 'Média Móvel (5)',
-                                data: dadosMA,
-                                borderColor: '#f59e0b',
-                                borderWidth: 3,
-                                borderDash: [5, 5],
-                                fill: false,
-                                tension: 0.4
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'top',
-                                labels: { color: '#9ca3af' }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                type: 'time',
-                                time: { unit: 'day' },
-                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                                ticks: { color: '#6b7280' }
-                            },
-                            y: {
-                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                                ticks: { 
-                                    color: '#6b7280',
-                                    callback: function(value) {
-                                        return value + '%';
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        function criarGraficoMomentum() {
-            const canvas = document.getElementById('chart-momentum');
-            if (!canvas) return;
-
-            const ctx = canvas.getContext('2d');
-            
-            if (typeof Chart !== 'undefined') {
-                if (charts.momentum) {
-                    charts.momentum.destroy();
-                }
-
-                // Calcular RSI simplificado
-                const apostasOrdenadas = [...apostasFiltradas].sort((a, b) => new Date(a.data) - new Date(b.data));
-                const periodo = 14;
-                const dadosRSI = [];
-                
-                for (let i = periodo; i < apostasOrdenadas.length; i++) {
-                    let ganhos = 0;
-                    let perdas = 0;
-                    
-                    for (let j = i - periodo; j < i; j++) {
-                        if (apostasOrdenadas[j].resultado === 'Ganhou') {
-                            ganhos++;
-                        } else if (apostasOrdenadas[j].resultado === 'Perdeu') {
-                            perdas++;
-                        }
-                    }
-                    
-                    const rs = perdas > 0 ? ganhos / perdas : ganhos;
-                    const rsi = 100 - (100 / (1 + rs));
-                    
-                    dadosRSI.push({
-                        x: new Date(apostasOrdenadas[i].data).getTime(),
-                        y: rsi
-                    });
-                }
-
-                charts.momentum = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        datasets: [{
-                            label: 'RSI (14)',
-                            data: dadosRSI,
-                            borderColor: '#8b5cf6',
-                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                            fill: true,
-                            tension: 0.4,
-                            borderWidth: 2
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            annotation: {
-                                annotations: {
-                                    line1: {
-                                        type: 'line',
-                                        yMin: 70,
-                                        yMax: 70,
-                                        borderColor: 'rgba(239, 68, 68, 0.5)',
-                                        borderWidth: 2,
-                                        borderDash: [5, 5]
-                                    },
-                                    line2: {
-                                        type: 'line',
-                                        yMin: 30,
-                                        yMax: 30,
-                                        borderColor: 'rgba(16, 185, 129, 0.5)',
-                                        borderWidth: 2,
-                                        borderDash: [5, 5]
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                type: 'time',
-                                time: { unit: 'day' },
-                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                                ticks: { color: '#6b7280' }
-                            },
-                            y: {
-                                min: 0,
-                                max: 100,
-                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                                ticks: { color: '#6b7280' }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        // As funções restantes (já existentes no código original)
-        function atualizarPerformance() {
-            try {
-                const apostasValidas = apostasFiltradas.filter(a => a.resultado === 'Ganhou' || a.resultado === 'Perdeu');
-                
-                if (apostasValidas.length === 0) {
-                    updateElementSafely('perf-yield', '0%');
-                    updateElementSafely('perf-roi-consistencia', '0%');
-                    updateElementSafely('perf-strike-rate', '0%');
-                    updateElementSafely('perf-apostas-mes', '0');
-                    return;
-                }
-                
-                const totalApostado = apostasValidas.reduce((sum, a) => sum + parseFloat(a.valor_apostado), 0);
-                const lucro = calcularLucroTotal();
-                const yield_ = totalApostado > 0 ? (lucro / totalApostado) * 100 : 0;
-                
-                const consistencia = Math.abs(yield_) > 0 ? Math.min(100, Math.abs(yield_) * 5) : 0;
-                
-                const apostasAltas = apostasValidas.filter(a => parseFloat(a.odd_final || a.odd_inicial) > 2.5);
-                const acertosAltos = apostasAltas.filter(a => a.resultado === 'Ganhou').length;
-                const strikeRate = apostasAltas.length > 0 ? (acertosAltos / apostasAltas.length) * 100 : 0;
-                
-                const meses = new Set(apostasValidas.map(a => a.data.substring(0, 7))).size || 1;
-                const apostasPorMes = apostasValidas.length / meses;
-                
-                updateElementSafely('perf-yield', formatarPercentual(yield_));
-                updateElementSafely('perf-roi-consistencia', formatarPercentual(consistencia));
-                updateElementSafely('perf-strike-rate', formatarPercentual(strikeRate));
-                updateElementSafely('perf-apostas-mes', Math.round(apostasPorMes));
-                updateElementSafely('perf-melhor-mes', yield_ > 0 ? new Date().toLocaleDateString('pt-BR', { month: 'short' }) : '-');
-                updateElementSafely('perf-odd-otima', calcularOddOtima().toFixed(2));
-                
-                const volumeIdeal = totalApostado / apostasValidas.length;
-                updateElementSafely('perf-volume-ideal', formatarMoeda(volumeIdeal));
-                
-                console.log('Performance atualizada');
-            } catch (error) {
-                console.error('Erro ao atualizar performance:', error);
-            }
-        }
-
-        function calcularOddOtima() {
-            const apostasValidas = apostasFiltradas.filter(a => a.resultado === 'Ganhou' || a.resultado === 'Perdeu');
-            if (apostasValidas.length === 0) return 2.0;
-            
-            const faixas = {
-                baixa: { min: 1.0, max: 2.0, apostas: [], lucro: 0, investido: 0 },
-                media: { min: 2.0, max: 3.5, apostas: [], lucro: 0, investido: 0 },
-                alta: { min: 3.5, max: 10.0, apostas: [], lucro: 0, investido: 0 }
-            };
-            
-            apostasValidas.forEach(aposta => {
-                const odd = parseFloat(aposta.odd_final || aposta.odd_inicial);
-                const valorApostado = parseFloat(aposta.valor_apostado);
-                const valorFinal = parseFloat(aposta.valor_final);
-                
-                if (odd >= faixas.baixa.min && odd < faixas.baixa.max) {
-                    faixas.baixa.apostas.push(aposta);
-                    faixas.baixa.investido += valorApostado;
-                    faixas.baixa.lucro += valorFinal;
-                } else if (odd >= faixas.media.min && odd < faixas.media.max) {
-                    faixas.media.apostas.push(aposta);
-                    faixas.media.investido += valorApostado;
-                    faixas.media.lucro += valorFinal;
-                } else if (odd >= faixas.alta.min && odd < faixas.alta.max) {
-                    faixas.alta.apostas.push(aposta);
-                    faixas.alta.investido += valorApostado;
-                    faixas.alta.lucro += valorFinal;
-                }
-            });
-            
-            let melhorFaixa = 'media';
-            let melhorROI = -100;
-            
-            Object.keys(faixas).forEach(faixa => {
-                const roi = faixas[faixa].investido > 0 ? (faixas[faixa].lucro / faixas[faixa].investido) * 100 : -100;
-                if (roi > melhorROI) {
-                    melhorROI = roi;
-                    melhorFaixa = faixa;
-                }
-            });
-            
-            const faixaEscolhida = faixas[melhorFaixa];
-            return (faixaEscolhida.min + faixaEscolhida.max) / 2;
-        }
-
-        function atualizarCasasDeApostas() {
-            try {
-                const apostasValidas = apostasFiltradas.filter(a => a.resultado === 'Ganhou' || a.resultado === 'Perdeu');
-                const dadosPorCasa = {};
-                
-                apostasValidas.forEach(aposta => {
-                    const casa = aposta.casa_de_apostas;
-                    if (!dadosPorCasa[casa]) {
-                        dadosPorCasa[casa] = {
-                            total: 0,
-                            ganhas: 0,
-                            investido: 0,
-                            lucro: 0,
-                            oddTotal: 0,
-                            bonusUsado: 0
-                        };
-                    }
-                    
-                    dadosPorCasa[casa].total++;
-                    dadosPorCasa[casa].investido += parseFloat(aposta.valor_apostado);
-                    dadosPorCasa[casa].lucro += parseFloat(aposta.valor_final);
-                    dadosPorCasa[casa].oddTotal += parseFloat(aposta.odd_final || aposta.odd_inicial) || 0;
-                    
-                    if (aposta.resultado === 'Ganhou') {
-                        dadosPorCasa[casa].ganhas++;
-                    }
-                    
-                    if (aposta.bonus || aposta.usou_bonus) {
-                        dadosPorCasa[casa].bonusUsado++;
-                    }
-                });
-                
-                const tbody = document.getElementById('table-ranking-casas');
-                if (tbody && Object.keys(dadosPorCasa).length > 0) {
-                    const casasOrdenadas = Object.entries(dadosPorCasa)
-                        .sort(([,a], [,b]) => {
-                            const roiA = a.investido > 0 ? (a.lucro / a.investido) * 100 : -100;
-                            const roiB = b.investido > 0 ? (b.lucro / b.investido) * 100 : -100;
-                            return roiB - roiA;
-                        });
-                    
-                    tbody.innerHTML = casasOrdenadas.map(([casa, dados]) => {
-                        const taxaAcerto = dados.total > 0 ? (dados.ganhas / dados.total) * 100 : 0;
-                        const roi = dados.investido > 0 ? (dados.lucro / dados.investido) * 100 : 0;
-                        const roiClass = roi >= 0 ? 'profit-positive' : 'profit-negative';
-                        const lucroClass = dados.lucro >= 0 ? 'profit-positive' : 'profit-negative';
-                        const oddMedia = dados.total > 0 ? dados.oddTotal / dados.total : 0;
-                        
-                        let avaliacao = '⭐';
-                        if (roi >= 10 && taxaAcerto >= 60) avaliacao = '⭐⭐⭐⭐⭐';
-                        else if (roi >= 5 && taxaAcerto >= 50) avaliacao = '⭐⭐⭐⭐';
-                        else if (roi >= 0 && taxaAcerto >= 45) avaliacao = '⭐⭐⭐';
-                        else if (roi >= 0) avaliacao = '⭐⭐';
-                        
-                        return `
-                            <tr class="hover:bg-slate-700/50 transition-colors">
-                                <td class="px-6 py-4 font-semibold">${casa}</td>
-                                <td class="px-6 py-4">${dados.total}</td>
-                                <td class="px-6 py-4">${formatarPercentual(taxaAcerto)}</td>
-                                <td class="px-6 py-4 ${roiClass} font-semibold">${formatarPercentual(roi)}</td>
-                                <td class="px-6 py-4 ${lucroClass} font-semibold">${formatarMoeda(dados.lucro)}</td>
-                                <td class="px-6 py-4">${oddMedia.toFixed(2)}</td>
-                                <td class="px-6 py-4">${dados.bonusUsado}</td>
-                                <td class="px-6 py-4 text-lg">${avaliacao}</td>
-                            </tr>
-                        `;
-                    }).join('');
-                } else if (tbody) {
-                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-slate-500 py-8">Nenhum dado disponível</td></tr>';
-                }
-                
-                console.log('Casas de apostas atualizadas');
-            } catch (error) {
-                console.error('Erro ao atualizar casas:', error);
-            }
-        }
-
-        function calcularSequencias() {
-            const apostasOrdenadas = [...apostasFiltradas].sort((a, b) => new Date(a.data) - new Date(b.data));
-            
-            let maiorVitorias = 0;
-            let maiorDerrotas = 0;
-            let sequenciaAtual = 0;
-            let tipoAtual = null;
-            
-            let vitoriasAtual = 0;
-            let derrotasAtual = 0;
-            
-            for (const aposta of apostasOrdenadas) {
-                if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Cashout') {
-                    if (tipoAtual === 'vitoria') {
-                        vitoriasAtual++;
-                    } else {
-                        maiorDerrotas = Math.max(maiorDerrotas, derrotasAtual);
-                        vitoriasAtual = 1;
-                        tipoAtual = 'vitoria';
-                        derrotasAtual = 0;
-                    }
-                    maiorVitorias = Math.max(maiorVitorias, vitoriasAtual);
-                } else if (aposta.resultado === 'Perdeu') {
-                    if (tipoAtual === 'derrota') {
-                        derrotasAtual++;
-                    } else {
-                        maiorVitorias = Math.max(maiorVitorias, vitoriasAtual);
-                        derrotasAtual = 1;
-                        tipoAtual = 'derrota';
-                        vitoriasAtual = 0;
-                    }
-                    maiorDerrotas = Math.max(maiorDerrotas, derrotasAtual);
-                }
-            }
-            
-            if (apostasOrdenadas.length > 0) {
-                const ultimaAposta = apostasOrdenadas[apostasOrdenadas.length - 1];
-                if (ultimaAposta.resultado === 'Ganhou' || ultimaAposta.resultado === 'Cashout') {
-                    sequenciaAtual = vitoriasAtual;
-                } else if (ultimaAposta.resultado === 'Perdeu') {
-                    sequenciaAtual = -derrotasAtual;
-                }
-            }
-            
-            return { maiorVitorias, maiorDerrotas, sequenciaAtual };
-        }
-
-        function atualizarAnaliseRisco() {
-            try {
-                const apostasValidas = apostasFiltradas.filter(a => a.resultado === 'Ganhou' || a.resultado === 'Perdeu');
-                
-                if (apostasValidas.length === 0) {
-                    updateElementSafely('risk-drawdown', '0%');
-                    updateElementSafely('risk-volatility', '0%');
-                    updateElementSafely('risk-score', '0');
-                    updateElementSafely('risk-kelly', '0%');
-                    return;
-                }
-                
-                const { drawdown, volatilidade, scoreRisco, kelly } = calcularMetricasRisco(apostasValidas);
-                
-                updateElementSafely('risk-drawdown', formatarPercentual(drawdown));
-                updateElementSafely('risk-volatility', formatarPercentual(volatilidade));
-                updateElementSafely('risk-score', Math.round(scoreRisco));
-                updateElementSafely('risk-kelly', formatarPercentual(kelly));
-                
-                // Calcular métricas adicionais
-                calcularMetricasRiscoAvancadas(apostasValidas);
-                gerarRecomendacoesRisco(scoreRisco, drawdown);
-                
-                console.log('Análise de risco atualizada');
-            } catch (error) {
-                console.error('Erro ao atualizar análise de risco:', error);
-            }
-        }
-
-        function calcularMetricasRisco(apostasValidas) {
-            let saldo = 0;
-            let picoSaldo = 0;
-            let maxDrawdown = 0;
-            const retornos = [];
-            
-            apostasValidas.forEach(aposta => {
-                saldo += parseFloat(aposta.valor_final);
-                
-                if (saldo > picoSaldo) picoSaldo = saldo;
-                if (picoSaldo > 0) {
-                    const drawdown = ((picoSaldo - saldo) / picoSaldo) * 100;
-                    maxDrawdown = Math.max(maxDrawdown, drawdown);
-                }
-                
-                const valorApostado = parseFloat(aposta.valor_apostado);
-                if (valorApostado > 0) {
-                    retornos.push(parseFloat(aposta.valor_final) / valorApostado);
-                }
-            });
-            
-            const mediaRetornos = retornos.reduce((a, b) => a + b, 0) / retornos.length || 0;
-            const variancia = retornos.reduce((acc, ret) => acc + Math.pow(ret - mediaRetornos, 2), 0) / retornos.length || 0;
-            const volatilidade = Math.sqrt(variancia) * 100;
-            
-            const scoreDrawdown = Math.min(maxDrawdown * 2, 50);
-            const scoreVolatilidade = Math.min(volatilidade * 5, 30);
-            const ganhas = apostasValidas.filter(a => a.resultado === 'Ganhou').length;
-            const taxaAcerto = (ganhas / apostasValidas.length) * 100;
-            const scoreTaxaAcerto = Math.max(0, 20 - (taxaAcerto / 3));
-            const scoreRisco = scoreDrawdown + scoreVolatilidade + scoreTaxaAcerto;
-            
-            const p = ganhas / apostasValidas.length;
-            const q = 1 - p;
-            const b = 2.5;
-            const kelly = Math.max(0, ((b * p - q) / b) * 100);
-            
-            return {
-                drawdown: maxDrawdown,
-                volatilidade,
-                scoreRisco,
-                kelly
-            };
-        }
-
-        function calcularMetricasRiscoAvancadas(apostasValidas) {
-            // Value at Risk (95%)
-            const retornos = apostasValidas.map(a => parseFloat(a.valor_final) || 0);
-            retornos.sort((a, b) => a - b);
-            const var95Index = Math.floor(retornos.length * 0.05);
-            const var95 = retornos[var95Index] || 0;
-            
-            // Expected Shortfall
-            const retornosAbaixoVaR = retornos.slice(0, var95Index);
-            const expectedShortfall = retornosAbaixoVaR.length > 0 ?
-                retornosAbaixoVaR.reduce((a, b) => a + b, 0) / retornosAbaixoVaR.length : 0;
-            
-            // Recovery Time (simulado)
-            const recoveryTime = Math.abs(var95) > 0 ? Math.ceil(Math.abs(var95 / 50)) : 0;
-            
-            // Risk-Adjusted Return
-            const totalInvestido = apostasValidas.reduce((sum, a) => sum + parseFloat(a.valor_apostado), 0);
-            const lucroTotal = calcularLucroTotal();
-            const retorno = totalInvestido > 0 ? (lucroTotal / totalInvestido) * 100 : 0;
-            const { volatilidade } = calcularMetricasRisco(apostasValidas);
-            const riskAdjustedReturn = volatilidade > 0 ? retorno / volatilidade : 0;
-            
-            updateElementSafely('var-95', formatarMoeda(var95));
-            updateElementSafely('expected-shortfall', formatarMoeda(expectedShortfall));
-            updateElementSafely('recovery-time', `${recoveryTime} dias`);
-            updateElementSafely('risk-adjusted-return', formatarPercentual(riskAdjustedReturn * 100));
-        }
-
-        function gerarRecomendacoesRisco(scoreRisco, drawdown) {
-            const container = document.getElementById('risk-recommendations');
-            if (!container) return;
-            
-            const recomendacoes = [];
-            
-            if (scoreRisco > 70) {
-                recomendacoes.push({
-                    tipo: 'danger',
-                    icone: 'alert-triangle',
-                    texto: 'Risco ALTO: Considere reduzir significativamente o valor das apostas.'
-                });
-            } else if (scoreRisco > 40) {
-                recomendacoes.push({
-                    tipo: 'warning',
-                    icone: 'alert-circle',
-                    texto: 'Risco MODERADO: Mantenha controle rigoroso do bankroll.'
-                });
-            } else {
-                recomendacoes.push({
-                    tipo: 'success',
-                    icone: 'check-circle',
-                    texto: 'Risco BAIXO: Gestão de risco adequada.'
-                });
-            }
-            
-            if (drawdown > 25) {
-                recomendacoes.push({
-                    tipo: 'warning',
-                    icone: 'trending-down',
-                    texto: 'Drawdown elevado: Implemente stop-loss mais rigoroso.'
-                });
-            }
-            
-            if (apostasFiltradas.length > 0) {
-                const totalApostado = apostasFiltradas.reduce((sum, a) => sum + parseFloat(a.valor_apostado), 0);
-                const mediaAposta = totalApostado / apostasFiltradas.length;
-                
-                recomendacoes.push({
-                    tipo: 'info',
-                    icone: 'info',
-                    texto: `Valor médio por aposta: ${formatarMoeda(mediaAposta)}. Considere manter consistência.`
-                });
-            }
-            
-            container.innerHTML = recomendacoes.map(rec => `
-                <div class="insight-card p-6 rounded-2xl ${
-                    rec.tipo === 'danger' ? 'border-red-500/50 bg-red-500/10' : 
-                    rec.tipo === 'warning' ? 'border-yellow-500/50 bg-yellow-500/10' : 
-                    rec.tipo === 'success' ? 'border-green-500/50 bg-green-500/10' : 
-                    'border-blue-500/50 bg-blue-500/10'
-                }">
-                    <div class="flex items-center space-x-4">
-                        <div class="metric-icon p-2 rounded-xl">
-                            <i data-lucide="${rec.icone}" class="w-5 h-5 ${
-                                rec.tipo === 'danger' ? 'text-red-400' : 
-                                rec.tipo === 'warning' ? 'text-yellow-400' : 
-                                rec.tipo === 'success' ? 'text-green-400' : 
-                                'text-blue-400'
-                            }"></i>
-                        </div>
-                        <span class="font-semibold">${rec.texto}</span>
-                    </div>
+        // Processar todos os tooltips
+        const tooltips = document.querySelectorAll('.tooltip');
+        
+        tooltips.forEach(tooltip => {
+            const data = tooltip.getAttribute('data-tooltip');
+            if (!data) return;
+            
+            const [title, content] = data.split('|');
+            const icon = tooltip.querySelector('.info-icon');
+            
+            // Criar portal para este tooltip
+            const portal = document.createElement('div');
+            portal.className = 'tooltip-portal';
+            portal.innerHTML = `
+                <div class="tooltip-content">
+                    <strong>${title}</strong><br>
+                    ${content}
                 </div>
-            `).join('');
+            `;
+            portalContainer.appendChild(portal);
             
-            if (window.lucide) {
-                lucide.createIcons();
-            }
-        }
-
-        // As funções básicas já existentes do código original
-        function configurarFiltrosData() {
-            const startDateInput = document.getElementById('filter-date-start');
-            const endDateInput = document.getElementById('filter-date-end');
+            let hideTimeout;
             
-            if (startDateInput) {
-                startDateInput.addEventListener('change', function() {
-                    console.log('Data inicial alterada:', this.value);
-                    aplicarFiltros();
-                    atualizarAnalises();
-                });
-            }
-            
-            if (endDateInput) {
-                endDateInput.addEventListener('change', function() {
-                    console.log('Data final alterada:', this.value);
-                    aplicarFiltros();
-                    atualizarAnalises();
-                });
-            }
-        }
-
-        async function carregarApostas() {
-            showLoading();
-            
-            try {
-                console.log('Tentando carregar apostas do Supabase...');
+            // Mostrar tooltip
+            const showTooltip = () => {
+                clearTimeout(hideTimeout);
+                const rect = icon.getBoundingClientRect();
+                const tooltipContent = portal.querySelector('.tooltip-content');
                 
-                if (!supabase) {
-                    throw new Error('Supabase não inicializado');
+                // Calcular posição
+                const tooltipWidth = 280;
+                const tooltipHeight = tooltipContent.offsetHeight || 80;
+                
+                let left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
+                let top = rect.top - tooltipHeight - 15;
+                
+                // Ajustar se sair da tela
+                if (left < 10) left = 10;
+                if (left + tooltipWidth > window.innerWidth - 10) {
+                    left = window.innerWidth - tooltipWidth - 10;
                 }
-
-                let query = supabase.from('aposta').select('*').order('data', { ascending: true });
-
-                const startDate = document.getElementById('filter-date-start')?.value;
-                const endDate = document.getElementById('filter-date-end')?.value;
                 
-                if (startDate) {
-                    query = query.gte('data', startDate);
+                if (top < 10) {
+                    // Mostrar abaixo se não couber em cima
+                    top = rect.bottom + 15;
                 }
-                if (endDate) {
-                    query = query.lte('data', endDate);
-                }
-
-                const { data, error } = await query;
                 
-                if (error) {
-                    console.error('Erro do Supabase:', error);
-                    throw error;
-                }
-
-                console.log('Dados carregados:', data?.length || 0, 'apostas');
-                apostas = data || [];
-                
-                aplicarFiltros();
-                preencherFiltros();
-                atualizarAnalises();
-                
-            } catch (error) {
-                console.error('Erro ao carregar dados:', error);
-                
-                criarDadosExemplo();
-                aplicarFiltros();
-                atualizarAnalises();
-                
-                mostrarMensagemOffline();
-            } finally {
-                hideLoading();
-            }
-        }
-
-        function criarDadosExemplo() {
-            const hoje = new Date();
-            apostas = [];
+                portal.style.left = left + 'px';
+                portal.style.top = top + 'px';
+                portal.classList.add('show');
+            };
             
-            for (let i = 0; i < 50; i++) {
-                const data = new Date(hoje);
-                data.setDate(data.getDate() - i * 2);
-                
-                const resultado = Math.random() > 0.45 ? 'Ganhou' : 'Perdeu';
-                const valorApostado = 50 + Math.random() * 200;
-                const odd = 1.5 + Math.random() * 3.5;
-                const usouBonus = Math.random() > 0.8;
-                
-                apostas.push({
-                    id: i + 1,
-                    data: data.toISOString().split('T')[0],
-                    resultado: resultado,
-                    valor_apostado: valorApostado.toFixed(2),
-                    valor_final: resultado === 'Ganhou' ? (valorApostado * odd).toFixed(2) : '0',
-                    odd_inicial: odd.toFixed(2),
-                    odd_final: odd.toFixed(2),
-                    casa_de_apostas: ['Bet365', 'Betano', 'Sportingbet', 'Betfair', '1xBet'][Math.floor(Math.random() * 5)],
-                    tipo_aposta: ['Simples', 'Múltipla', 'Sistema'][Math.floor(Math.random() * 3)],
-                    categoria: ['Futebol', 'Tênis', 'Basquete', 'E-Sports', 'Vôlei'][Math.floor(Math.random() * 5)],
-                    mercado: ['1X2', 'Over/Under', 'Handicap', 'Ambas Marcam'][Math.floor(Math.random() * 4)],
-                    bonus: usouBonus,
-                    descricao: `Aposta ${i + 1}`
-                });
-            }
+            // Esconder tooltip
+            const hideTooltip = () => {
+                hideTimeout = setTimeout(() => {
+                    portal.classList.remove('show');
+                }, 100);
+            };
             
-            console.log('Dados de exemplo criados:', apostas.length, 'apostas');
-        }
-
-        function mostrarMensagemOffline() {
-            const container = document.getElementById('insights-container');
-            if (container) {
-                container.innerHTML = `
-                    <div class="insight-card p-6 rounded-2xl border-orange-500/50 bg-orange-500/10">
-                        <div class="flex items-start space-x-4">
-                            <div class="metric-icon p-2 rounded-xl">
-                                <i data-lucide="wifi-off" class="w-5 h-5 text-orange-400"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-white mb-2">Modo Demonstração</h4>
-                                <p class="text-slate-300">Usando dados de exemplo. Conecte-se ao banco para ver seus dados reais.</p>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                if (window.lucide) {
-                    lucide.createIcons();
-                }
-            }
-        }
-
-        function filtrarPorCriterios(aposta) {
-            if (!filtrarPorData(aposta)) return false;
-            if (!filtrarPorCasa(aposta)) return false;
-            if (!filtrarPorTipo(aposta)) return false;
-            if (!filtrarPorCategoria(aposta)) return false;
+            // Eventos
+            icon.addEventListener('mouseenter', showTooltip);
+            icon.addEventListener('mouseleave', hideTooltip);
             
-            return true;
-        }
-
-        function filtrarPorData(aposta) {
-            const dataAposta = new Date(aposta.data);
-            const dataInicio = document.getElementById('filter-date-start')?.value;
-            const dataFim = document.getElementById('filter-date-end')?.value;
-            
-            if (dataInicio && dataAposta < new Date(dataInicio)) return false;
-            if (dataFim && dataAposta > new Date(dataFim)) return false;
-            
-            return true;
-        }
-
-        function filtrarPorCasa(aposta) {
-            const casasSelecionadas = tomSelects.house?.getValue() || [];
-            if (casasSelecionadas.length === 0) return true;
-            
-            return casasSelecionadas.includes(aposta.casa_de_apostas);
-        }
-
-        function filtrarPorTipo(aposta) {
-            const tiposSelecionados = tomSelects.type?.getValue() || [];
-            if (tiposSelecionados.length === 0) return true;
-            
-            return tiposSelecionados.includes(aposta.tipo_aposta);
-        }
-
-        function filtrarPorCategoria(aposta) {
-            const categoriasSelecionadas = tomSelects.tournament?.getValue() || [];
-            if (categoriasSelecionadas.length === 0) return true;
-            
-            const categoriasAposta = String(aposta.categoria || '').split(/[,;]+/).map(c => c.trim().toLowerCase());
-            return categoriasSelecionadas.some(cat => 
-                categoriasAposta.includes(cat.toLowerCase())
-            );
-        }
-
-        function aplicarFiltros() {
-            try {
-                console.log('Aplicando filtros...');
-                
-                const startDate = document.getElementById('filter-date-start')?.value;
-                const endDate = document.getElementById('filter-date-end')?.value;
-                
-                const selectedHouses = tomSelects.house?.getValue() || [];
-                const selectedTypes = tomSelects.type?.getValue() || [];
-                const selectedTournaments = tomSelects.tournament?.getValue() || [];
-                
-                console.log('Filtros ativos:', {
-                    dataInicio: startDate,
-                    dataFim: endDate,
-                    casas: selectedHouses,
-                    tipos: selectedTypes,
-                    torneios: selectedTournaments
-                });
-                
-                apostasFiltradas = apostas.filter(aposta => {
-                    return filtrarPorCriterios(aposta);
-                });
-                
-                console.log(`Filtros aplicados: ${apostasFiltradas.length} apostas de ${apostas.length} total`);
-            } catch (error) {
-                console.error('Erro ao aplicar filtros:', error);
-                apostasFiltradas = apostas;
-            }
-        }
-
-        function preencherFiltros() {
-            try {
-                console.log('Preenchendo filtros...');
-                const casas = [...new Set(apostas.map(a => a.casa_de_apostas).filter(Boolean))];
-                const tipos = [...new Set(apostas.map(a => a.tipo_aposta).filter(Boolean))];
-
-                const rawCategorias = apostas.map(a => a.categoria).filter(Boolean);
-                const tokens = rawCategorias
-                    .flatMap(c => String(c).split(/[,;]+/))
-                    .map(s => s.trim())
-                    .filter(Boolean);
-                const lowerToOriginal = new Map();
-                tokens.forEach(tok => {
-                    const key = tok.toLowerCase();
-                    if (!lowerToOriginal.has(key)) lowerToOriginal.set(key, tok);
-                });
-                const torneirosUnicos = Array.from(lowerToOriginal.values());
-
-                function buildTomSelect(selector, values, placeholder) {
-                    const el = document.querySelector(selector);
-                    if (!el) return;
-                    if (el.tomselect) {
-                        try { el.tomselect.destroy(); } catch (e) { console.log('Erro destroy TomSelect', e); }
-                    }
-                    el.innerHTML = '';
-                    const tomSelect = new TomSelect(el, {
-                        options: (values || []).map(v => ({ value: String(v), text: String(v) })),
-                        items: [],
-                        placeholder: placeholder || 'Selecione...',
-                        plugins: ['remove_button'],
-                        persist: false,
-                        create: false,
-                        maxItems: null,
-                        allowEmptyOption: true,
-                    });
-                    
-                    return tomSelect;
-                }
-
-                tomSelects.house = buildTomSelect('#filter-house', casas, 'Casas...');
-                tomSelects.type = buildTomSelect('#filter-type', tipos, 'Tipos...');
-                tomSelects.tournament = buildTomSelect('#filter-tournament', torneirosUnicos, 'Categorias/Torneios...');
-
-                if (tomSelects.house) {
-                    tomSelects.house.on('change', () => { 
-                        console.log('Filtro casa alterado');
-                        aplicarFiltros(); 
-                        atualizarAnalises(); 
-                    });
-                }
-                if (tomSelects.type) {
-                    tomSelects.type.on('change', () => { 
-                        console.log('Filtro tipo alterado');
-                        aplicarFiltros(); 
-                        atualizarAnalises(); 
-                    });
-                }
-                if (tomSelects.tournament) {
-                    tomSelects.tournament.on('change', () => { 
-                        console.log('Filtro categoria alterado');
-                        aplicarFiltros(); 
-                        atualizarAnalises(); 
-                    });
-                }
-
-                console.log('Filtros preenchidos com sucesso');
-            } catch (error) {
-                console.error('Erro ao preencher filtros:', error);
-            }
-        }
-
-        function atualizarAnalises() {
-            atualizarMetricas();
-            atualizarEstatisticas();
-            criarGraficosAdicionais();
-            atualizarInsights();
-        }
-
-        function atualizarMetricas() {
-            try {
-                const totalApostado = apostasFiltradas.reduce((sum, aposta) => sum + (parseFloat(aposta.valor_apostado) || 0), 0);
-                const lucro = calcularLucroTotal();
-                const ganhas = apostasFiltradas.filter(a => a.resultado === 'Ganhou').length;
-                const total = apostasFiltradas.length;
-                const roi = calcularROI(lucro, totalApostado);
-                const taxaAcerto = calcularTaxaAcerto(ganhas, total);
-
-                updateElementSafely('metric-total-apostado', formatarMoeda(totalApostado));
-                updateElementSafely('metric-roi', formatarPercentual(roi));
-                updateElementSafely('metric-lucro', formatarMoeda(lucro));
-                updateElementSafely('metric-taxa-acerto', formatarPercentual(taxaAcerto));
-
-                const roiStatus = document.getElementById('metric-roi-status');
-                if (roiStatus) {
-                    if (roi >= 5) {
-                        roiStatus.textContent = '✔ Excelente';
-                        roiStatus.className = 'status-indicator status-excellent';
-                    } else if (roi >= 0) {
-                        roiStatus.textContent = '~ Positivo';
-                        roiStatus.className = 'status-indicator status-good';
-                    } else {
-                        roiStatus.textContent = '✗ Negativo';
-                        roiStatus.className = 'status-indicator status-poor';
-                    }
-                }
-
-                const taxaStatus = document.getElementById('metric-taxa-status');
-                if (taxaStatus) {
-                    if (taxaAcerto >= 60) {
-                        taxaStatus.textContent = '✔ Excelente';
-                        taxaStatus.className = 'status-indicator status-excellent';
-                    } else if (taxaAcerto >= 50) {
-                        taxaStatus.textContent = '~ Bom';
-                        taxaStatus.className = 'status-indicator status-good';
-                    } else {
-                        taxaStatus.textContent = '✗ Abaixo';
-                        taxaStatus.className = 'status-indicator status-poor';
-                    }
-                }
-
-                console.log('Métricas atualizadas:', { totalApostado, roi, lucro, taxaAcerto });
-            } catch (error) {
-                console.error('Erro ao atualizar métricas:', error);
-            }
-        }
-
-        function calcularLucroTotal() {
-            return apostasFiltradas
-                .filter(aposta => aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu' || aposta.resultado === 'Cashout')
-                .reduce((sum, aposta) => {
-                    const vf = parseFloat(aposta.valor_final) || 0;
-                    return sum + vf;
-                }, 0);
-        }
-
-        function atualizarEstatisticas() {
-            try {
-                const totalApostas = apostasFiltradas.length;
-                const diasUnicos = new Set(apostasFiltradas.map(a => a.data)).size;
-                const apostasPorDia = totalApostas / (diasUnicos || 1);
-
-                const odds = apostasFiltradas.map(a => {
-                    let odd = a.odd_final || a.odd_inicial || a.odd;
-                    if (typeof odd === 'string') {
-                        odd = odd.replace(',', '.');
-                    }
-                    return parseFloat(odd) || 0;
-                }).filter(o => o > 0);
-                
-                const oddMedia = odds.length > 0 ? odds.reduce((a, b) => a + b, 0) / odds.length : 0;
-                const oddAlta = odds.length > 0 ? Math.max(...odds) : 0;
-                const oddBaixa = odds.length > 0 ? Math.min(...odds) : 0;
-
-                const { maiorVitorias, maiorDerrotas, sequenciaAtual } = calcularSequencias();
-
-                updateElementSafely('stat-total-apostas', totalApostas);
-                updateElementSafely('stat-apostas-dia', apostasPorDia.toFixed(1));
-                updateElementSafely('stat-dias-ativos', diasUnicos);
-                updateElementSafely('stat-odd-media', oddMedia.toFixed(2));
-                updateElementSafely('stat-odd-alta', oddAlta.toFixed(2));
-                updateElementSafely('stat-odd-baixa', oddBaixa.toFixed(2));
-                updateElementSafely('stat-seq-vitorias', maiorVitorias);
-                updateElementSafely('stat-seq-derrotas', maiorDerrotas);
-                updateElementSafely('stat-seq-atual', sequenciaAtual > 0 ? `+${sequenciaAtual}` : sequenciaAtual.toString());
-
-                console.log('Estatísticas atualizadas');
-            } catch (error) {
-                console.error('Erro ao atualizar estatísticas:', error);
-            }
-        }
-
-        function atualizarInsights() {
-            try {
-                const container = document.getElementById('insights-container');
-                if (!container) return;
-
-                const totalApostado = apostasFiltradas.reduce((sum, aposta) => sum + (parseFloat(aposta.valor_apostado) || 0), 0);
-                const lucro = calcularLucroTotal();
-                const ganhas = apostasFiltradas.filter(a => a.resultado === 'Ganhou').length;
-                const total = apostasFiltradas.length;
-                const roi = calcularROI(lucro, totalApostado);
-                const taxaAcerto = calcularTaxaAcerto(ganhas, total);
-                const { maiorVitorias, maiorDerrotas, sequenciaAtual } = calcularSequencias();
-
-                const odds = apostasFiltradas.map(a => {
-                    let odd = a.odd_final || a.odd_inicial || a.odd;
-                    if (typeof odd === 'string') odd = odd.replace(',', '.');
-                    return parseFloat(odd) || 0;
-                }).filter(o => o > 0);
-                const oddMedia = odds.length > 0 ? odds.reduce((a, b) => a + b, 0) / odds.length : 0;
-
-                const insights = [];
-
-                if (roi > 10) {
-                    insights.push({
-                        icon: 'trending-up',
-                        color: 'emerald',
-                        title: 'Excelente Performance!',
-                        description: `Seu ROI de ${roi.toFixed(1)}% está muito acima da média. Continue com essa estratégia!`
-                    });
-                } else if (roi > 0) {
-                    insights.push({
-                        icon: 'thumbs-up',
-                        color: 'green',
-                        title: 'Performance Positiva',
-                        description: `ROI de ${roi.toFixed(1)}% mostra que você está no caminho certo. Analise suas melhores apostas.`
-                    });
+            // Para mobile
+            icon.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (portal.classList.contains('show')) {
+                    portal.classList.remove('show');
                 } else {
-                    insights.push({
-                        icon: 'alert-triangle',
-                        color: 'red',
-                        title: 'Atenção à Performance',
-                        description: `ROI negativo de ${roi.toFixed(1)}%. Revise sua estratégia e considere reduzir o volume.`
+                    // Esconder outros tooltips
+                    document.querySelectorAll('.tooltip-portal').forEach(p => {
+                        p.classList.remove('show');
                     });
+                    showTooltip();
                 }
-
-                if (taxaAcerto > 60) {
-                    insights.push({
-                        icon: 'target',
-                        color: 'emerald',
-                        title: 'Alta Precisão',
-                        description: `Taxa de acerto de ${taxaAcerto.toFixed(1)}% é excelente! Sua análise está muito precisa.`
-                    });
-                } else if (taxaAcerto < 40) {
-                    insights.push({
-                        icon: 'crosshair',
-                        color: 'orange',
-                        title: 'Melhore a Precisão',
-                        description: `Taxa de ${taxaAcerto.toFixed(1)}% está baixa. Foque em apostas com maior probabilidade.`
-                    });
-                }
-
-                if (sequenciaAtual > 3) {
-                    insights.push({
-                        icon: 'zap',
-                        color: 'emerald',
-                        title: 'Sequência Quente!',
-                        description: `Você está em uma sequência de ${sequenciaAtual} vitórias! Aproveite o momento.`
-                    });
-                } else if (sequenciaAtual < -3) {
-                    insights.push({
-                        icon: 'pause',
-                        color: 'red',
-                        title: 'Sequência Fria',
-                        description: `Sequência de ${Math.abs(sequenciaAtual)} derrotas. Considere uma pausa para reavaliar.`
-                    });
-                }
-
-                if (oddMedia > 2.5) {
-                    insights.push({
-                        icon: 'dice-6',
-                        color: 'blue',
-                        title: 'Apostas de Alto Risco',
-                        description: `Odd média de ${oddMedia.toFixed(2)} indica apostas arriscadas. Monitore o ROI cuidadosamente.`
-                    });
-                } else if (oddMedia < 1.5) {
-                    insights.push({
-                        icon: 'shield',
-                        color: 'green',
-                        title: 'Estratégia Conservadora',
-                        description: `Odd média de ${oddMedia.toFixed(2)} mostra apostas seguras. Bom para capital preservação.`
-                    });
-                }
-
-                if (total > 50) {
-                    insights.push({
-                        icon: 'bar-chart-3',
-                        color: 'purple',
-                        title: 'Alto Volume',
-                        description: `${total} apostas mostram experiência. Analise padrões para otimizar ainda mais.`
-                    });
-                } else if (total < 10) {
-                    insights.push({
-                        icon: 'plus-circle',
-                        color: 'blue',
-                        title: 'Aumente o Volume',
-                        description: `Apenas ${total} apostas. Mais dados ajudarão a identificar padrões de sucesso.`
-                    });
-                }
-
-                if (insights.length === 0) {
-                    container.innerHTML = `
-                        <div class="insight-card p-6 rounded-2xl border-slate-500/50 bg-slate-500/10">
-                            <div class="flex items-start space-x-4">
-                                <div class="metric-icon p-2 rounded-xl">
-                                    <i data-lucide="info" class="w-5 h-5 text-slate-400"></i>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-white mb-2">Aguardando Dados</h4>
-                                    <p class="text-slate-300">Adicione mais apostas para gerar insights personalizados.</p>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    container.innerHTML = insights.map(insight => `
-                        <div class="insight-card p-6 rounded-2xl border-${insight.color}-500/50 bg-${insight.color}-500/10">
-                            <div class="flex items-start space-x-4">
-                                <div class="metric-icon p-2 rounded-xl">
-                                    <i data-lucide="${insight.icon}" class="w-5 h-5 text-${insight.color}-400"></i>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-white mb-2">${insight.title}</h4>
-                                    <p class="text-slate-300">${insight.description}</p>
-                                </div>
-                            </div>
-                        </div>
-                    `).join('');
-                }
-
-                if (window.lucide) {
-                    lucide.createIcons();
-                }
-
-                console.log('Insights atualizados');
-            } catch (error) {
-                console.error('Erro ao atualizar insights:', error);
-            }
-        }
-
-        function configurarBotaoLimparFiltros() {
-            const btnClearFilters = document.getElementById('btn-clear-filters');
-            if (btnClearFilters) {
-                btnClearFilters.addEventListener('click', function() {
-                    const startDateInput = document.getElementById('filter-date-start');
-                    const endDateInput = document.getElementById('filter-date-end');
-                    
-                    if (startDateInput) startDateInput.value = '';
-                    if (endDateInput) endDateInput.value = '';
-                    
-                    if (tomSelects.house) tomSelects.house.clear();
-                    if (tomSelects.type) tomSelects.type.clear();
-                    if (tomSelects.tournament) tomSelects.tournament.clear();
-                    
-                    aplicarFiltros();
-                    atualizarAnalises();
-                    
-                    console.log('Filtros limpos');
-                });
-            }
-        }
-
-        // Inicialização
-        document.addEventListener('DOMContentLoaded', () => {
-            try {
-                console.log('Inicializando BetTracker Dashboard Enhanced...');
-                
-                if (window.lucide) {
-                    lucide.createIcons();
-                }
-
-                try {
-                    if (window.supabase) {
-                        supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
-                        console.log('Supabase inicializado');
-                    } else {
-                        console.warn('Supabase não disponível');
-                    }
-                } catch (error) {
-                    console.error('Erro ao inicializar Supabase:', error);
-                }
-                
-                configurarAbas();
-                
-                const hoje = new Date().toISOString().split('T')[0];
-                const endDateInput = document.getElementById('filter-date-end');
-                if (endDateInput) {
-                    endDateInput.value = hoje;
-                }
-                
-                const refreshBtn = document.getElementById('refresh-data');
-                if (refreshBtn) {
-                    refreshBtn.addEventListener('click', carregarApostas);
-                }
-                
-                configurarFiltrosData();
-                configurarBotaoLimparFiltros();
-                carregarApostas();
-                
-                console.log('Dashboard Enhanced inicializado com sucesso!');
-            } catch (error) {
-                console.error('Erro na inicialização:', error);
-            }
+            });
         });
+        
+        // Esconder tooltips ao clicar fora ou fazer scroll
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.tooltip-portal').forEach(p => {
+                p.classList.remove('show');
+            });
+        });
+        
+        let scrollTimeout;
+        window.addEventListener('scroll', () => {
+            clearTimeout(scrollTimeout);
+            document.querySelectorAll('.tooltip-portal').forEach(p => {
+                p.classList.remove('show');
+            });
+        }, true);
+    });
     </script>
+
+    <!-- JavaScript Principal -->
+    <script src="analises.js"></script>
 </body>
 </html>
