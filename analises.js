@@ -5,6 +5,326 @@ const SUPABASE_CONFIG = {
 };
 
 // =====================================================
+// FUNÇÕES ESPECÍFICAS DE ABAS - PADRÕES E TENDÊNCIAS
+// =====================================================
+function atualizarPadroesTendencias() {
+    try {
+        // Análise de Consistência
+        const mesesComDados = {};
+        apostasFiltradas.forEach(aposta => {
+            const mes = aposta.data.substring(0, 7);
+            if (!mesesComDados[mes]) {
+                mesesComDados[mes] = { total: 0, ganhas: 0 };
+            }
+            mesesComDados[mes].total++;
+            if (aposta.resultado === 'Ganhou') {
+                mesesComDados[mes].ganhas++;
+            }
+        });
+        
+        const taxasPorMes = Object.values(mesesComDados).map(m => 
+            m.total > 0 ? (m.ganhas / m.total) * 100 : 0
+        );
+        
+        const mediaTaxa = taxasPorMes.length > 0 
+            ? taxasPorMes.reduce((a, b) => a + b, 0) / taxasPorMes.length 
+            : 0;
+        
+        const desvioTaxa = taxasPorMes.length > 0
+            ? Math.sqrt(taxasPorMes.reduce((sum, taxa) => sum + Math.pow(taxa - mediaTaxa, 2), 0) / taxasPorMes.length)
+            : 0;
+        
+        const consistencia = mediaTaxa > 0 ? Math.max(0, 100 - desvioTaxa) : 0;
+        updateElementSafely('pattern-consistency', formatarPercentual(consistencia));
+        
+        // Momentum (últimas 10 vs anteriores) - melhorado
+        const ultimas10 = apostasFiltradas.slice(-10);
+        const anteriores = apostasFiltradas.slice(0, -10);
+        
+        const taxaUltimas = ultimas10.length > 0 
+            ? (ultimas10.filter(a => a.resultado === 'Ganhou').length / ultimas10.length) * 100
+            : 0;
+        
+        const taxaAnteriores = anteriores.length > 0
+            ? (anteriores.filter(a => a.resultado === 'Ganhou').length / anteriores.length) * 100
+            : 0;
+        
+        let momentum = 'Neutro';
+        if (taxaUltimas > taxaAnteriores + 10) momentum = 'Positivo ↑';
+        else if (taxaUltimas < taxaAnteriores - 10) momentum = 'Negativo ↓';
+        
+        updateElementSafely('pattern-momentum', momentum);
+        
+        // Calcular ciclo dominante (intervalo médio entre apostas)
+        let cicloDominante = '-';
+        if (apostasFiltradas.length > 1) {
+            const datasOrdenadas = [...new Set(apostasFiltradas.map(a => a.data))].sort();
+            const intervalos = [];
+            
+            for (let i = 1; i < datasOrdenadas.length; i++) {
+                const dataAnterior = new Date(datasOrdenadas[i - 1]);
+                const dataAtual = new Date(datasOrdenadas[i]);
+                const diffDias = Math.floor((dataAtual - dataAnterior) / (1000 * 60 * 60 * 24));
+                intervalos.push(diffDias);
+            }
+            
+            if (intervalos.length > 0) {
+                const mediaIntervalo = intervalos.reduce((a, b) => a + b, 0) / intervalos.length;
+                if (mediaIntervalo < 1.5) cicloDominante = 'Diário';
+                else if (mediaIntervalo < 3.5) cicloDominante = `${Math.round(mediaIntervalo)} dias`;
+                else if (mediaIntervalo < 8) cicloDominante = 'Semanal';
+                else if (mediaIntervalo < 15) cicloDominante = 'Quinzenal';
+                else cicloDominante = 'Mensal';
+            }
+        }
+        updateElementSafely('pattern-cycle', cicloDominante);
+        
+        // Calcular direção da tendência baseada em média móvel
+        let direcao = 'Indefinida';
+        if (apostasFiltradas.length >= 20) {
+            // Média móvel das últimas 10 vs 10 anteriores
+            const ultimas10Apostas = apostasFiltradas.slice(-10);
+            const anteriores10Apostas = apostasFiltradas.slice(-20, -10);
+            
+            const roiUltimas = ultimas10Apostas.reduce((sum, a) => {
+                const investido = parseFloat(a.valor_apostado) || 0;
+                const lucro = (a.resultado === 'Ganhou' || a.resultado === 'Perdeu') 
+                    ? (parseFloat(a.valor_final) || 0) - investido
+                    : 0;
+                return sum + (investido > 0 ? (lucro / investido) * 100 : 0);
+            }, 0) / ultimas10Apostas.length;
+            
+            const roiAnteriores = anteriores10Apostas.reduce((sum, a) => {
+                const investido = parseFloat(a.valor_apostado) || 0;
+                const lucro = (a.resultado === 'Ganhou' || a.resultado === 'Perdeu') 
+                    ? (parseFloat(a.valor_final) || 0) - investido
+                    : 0;
+                return sum + (investido > 0 ? (lucro / investido) * 100 : 0);
+            }, 0) / anteriores10Apostas.length;
+            
+            if (roiUltimas > roiAnteriores + 5) direcao = 'Ascendente ↗';
+            else if (roiUltimas < roiAnteriores - 5) direcao = 'Descendente ↘';
+            else direcao = 'Lateral →';
+        } else if (apostasFiltradas.length > 0) {
+            const taxaGeral = (apostasFiltradas.filter(a => a.resultado === 'Ganhou').length / apostasFiltradas.length) * 100;
+            direcao = taxaGeral > 50 ? 'Positiva' : 'Negativa';
+        }
+        updateElementSafely('pattern-direction', direcao);
+        
+        // Análise de Bônus
+        const apostasComBonus = apostasFiltradas.filter(a => a.bonus || a.usou_bonus);
+        updateElementSafely('bonus-count', apostasComBonus.length);
+        
+        const lucroBonus = apostasComBonus.reduce((sum, a) => {
+            if (a.resultado === 'Ganhou' || a.resultado === 'Perdeu') {
+                return sum + (parseFloat(a.valor_final) || 0);
+            }
+            return sum;
+        }, 0);
+        const investidoBonus = apostasComBonus.reduce((sum, a) => sum + (parseFloat(a.valor_apostado) || 0), 0);
+        const roiBonus = investidoBonus > 0 ? (lucroBonus / investidoBonus) * 100 : 0;
+        updateElementSafely('bonus-roi', formatarPercentual(roiBonus));
+        
+        const ganhasBonus = apostasComBonus.filter(a => a.resultado === 'Ganhou').length;
+        const taxaBonus = apostasComBonus.length > 0 ? (ganhasBonus / apostasComBonus.length) * 100 : 0;
+        updateElementSafely('bonus-winrate', formatarPercentual(taxaBonus));
+        updateElementSafely('bonus-profit', formatarMoeda(lucroBonus));
+        
+        console.log('Padrões e Tendências atualizados');
+    } catch (error) {
+        console.error('Erro ao atualizar padrões e tendências:', error);
+    }
+}
+
+function criarGraficosPadroes() {
+    // Como a aba de padrões é mais analítica, vou criar visualizações complementares
+    // que podem ser adicionadas aos cards existentes
+    
+    // Análise de categorias
+    const containerCategorias = document.getElementById('patterns-categoria');
+    if (containerCategorias) {
+        const categorias = {};
+        
+        apostasFiltradas.forEach(aposta => {
+            const categoria = aposta.categoria || 'Não especificada';
+            if (!categorias[categoria]) {
+                categorias[categoria] = {
+                    total: 0,
+                    ganhas: 0,
+                    lucro: 0,
+                    investido: 0
+                };
+            }
+            
+            categorias[categoria].total++;
+            categorias[categoria].investido += parseFloat(aposta.valor_apostado) || 0;
+            
+            if (aposta.resultado === 'Ganhou') {
+                categorias[categoria].ganhas++;
+            }
+            
+            if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu') {
+                categorias[categoria].lucro += parseFloat(aposta.valor_final) || 0;
+            }
+        });
+        
+        const categoriasHtml = Object.entries(categorias)
+            .filter(([, dados]) => dados.total > 10) // Filtrar apenas categorias com mais de 10 apostas
+            .sort(([,a], [,b]) => b.lucro - a.lucro)
+            .map(([categoria, dados]) => {
+                const taxaAcerto = dados.total > 0 ? (dados.ganhas / dados.total) * 100 : 0;
+                const roi = dados.investido > 0 ? (dados.lucro / dados.investido) * 100 : 0;
+                const corTaxa = taxaAcerto >= 60 ? 'text-green-400' : taxaAcerto >= 50 ? 'text-yellow-400' : 'text-red-400';
+                const corROI = roi >= 0 ? 'text-green-400' : 'text-red-400';
+                
+                return `
+                    <div class="bg-slate-800/50 rounded-xl p-4">
+                        <h4 class="font-bold text-white mb-3">${categoria}</h4>
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Apostas:</span>
+                                <span class="font-semibold">${dados.total}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Taxa:</span>
+                                <span class="font-semibold ${corTaxa}">${taxaAcerto.toFixed(1)}%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">ROI:</span>
+                                <span class="font-semibold ${corROI}">${roi.toFixed(1)}%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Lucro:</span>
+                                <span class="font-semibold ${corROI}">${formatarMoeda(dados.lucro)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        
+        containerCategorias.innerHTML = categoriasHtml || '<div class="text-center text-slate-500">Nenhuma categoria com mais de 10 apostas encontrada</div>';
+    }
+    
+    // Criar um heatmap mensal
+    const heatmapContainer = document.getElementById('heatmap-mensal');
+    if (heatmapContainer) {
+        const mesesPorAno = {};
+        const mesesNomes = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        
+        apostasFiltradas.forEach(aposta => {
+            const data = new Date(aposta.data);
+            const ano = data.getFullYear();
+            const mes = data.getMonth();
+            
+            if (!mesesPorAno[ano]) {
+                mesesPorAno[ano] = new Array(12).fill(null).map(() => ({ lucro: 0, investido: 0 }));
+            }
+            
+            mesesPorAno[ano][mes].investido += parseFloat(aposta.valor_apostado) || 0;
+            if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu') {
+                mesesPorAno[ano][mes].lucro += parseFloat(aposta.valor_final) || 0;
+            }
+        });
+        
+        let heatmapHtml = '<table class="w-full">';
+        heatmapHtml += '<thead><tr><th class="text-left p-2 text-slate-400">Ano</th>';
+        mesesNomes.forEach(mes => {
+            heatmapHtml += `<th class="p-2 text-slate-400 text-sm">${mes}</th>`;
+        });
+        heatmapHtml += '</tr></thead><tbody>';
+        
+        Object.entries(mesesPorAno).sort().forEach(([ano, meses]) => {
+            heatmapHtml += `<tr><td class="p-2 font-semibold">${ano}</td>`;
+            meses.forEach(mesData => {
+                const roi = mesData.investido > 0 ? (mesData.lucro / mesData.investido) * 100 : 0;
+                let bgColor = 'bg-slate-700/50';
+                let textColor = 'text-slate-400';
+                
+                if (mesData.investido > 0) {
+                    if (roi > 10) {
+                        bgColor = 'bg-green-500/50';
+                        textColor = 'text-green-300';
+                    } else if (roi > 0) {
+                        bgColor = 'bg-green-500/30';
+                        textColor = 'text-green-400';
+                    } else if (roi > -10) {
+                        bgColor = 'bg-yellow-500/30';
+                        textColor = 'text-yellow-400';
+                    } else {
+                        bgColor = 'bg-red-500/30';
+                        textColor = 'text-red-400';
+                    }
+                }
+                
+                heatmapHtml += `<td class="p-1">
+                    <div class="heatmap-cell ${bgColor} ${textColor}" 
+                         title="ROI: ${roi.toFixed(1)}% | Lucro: ${formatarMoeda(mesData.lucro)}">
+                        ${mesData.investido > 0 ? roi.toFixed(0) + '%' : '-'}
+                    </div>
+                </td>`;
+            });
+            heatmapHtml += '</tr>';
+        });
+        
+        heatmapHtml += '</tbody></table>';
+        heatmapContainer.innerHTML = heatmapHtml;
+    }
+    
+    console.log('Gráficos de padrões criados');
+}
+
+// =====================================================
+// INICIALIZAÇÃO
+// =====================================================
+document.addEventListener('DOMContentLoaded', () => {
+    try {
+        console.log('Inicializando BetTracker Dashboard Enhanced...');
+        
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+
+        try {
+            if (window.supabase) {
+                supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+                console.log('Supabase inicializado');
+            } else {
+                console.warn('Supabase não disponível');
+            }
+        } catch (error) {
+            console.error('Erro ao inicializar Supabase:', error);
+        }
+        
+        configurarAbas();
+        
+        const hoje = new Date().toISOString().split('T')[0];
+        const endDateInput = document.getElementById('filter-date-end');
+        if (endDateInput) {
+            endDateInput.value = hoje;
+        }
+        
+        const refreshBtn = document.getElementById('refresh-data');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => {
+                carregarApostas();
+                setTimeout(() => {
+                    const abaAtiva = document.querySelector('.tab-button.active').getAttribute('data-tab');
+                    carregarConteudoAba(abaAtiva);
+                }, 500);
+            });
+        }
+        
+        configurarFiltrosData();
+        configurarBotaoLimparFiltros();
+        carregarApostas();
+        
+        console.log('Dashboard Enhanced inicializado com sucesso!');
+    } catch (error) {
+        console.error('Erro na inicialização:', error);
+    }
+});
+
+// =====================================================
 // VARIÁVEIS GLOBAIS
 // =====================================================
 let supabase;
@@ -94,14 +414,21 @@ function carregarConteudoAba(aba) {
             case 'dashboard':
                 atualizarAnalises();
                 criarGraficosAdicionais();
+                criarGraficoLucroMensal(); // Novo gráfico mensal
                 break;
             case 'performance':
                 atualizarPerformance();
                 criarGraficosPerformance();
+                criarGraficoLucroDiario(); // Movido para cá
                 break;
             case 'casas':
                 atualizarCasasDeApostas();
                 criarGraficosCasas();
+                atualizarTopCasasMetricas(); // Nova métrica
+                break;
+            case 'torneios': // Nova aba
+                atualizarTorneios();
+                criarGraficosTorneios();
                 break;
             case 'odds':
                 atualizarAnaliseOdds();
@@ -461,7 +788,7 @@ function atualizarMetricas() {
         const roiStatus = document.getElementById('metric-roi-status');
         if (roiStatus) {
             if (roi >= 5) {
-                roiStatus.textContent = '✓ Excelente';
+                roiStatus.textContent = '✔ Excelente';
                 roiStatus.className = 'status-indicator status-excellent';
             } else if (roi >= 0) {
                 roiStatus.textContent = '~ Positivo';
@@ -475,7 +802,7 @@ function atualizarMetricas() {
         const taxaStatus = document.getElementById('metric-taxa-status');
         if (taxaStatus) {
             if (taxaAcerto >= 60) {
-                taxaStatus.textContent = '✓ Excelente';
+                taxaStatus.textContent = '✔ Excelente';
                 taxaStatus.className = 'status-indicator status-excellent';
             } else if (taxaAcerto >= 50) {
                 taxaStatus.textContent = '~ Bom';
@@ -536,7 +863,88 @@ function atualizarEstatisticas() {
         console.error('Erro ao atualizar estatísticas:', error);
     }
 }
+function criarGraficoLucroMensal() {
+    const canvas = document.getElementById('chart-lucro-mensal');
+    if (!canvas) return;
 
+    const ctx = canvas.getContext('2d');
+    
+    if (typeof Chart !== 'undefined') {
+        if (charts.lucroMensal) {
+            charts.lucroMensal.destroy();
+        }
+
+        const lucroPorMes = {};
+        apostasFiltradas.forEach(aposta => {
+            const mes = aposta.data.substring(0, 7); // YYYY-MM
+            if (!lucroPorMes[mes]) {
+                lucroPorMes[mes] = {
+                    lucro: 0,
+                    investido: 0
+                };
+            }
+            lucroPorMes[mes].investido += parseFloat(aposta.valor_apostado) || 0;
+            if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu' || aposta.resultado === 'Cashout') {
+                lucroPorMes[mes].lucro += parseFloat(aposta.valor_final) || 0;
+            }
+        });
+
+        const meses = Object.keys(lucroPorMes).sort();
+        const lucros = meses.map(mes => lucroPorMes[mes].lucro);
+
+        charts.lucroMensal = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: meses.map(m => {
+                    const [ano, mes] = m.split('-');
+                    return `${mes}/${ano}`;
+                }),
+                datasets: [{
+                    label: 'Lucro Mensal',
+                    data: lucros,
+                    backgroundColor: lucros.map(l => l >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)'),
+                    borderColor: lucros.map(l => l >= 0 ? '#10b981' : '#ef4444'),
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const mes = meses[context.dataIndex];
+                                const dados = lucroPorMes[mes];
+                                const roi = dados.investido > 0 ? (dados.lucro / dados.investido) * 100 : 0;
+                                return [
+                                    `Lucro: ${formatarMoeda(context.parsed.y)}`,
+                                    `ROI: ${formatarPercentual(roi)}`
+                                ];
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { 
+                        grid: { display: false },
+                        ticks: { color: '#6b7280' }
+                    },
+                    y: { 
+                        grid: { color: 'rgba(148, 163, 184, 0.1)' },
+                        ticks: { 
+                            color: '#6b7280',
+                            callback: function(value) {
+                                return formatarMoeda(value);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
 function calcularSequencias() {
     const apostasOrdenadas = [...apostasFiltradas].sort((a, b) => new Date(a.data) - new Date(b.data));
     
@@ -1109,7 +1517,7 @@ function atualizarPerformance() {
         // Strike Rate para odds altas - CORRIGIDO
         const apostasOddsAltas = apostasFiltradas.filter(a => {
             const odd = parseFloat(a.odd_final || a.odd_inicial || a.odd || '0');
-            return odd > 2.5;
+            return odd > 2.0;
         });
         const ganhasOddsAltas = apostasOddsAltas.filter(a => a.resultado === 'Ganhou').length;
         const strikeRate = apostasOddsAltas.length > 0 ? (ganhasOddsAltas / apostasOddsAltas.length) * 100 : 0;
@@ -1400,7 +1808,7 @@ function atualizarAnaliseTemporal() {
             if (aposta.resultado === 'Ganhou') {
                 dadosPorDiaSemana[nomeDia].ganhas++;
             }
-            if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu') {
+            if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu' || aposta.resultado === 'Cashout') {
                 dadosPorDiaSemana[nomeDia].lucro += parseFloat(aposta.valor_final) || 0;
             }
         });
@@ -1417,9 +1825,75 @@ function atualizarAnaliseTemporal() {
         });
         
         updateElementSafely('melhor-dia-semana', melhorDia);
-        updateElementSafely('melhor-horario', '20h-22h');
-        updateElementSafely('melhor-mes-ano', 'Janeiro');
-        updateElementSafely('streak-atual-dias', apostasFiltradas.length > 0 ? '3' : '0');
+        
+        // Calcular frequência semanal (apostas por semana)
+        if (apostasFiltradas.length > 0) {
+            const datasOrdenadas = [...new Set(apostasFiltradas.map(a => a.data))].sort();
+            const primeiraData = new Date(datasOrdenadas[0]);
+            const ultimaData = new Date(datasOrdenadas[datasOrdenadas.length - 1]);
+            const diffEmSemanas = Math.max(1, (ultimaData - primeiraData) / (1000 * 60 * 60 * 24 * 7));
+            const apostasPorSemana = apostasFiltradas.length / diffEmSemanas;
+            updateElementSafely('frequencia-semanal', apostasPorSemana.toFixed(1));
+        } else {
+            updateElementSafely('frequencia-semanal', '0');
+        }
+        
+        // Calcular melhor mês do ano com dados reais
+        const mesesComDados = {};
+        apostasFiltradas.forEach(aposta => {
+            const data = new Date(aposta.data);
+            const mesNome = data.toLocaleString('pt-BR', { month: 'long' });
+            const mesChave = mesNome.charAt(0).toUpperCase() + mesNome.slice(1);
+            
+            if (!mesesComDados[mesChave]) {
+                mesesComDados[mesChave] = { 
+                    lucro: 0, 
+                    investido: 0,
+                    total: 0
+                };
+            }
+            
+            mesesComDados[mesChave].total++;
+            mesesComDados[mesChave].investido += parseFloat(aposta.valor_apostado) || 0;
+            
+            if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu' || aposta.resultado === 'Cashout') {
+                mesesComDados[mesChave].lucro += parseFloat(aposta.valor_final) || 0;
+            }
+        });
+        
+        let melhorMes = '-';
+        let melhorROIMes = -Infinity;
+        
+        Object.entries(mesesComDados).forEach(([mes, dados]) => {
+            const roi = dados.investido > 0 ? (dados.lucro / dados.investido) * 100 : 0;
+            if (roi > melhorROIMes && dados.total >= 5) { // Mínimo de 5 apostas no mês
+                melhorROIMes = roi;
+                melhorMes = mes;
+            }
+        });
+        
+        updateElementSafely('melhor-mes-ano', melhorMes);
+        
+        // Calcular dias com atividade consecutiva
+        if (apostasFiltradas.length > 0) {
+            const datasUnicas = [...new Set(apostasFiltradas.map(a => a.data))].sort().reverse();
+            let diasConsecutivos = 1;
+            
+            for (let i = 1; i < datasUnicas.length; i++) {
+                const dataAtual = new Date(datasUnicas[i - 1]);
+                const dataAnterior = new Date(datasUnicas[i]);
+                const diffDias = Math.floor((dataAtual - dataAnterior) / (1000 * 60 * 60 * 24));
+                
+                if (diffDias === 1) {
+                    diasConsecutivos++;
+                } else {
+                    break;
+                }
+            }
+            updateElementSafely('streak-atual-dias', diasConsecutivos);
+        } else {
+            updateElementSafely('streak-atual-dias', '0');
+        }
         
         console.log('Análise Temporal atualizada');
     } catch (error) {
@@ -1639,6 +2113,89 @@ function criarGraficosTemporais() {
 // =====================================================
 // FUNÇÕES ESPECÍFICAS DE ABAS - CASAS DE APOSTAS
 // =====================================================
+function atualizarTopCasasMetricas() {
+    const container = document.getElementById('top-casas-metricas');
+    if (!container) return;
+    
+    const dadosPorCasa = {};
+    
+    apostasFiltradas.forEach(aposta => {
+        const casa = aposta.casa_de_apostas || 'Não especificada';
+        if (!dadosPorCasa[casa]) {
+            dadosPorCasa[casa] = {
+                total: 0,
+                ganhas: 0,
+                lucro: 0,
+                investido: 0,
+                maiorGanho: 0,
+                sequenciaAtual: 0
+            };
+        }
+        
+        dadosPorCasa[casa].total++;
+        dadosPorCasa[casa].investido += parseFloat(aposta.valor_apostado) || 0;
+        
+        const valorFinal = parseFloat(aposta.valor_final) || 0;
+        const valorApostado = parseFloat(aposta.valor_apostado) || 0;
+        
+        if (aposta.resultado === 'Ganhou') {
+            dadosPorCasa[casa].ganhas++;
+            const ganhoAposta = valorFinal - valorApostado;
+            if (ganhoAposta > dadosPorCasa[casa].maiorGanho) {
+                dadosPorCasa[casa].maiorGanho = ganhoAposta;
+            }
+        }
+        
+        if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu') {
+            dadosPorCasa[casa].lucro += valorFinal;
+        }
+    });
+    
+    // Top 3 casas por lucro
+    const top3Casas = Object.entries(dadosPorCasa)
+        .filter(([, dados]) => dados.total >= 5) // Mínimo de 5 apostas
+        .sort(([,a], [,b]) => b.lucro - a.lucro)
+        .slice(0, 3);
+    
+    if (top3Casas.length > 0) {
+        container.innerHTML = top3Casas.map(([casa, dados], index) => {
+            const roi = dados.investido > 0 ? (dados.lucro / dados.investido) * 100 : 0;
+            const taxa = dados.total > 0 ? (dados.ganhas / dados.total) * 100 : 0;
+            const medalhas = ['🥇', '🥈', '🥉'];
+            
+            return `
+                <div class="bg-slate-800/50 rounded-xl p-4 mb-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h5 class="font-bold text-white flex items-center">
+                            <span class="text-2xl mr-2">${medalhas[index]}</span>
+                            ${casa}
+                        </h5>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                            <span class="text-slate-400">ROI:</span>
+                            <span class="font-semibold ml-2 ${roi >= 0 ? 'text-green-400' : 'text-red-400'}">${roi.toFixed(1)}%</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400">Taxa:</span>
+                            <span class="font-semibold ml-2">${taxa.toFixed(1)}%</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400">Lucro:</span>
+                            <span class="font-semibold ml-2 ${dados.lucro >= 0 ? 'text-green-400' : 'text-red-400'}">${formatarMoeda(dados.lucro)}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400">Maior:</span>
+                            <span class="font-semibold ml-2 text-yellow-400">${formatarMoeda(dados.maiorGanho)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } else {
+        container.innerHTML = '<div class="text-center text-slate-500">Dados insuficientes para análise</div>';
+    }
+}
 function atualizarCasasDeApostas() {
     try {
         const apostasValidas = apostasFiltradas.filter(a => 
@@ -2023,7 +2580,7 @@ function atualizarAnaliseOdds() {
 }
 
 function criarGraficosOdds() {
-    // Gráfico Relação Odd vs Performance
+    // Gráfico Relação Odd vs Performance  
     const canvasOddPerf = document.getElementById('chart-odd-performance');
     if (canvasOddPerf && typeof Chart !== 'undefined') {
         const ctx = canvasOddPerf.getContext('2d');
@@ -2272,12 +2829,32 @@ function atualizarAnaliseRisco() {
         
         updateElementSafely('risk-score', Math.round(scoreRisco));
         
-        // Critério de Kelly simplificado
-        const p = taxaAcerto / 100; // Probabilidade de ganhar
-        const b = 2; // Odd média (simplificado)
-        const q = 1 - p; // Probabilidade de perder
-        const kelly = ((p * b - q) / b) * 100;
-        updateElementSafely('risk-kelly', formatarPercentual(Math.max(0, kelly)));
+        // Critério de Kelly com cálculo real
+        const apostasGanhas = apostasFiltradas.filter(a => a.resultado === 'Ganhou').length;
+        const apostasPerdidas = apostasFiltradas.filter(a => a.resultado === 'Perdeu').length;
+        const totalApostasResultado = apostasGanhas + apostasPerdidas;
+        
+        if (totalApostasResultado > 0) {
+            const p = apostasGanhas / totalApostasResultado; // Probabilidade de ganhar
+            
+            // Calcular odd média real das apostas ganhas
+            const apostasVencedoras = apostasFiltradas.filter(a => a.resultado === 'Ganhou');
+            const oddMediaGanha = apostasVencedoras.length > 0
+                ? apostasVencedoras.reduce((sum, a) => sum + (parseFloat(a.odd_final || a.odd_inicial || '2') || 2), 0) / apostasVencedoras.length
+                : 2;
+            
+            const b = oddMediaGanha - 1; // Retorno líquido médio
+            const q = 1 - p; // Probabilidade de perder
+            
+            // Fórmula de Kelly: f = (p*b - q) / b
+            const kelly = b > 0 ? ((p * b - q) / b) * 100 : 0;
+            
+            // Limitar Kelly entre 0 e 25% (mais conservador)
+            const kellyAjustado = Math.min(25, Math.max(0, kelly));
+            updateElementSafely('risk-kelly', formatarPercentual(kellyAjustado));
+        } else {
+            updateElementSafely('risk-kelly', '0%');
+        }
         
         console.log('Análise de Risco atualizada');
     } catch (error) {
@@ -2454,212 +3031,250 @@ function criarGraficosRisco() {
         });
     }
     
-    // Atualizar métricas avançadas de risco
+    // Atualizar métricas avançadas de risco com cálculos mais precisos
     const apostasOrdenadas = [...apostasFiltradas].sort((a, b) => new Date(a.data) - new Date(b.data));
-    const retornos = apostasOrdenadas.map(a => {
+    const retornos = [];
+    
+    apostasOrdenadas.forEach(a => {
+        const investido = parseFloat(a.valor_apostado) || 0;
         if (a.resultado === 'Ganhou') {
-            return (parseFloat(a.valor_final) || 0) - (parseFloat(a.valor_apostado) || 0);
+            const ganho = (parseFloat(a.valor_final) || 0) - investido;
+            retornos.push(ganho);
         } else if (a.resultado === 'Perdeu') {
-            return -(parseFloat(a.valor_apostado) || 0);
+            retornos.push(-investido);
+        } else if (a.resultado === 'Cashout') {
+            const retornoCashout = (parseFloat(a.valor_final) || 0) - investido;
+            retornos.push(retornoCashout);
         }
-        return 0;
     });
     
-    // Value at Risk (95%)
-    const retornosOrdenados = [...retornos].sort((a, b) => a - b);
-    const indexVaR = Math.floor(retornos.length * 0.05);
-    const var95 = retornosOrdenados.length > 0 ? retornosOrdenados[indexVaR] : 0;
-    updateElementSafely('var-95', formatarMoeda(var95));
+    // Value at Risk (95%) - valor em risco no percentil 5%
+    if (retornos.length > 0) {
+        const retornosOrdenados = [...retornos].sort((a, b) => a - b);
+        const indexVaR = Math.max(0, Math.floor(retornos.length * 0.05));
+        const var95 = retornosOrdenados[indexVaR] || 0;
+        updateElementSafely('var-95', formatarMoeda(Math.abs(var95)));
+        
+        // Expected Shortfall (média dos retornos abaixo do VaR)
+        const retornosAbaixoVaR = retornosOrdenados.slice(0, Math.max(1, indexVaR));
+        const expectedShortfall = retornosAbaixoVaR.reduce((a, b) => a + b, 0) / retornosAbaixoVaR.length;
+        updateElementSafely('expected-shortfall', formatarMoeda(Math.abs(expectedShortfall)));
+    } else {
+        updateElementSafely('var-95', 'R$ 0');
+        updateElementSafely('expected-shortfall', 'R$ 0');
+    }
     
-    // Expected Shortfall
-    const retornosAbaixoVaR = retornosOrdenados.slice(0, indexVaR);
-    const expectedShortfall = retornosAbaixoVaR.length > 0 
-        ? retornosAbaixoVaR.reduce((a, b) => a + b, 0) / retornosAbaixoVaR.length
-        : 0;
-    updateElementSafely('expected-shortfall', formatarMoeda(expectedShortfall));
-    
-    // Recovery Time (dias para recuperar do drawdown)
-    let recoveryTime = 0;
-    let emDrawdown = false;
-    let diasEmDrawdown = 0;
+    // Recovery Time - tempo máximo para recuperar de drawdown
+    let maxRecoveryTime = 0;
     let saldoTemp = 0;
     let picoTemp = 0;
+    let inicioDrawdown = null;
     
-    apostasOrdenadas.forEach(aposta => {
-        if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu') {
+    apostasOrdenadas.forEach((aposta, index) => {
+        if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu' || aposta.resultado === 'Cashout') {
             saldoTemp += parseFloat(aposta.valor_final) || 0;
+            
             if (saldoTemp > picoTemp) {
-                picoTemp = saldoTemp;
-                if (emDrawdown) {
-                    recoveryTime = Math.max(recoveryTime, diasEmDrawdown);
-                    emDrawdown = false;
-                    diasEmDrawdown = 0;
+                // Recuperou do drawdown
+                if (inicioDrawdown !== null) {
+                    const dataRecuperacao = new Date(aposta.data);
+                    const diffDias = Math.floor((dataRecuperacao - inicioDrawdown) / (1000 * 60 * 60 * 24));
+                    maxRecoveryTime = Math.max(maxRecoveryTime, diffDias);
+                    inicioDrawdown = null;
                 }
-            } else {
-                emDrawdown = true;
-                diasEmDrawdown++;
+                picoTemp = saldoTemp;
+            } else if (inicioDrawdown === null && saldoTemp < picoTemp) {
+                // Início de um novo drawdown
+                inicioDrawdown = new Date(aposta.data);
             }
         }
     });
     
-    updateElementSafely('recovery-time', recoveryTime + ' dias');
+    // Se ainda está em drawdown, calcular dias desde o início
+    if (inicioDrawdown !== null && apostasOrdenadas.length > 0) {
+        const ultimaData = new Date(apostasOrdenadas[apostasOrdenadas.length - 1].data);
+        const diasEmDrawdown = Math.floor((ultimaData - inicioDrawdown) / (1000 * 60 * 60 * 24));
+        maxRecoveryTime = Math.max(maxRecoveryTime, diasEmDrawdown);
+    }
     
-    // Risk-Adjusted Return
-    const lucroTotal = calcularLucroTotal();
-    const desvios = retornos.map(r => Math.pow(r - (lucroTotal / retornos.length), 2));
-    const desvioPadrao = Math.sqrt(desvios.reduce((a, b) => a + b, 0) / (retornos.length || 1));
-    const riskAdjustedReturn = desvioPadrao > 0 ? (lucroTotal / desvioPadrao) * 100 : 0;
-    updateElementSafely('risk-adjusted-return', formatarPercentual(riskAdjustedReturn));
+    updateElementSafely('recovery-time', maxRecoveryTime > 0 ? maxRecoveryTime + ' dias' : '0 dias');
+    
+    // Risk-Adjusted Return (Retorno ajustado ao risco)
+    if (retornos.length > 0) {
+        const retornoMedio = retornos.reduce((a, b) => a + b, 0) / retornos.length;
+        const variancia = retornos.reduce((sum, r) => sum + Math.pow(r - retornoMedio, 2), 0) / retornos.length;
+        const desvioPadrao = Math.sqrt(variancia);
+        
+        // Calcular o Sharpe Ratio como proxy para Risk-Adjusted Return
+        const sharpeRatio = desvioPadrao > 0 ? (retornoMedio / desvioPadrao) : 0;
+        
+        // Converter para percentual (multiplicar por 100 e considerar positivo como bom)
+        const riskAdjustedReturn = sharpeRatio * 100;
+        updateElementSafely('risk-adjusted-return', formatarPercentual(Math.abs(riskAdjustedReturn)));
+    } else {
+        updateElementSafely('risk-adjusted-return', '0%');
+    }
     
     console.log('Gráficos de risco criados');
 }
-
+// FUNÇÕES PARA A NOVA ABA TORNEIOS
 // =====================================================
-// FUNÇÕES ESPECÍFICAS DE ABAS - ANÁLISE TEMPORAL
-// =====================================================
-function atualizarAnaliseTemporal() {
+function atualizarTorneios() {
     try {
-        // Análise por dia da semana
-        const diasSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-        const dadosPorDiaSemana = {};
+        // Agrupar apostas por torneio/categoria
+        const dadosPorTorneio = {};
         
         apostasFiltradas.forEach(aposta => {
-            const diaSemana = new Date(aposta.data).getDay();
-            const nomeDia = diasSemana[diaSemana];
+            // Processar categorias/torneios separados por vírgula ou ponto e vírgula
+            const categorias = String(aposta.categoria || 'Não especificado')
+                .split(/[,;]+/)
+                .map(c => c.trim())
+                .filter(Boolean);
             
-            if (!dadosPorDiaSemana[nomeDia]) {
-                dadosPorDiaSemana[nomeDia] = { total: 0, ganhas: 0, lucro: 0 };
-            }
-            
-            dadosPorDiaSemana[nomeDia].total++;
-            if (aposta.resultado === 'Ganhou') {
-                dadosPorDiaSemana[nomeDia].ganhas++;
-            }
-            if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu') {
-                dadosPorDiaSemana[nomeDia].lucro += parseFloat(aposta.valor_final) || 0;
-            }
+            categorias.forEach(torneio => {
+                if (!dadosPorTorneio[torneio]) {
+                    dadosPorTorneio[torneio] = {
+                        total: 0,
+                        ganhas: 0,
+                        lucro: 0,
+                        investido: 0,
+                        odds: [],
+                        datas: []
+                    };
+                }
+                
+                dadosPorTorneio[torneio].total++;
+                dadosPorTorneio[torneio].investido += parseFloat(aposta.valor_apostado) || 0;
+                dadosPorTorneio[torneio].odds.push(parseFloat(aposta.odd_final || aposta.odd_inicial || '0') || 0);
+                dadosPorTorneio[torneio].datas.push(aposta.data);
+                
+                if (aposta.resultado === 'Ganhou') {
+                    dadosPorTorneio[torneio].ganhas++;
+                }
+                
+                if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu' || aposta.resultado === 'Cashout') {
+                    dadosPorTorneio[torneio].lucro += parseFloat(aposta.valor_final) || 0;
+                }
+            });
         });
         
-        // Encontrar melhor dia
-        let melhorDia = '-';
+        // Encontrar métricas principais
+        let melhorTorneio = '-';
+        let melhorTaxa = 0;
+        let melhorROI = -Infinity;
         let melhorLucro = -Infinity;
+        let torneiosAtivos = 0;
         
-        Object.entries(dadosPorDiaSemana).forEach(([dia, dados]) => {
-            if (dados.lucro > melhorLucro) {
-                melhorLucro = dados.lucro;
-                melhorDia = dia;
+        Object.entries(dadosPorTorneio).forEach(([torneio, dados]) => {
+            if (dados.total >= 5) { // Mínimo de 5 apostas para considerar
+                const taxa = (dados.ganhas / dados.total) * 100;
+                const roi = dados.investido > 0 ? (dados.lucro / dados.investido) * 100 : 0;
+                
+                if (dados.lucro > melhorLucro) {
+                    melhorLucro = dados.lucro;
+                    melhorTorneio = torneio;
+                }
+                
+                if (taxa > melhorTaxa) {
+                    melhorTaxa = taxa;
+                }
+                
+                if (roi > melhorROI) {
+                    melhorROI = roi;
+                }
+                
+                // Verificar se está ativo (apostas nos últimos 30 dias)
+                const hoje = new Date();
+                const dataRecente = dados.datas.some(data => {
+                    const dataAposta = new Date(data);
+                    const diffDias = (hoje - dataAposta) / (1000 * 60 * 60 * 24);
+                    return diffDias <= 30;
+                });
+                
+                if (dataRecente) torneiosAtivos++;
             }
         });
         
-        updateElementSafely('melhor-dia-semana', melhorDia);
+        // Atualizar métricas
+        updateElementSafely('torneio-mais-lucrativo', melhorTorneio);
+        updateElementSafely('torneio-melhor-taxa', formatarPercentual(melhorTaxa));
+        updateElementSafely('torneio-melhor-roi', formatarPercentual(melhorROI));
+        updateElementSafely('torneios-ativos', torneiosAtivos);
         
-        // Para as outras métricas temporais, vamos usar valores placeholder por enquanto
-        updateElementSafely('melhor-horario', '20h-22h');
-        updateElementSafely('melhor-mes-ano', 'Janeiro');
-        updateElementSafely('streak-atual-dias', apostasFiltradas.length > 0 ? '3' : '0');
+        // Atualizar tabela de torneios
+        const tbody = document.getElementById('table-torneios');
+        if (tbody && Object.keys(dadosPorTorneio).length > 0) {
+            const torneiosOrdenados = Object.entries(dadosPorTorneio)
+                .filter(([, dados]) => dados.total >= 3) // Mínimo de 3 apostas para aparecer na tabela
+                .sort(([,a], [,b]) => b.lucro - a.lucro);
+            
+            tbody.innerHTML = torneiosOrdenados.map(([torneio, dados]) => {
+                const taxaAcerto = dados.total > 0 ? (dados.ganhas / dados.total) * 100 : 0;
+                const roi = dados.investido > 0 ? (dados.lucro / dados.investido) * 100 : 0;
+                const oddMedia = dados.odds.length > 0 ? dados.odds.reduce((a, b) => a + b, 0) / dados.odds.length : 0;
+                
+                // Calcular tendência (últimas 5 vs anteriores)
+                const ultimasApostas = dados.datas.slice(-5).length;
+                const taxaRecente = ultimasApostas > 0 ? 
+                    (dados.datas.slice(-5).filter((_, i) => dados.ganhas > i).length / ultimasApostas) * 100 : 0;
+                
+                let tendencia = '<span class="text-slate-400">→</span>';
+                if (roi > 0 && taxaRecente > 60) {
+                    tendencia = '<span class="text-green-400">↗</span>';
+                } else if (roi < -10) {
+                    tendencia = '<span class="text-red-400">↘</span>';
+                }
+                
+                const roiClass = roi >= 0 ? 'profit-positive' : 'profit-negative';
+                const lucroClass = dados.lucro >= 0 ? 'profit-positive' : 'profit-negative';
+                
+                return `
+                    <tr class="hover:bg-slate-700/50 transition-colors">
+                        <td class="px-6 py-4 font-semibold">${torneio}</td>
+                        <td class="px-6 py-4">${dados.total}</td>
+                        <td class="px-6 py-4">${formatarPercentual(taxaAcerto)}</td>
+                        <td class="px-6 py-4 ${roiClass} font-semibold">${formatarPercentual(roi)}</td>
+                        <td class="px-6 py-4 ${lucroClass} font-semibold">${formatarMoeda(dados.lucro)}</td>
+                        <td class="px-6 py-4">${oddMedia.toFixed(2)}</td>
+                        <td class="px-6 py-4 text-2xl text-center">${tendencia}</td>
+                    </tr>
+                `;
+            }).join('');
+        } else if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-slate-500 py-8">Nenhum torneio com apostas suficientes</td></tr>';
+        }
         
-        console.log('Análise Temporal atualizada');
-    } catch (error) {
-        console.error('Erro ao atualizar análise temporal:', error);
-    }
-}
-
-function criarGraficosTemporais() {
-    // Implementação dos gráficos temporais
-    console.log('Criando gráficos Temporais...');
-}
-
-// =====================================================
-// FUNÇÕES ESPECÍFICAS DE ABAS - PADRÕES E TENDÊNCIAS
-// =====================================================
-function atualizarPadroesTendencias() {
-    try {
-        // Análise de Consistência
-        const mesesComDados = {};
+        // Análise por esporte
+        const esportes = {};
         apostasFiltradas.forEach(aposta => {
-            const mes = aposta.data.substring(0, 7);
-            if (!mesesComDados[mes]) {
-                mesesComDados[mes] = { total: 0, ganhas: 0 };
+            // Tentar identificar o esporte pela categoria
+            const categoria = String(aposta.categoria || '').toLowerCase();
+            let esporte = 'Outros';
+            
+            if (categoria.includes('futebol') || categoria.includes('soccer') || 
+                categoria.includes('champions') || categoria.includes('premier') ||
+                categoria.includes('bundesliga') || categoria.includes('la liga')) {
+                esporte = 'Futebol';
+            } else if (categoria.includes('basquete') || categoria.includes('nba') || 
+                       categoria.includes('basket')) {
+                esporte = 'Basquete';
+            } else if (categoria.includes('tênis') || categoria.includes('tennis') ||
+                       categoria.includes('atp') || categoria.includes('wta')) {
+                esporte = 'Tênis';
+            } else if (categoria.includes('e-sports') || categoria.includes('esports') ||
+                       categoria.includes('cs:go') || categoria.includes('lol') ||
+                       categoria.includes('dota') || categoria.includes('valorant')) {
+                esporte = 'E-Sports';
+            } else if (categoria.includes('vôlei') || categoria.includes('volei') ||
+                       categoria.includes('volleyball')) {
+                esporte = 'Vôlei';
+            } else if (categoria.includes('mma') || categoria.includes('ufc') ||
+                       categoria.includes('boxe') || categoria.includes('luta')) {
+                esporte = 'Lutas';
             }
-            mesesComDados[mes].total++;
-            if (aposta.resultado === 'Ganhou') {
-                mesesComDados[mes].ganhas++;
-            }
-        });
-        
-        const taxasPorMes = Object.values(mesesComDados).map(m => 
-            m.total > 0 ? (m.ganhas / m.total) * 100 : 0
-        );
-        
-        const mediaTaxa = taxasPorMes.length > 0 
-            ? taxasPorMes.reduce((a, b) => a + b, 0) / taxasPorMes.length 
-            : 0;
-        
-        const desvioTaxa = taxasPorMes.length > 0
-            ? Math.sqrt(taxasPorMes.reduce((sum, taxa) => sum + Math.pow(taxa - mediaTaxa, 2), 0) / taxasPorMes.length)
-            : 0;
-        
-        const consistencia = mediaTaxa > 0 ? Math.max(0, 100 - desvioTaxa) : 0;
-        updateElementSafely('pattern-consistency', formatarPercentual(consistencia));
-        
-        // Momentum (últimas 10 vs anteriores)
-        const ultimas10 = apostasFiltradas.slice(-10);
-        const anteriores = apostasFiltradas.slice(0, -10);
-        
-        const taxaUltimas = ultimas10.length > 0 
-            ? (ultimas10.filter(a => a.resultado === 'Ganhou').length / ultimas10.length) * 100
-            : 0;
-        
-        const taxaAnteriores = anteriores.length > 0
-            ? (anteriores.filter(a => a.resultado === 'Ganhou').length / anteriores.length) * 100
-            : 0;
-        
-        let momentum = 'Neutro';
-        if (taxaUltimas > taxaAnteriores + 10) momentum = 'Positivo';
-        else if (taxaUltimas < taxaAnteriores - 10) momentum = 'Negativo';
-        
-        updateElementSafely('pattern-momentum', momentum);
-        updateElementSafely('pattern-cycle', '7 dias');
-        updateElementSafely('pattern-direction', taxaUltimas > 50 ? 'Ascendente' : 'Descendente');
-        
-        // Análise de Bônus
-        const apostasComBonus = apostasFiltradas.filter(a => a.bonus || a.usou_bonus);
-        updateElementSafely('bonus-count', apostasComBonus.length);
-        
-        const lucroBonus = apostasComBonus.reduce((sum, a) => {
-            if (a.resultado === 'Ganhou' || a.resultado === 'Perdeu') {
-                return sum + (parseFloat(a.valor_final) || 0);
-            }
-            return sum;
-        }, 0);
-        const investidoBonus = apostasComBonus.reduce((sum, a) => sum + (parseFloat(a.valor_apostado) || 0), 0);
-        const roiBonus = investidoBonus > 0 ? (lucroBonus / investidoBonus) * 100 : 0;
-        updateElementSafely('bonus-roi', formatarPercentual(roiBonus));
-        
-        const ganhasBonus = apostasComBonus.filter(a => a.resultado === 'Ganhou').length;
-        const taxaBonus = apostasComBonus.length > 0 ? (ganhasBonus / apostasComBonus.length) * 100 : 0;
-        updateElementSafely('bonus-winrate', formatarPercentual(taxaBonus));
-        updateElementSafely('bonus-profit', formatarMoeda(lucroBonus));
-        
-        console.log('Padrões e Tendências atualizados');
-    } catch (error) {
-        console.error('Erro ao atualizar padrões e tendências:', error);
-    }
-}
-
-function criarGraficosPadroes() {
-    // Como a aba de padrões é mais analítica, vou criar visualizações complementares
-    // que podem ser adicionadas aos cards existentes
-    
-    // Análise de categorias
-    const containerCategorias = document.getElementById('patterns-categoria');
-    if (containerCategorias) {
-        const categorias = {};
-        
-        apostasFiltradas.forEach(aposta => {
-            const categoria = aposta.categoria || 'Não especificada';
-            if (!categorias[categoria]) {
-                categorias[categoria] = {
+            
+            if (!esportes[esporte]) {
+                esportes[esporte] = {
                     total: 0,
                     ganhas: 0,
                     lucro: 0,
@@ -2667,169 +3282,374 @@ function criarGraficosPadroes() {
                 };
             }
             
-            categorias[categoria].total++;
-            categorias[categoria].investido += parseFloat(aposta.valor_apostado) || 0;
-            
+            esportes[esporte].total++;
+            esportes[esporte].investido += parseFloat(aposta.valor_apostado) || 0;
             if (aposta.resultado === 'Ganhou') {
-                categorias[categoria].ganhas++;
+                esportes[esporte].ganhas++;
             }
-            
             if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu') {
-                categorias[categoria].lucro += parseFloat(aposta.valor_final) || 0;
+                esportes[esporte].lucro += parseFloat(aposta.valor_final) || 0;
             }
         });
         
-        const categoriasHtml = Object.entries(categorias)
-            .sort(([,a], [,b]) => b.lucro - a.lucro)
-            .map(([categoria, dados]) => {
-                const taxaAcerto = dados.total > 0 ? (dados.ganhas / dados.total) * 100 : 0;
-                const roi = dados.investido > 0 ? (dados.lucro / dados.investido) * 100 : 0;
-                const corTaxa = taxaAcerto >= 60 ? 'text-green-400' : taxaAcerto >= 50 ? 'text-yellow-400' : 'text-red-400';
-                const corROI = roi >= 0 ? 'text-green-400' : 'text-red-400';
-                
-                return `
-                    <div class="bg-slate-800/50 rounded-xl p-4">
-                        <h4 class="font-bold text-white mb-3">${categoria}</h4>
-                        <div class="space-y-2">
-                            <div class="flex justify-between">
-                                <span class="text-slate-400">Apostas:</span>
-                                <span class="font-semibold">${dados.total}</span>
+        // Renderizar análise por esporte
+        const analiseEsportesContainer = document.getElementById('analise-esportes');
+        if (analiseEsportesContainer) {
+            const esportesHtml = Object.entries(esportes)
+                .filter(([, dados]) => dados.total > 0)
+                .sort(([,a], [,b]) => b.total - a.total)
+                .map(([esporte, dados]) => {
+                    const taxa = dados.total > 0 ? (dados.ganhas / dados.total) * 100 : 0;
+                    const roi = dados.investido > 0 ? (dados.lucro / dados.investido) * 100 : 0;
+                    const corROI = roi >= 0 ? 'text-green-400' : 'text-red-400';
+                    
+                    // Ícone do esporte
+                    const icones = {
+                        'Futebol': 'trophy',
+                        'Basquete': 'target',
+                        'Tênis': 'circle',
+                        'E-Sports': 'gamepad-2',
+                        'Vôlei': 'volleyball',
+                        'Lutas': 'swords',
+                        'Outros': 'star'
+                    };
+                    
+                    return `
+                        <div class="bg-slate-800/50 rounded-xl p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="metric-icon p-2 rounded-xl mr-3">
+                                    <i data-lucide="${icones[esporte] || 'star'}" class="w-5 h-5"></i>
+                                </div>
+                                <h4 class="font-bold text-white text-lg">${esporte}</h4>
                             </div>
-                            <div class="flex justify-between">
-                                <span class="text-slate-400">Taxa:</span>
-                                <span class="font-semibold ${corTaxa}">${taxaAcerto.toFixed(1)}%</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-slate-400">ROI:</span>
-                                <span class="font-semibold ${corROI}">${roi.toFixed(1)}%</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-slate-400">Lucro:</span>
-                                <span class="font-semibold ${corROI}">${formatarMoeda(dados.lucro)}</span>
+                            <div class="space-y-3">
+                                <div class="flex justify-between">
+                                    <span class="text-slate-400">Apostas:</span>
+                                    <span class="font-semibold">${dados.total}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-400">Taxa:</span>
+                                    <span class="font-semibold">${taxa.toFixed(1)}%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-400">ROI:</span>
+                                    <span class="font-semibold ${corROI}">${roi.toFixed(1)}%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-400">Lucro:</span>
+                                    <span class="font-semibold ${corROI}">${formatarMoeda(dados.lucro)}</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                `;
-            }).join('');
-        
-        containerCategorias.innerHTML = categoriasHtml || '<div class="text-center text-slate-500">Nenhuma categoria encontrada</div>';
-    }
-    
-    // Criar um heatmap mensal
-    const heatmapContainer = document.getElementById('heatmap-mensal');
-    if (heatmapContainer) {
-        const mesesPorAno = {};
-        const mesesNomes = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-        
-        apostasFiltradas.forEach(aposta => {
-            const data = new Date(aposta.data);
-            const ano = data.getFullYear();
-            const mes = data.getMonth();
+                    `;
+                }).join('');
             
-            if (!mesesPorAno[ano]) {
-                mesesPorAno[ano] = new Array(12).fill(null).map(() => ({ lucro: 0, investido: 0 }));
-            }
-            
-            mesesPorAno[ano][mes].investido += parseFloat(aposta.valor_apostado) || 0;
-            if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu') {
-                mesesPorAno[ano][mes].lucro += parseFloat(aposta.valor_final) || 0;
-            }
-        });
+            analiseEsportesContainer.innerHTML = esportesHtml || '<div class="text-center text-slate-500">Nenhuma análise disponível</div>';
+        }
         
-        let heatmapHtml = '<table class="w-full">';
-        heatmapHtml += '<thead><tr><th class="text-left p-2 text-slate-400">Ano</th>';
-        mesesNomes.forEach(mes => {
-            heatmapHtml += `<th class="p-2 text-slate-400 text-sm">${mes}</th>`;
-        });
-        heatmapHtml += '</tr></thead><tbody>';
-        
-        Object.entries(mesesPorAno).sort().forEach(([ano, meses]) => {
-            heatmapHtml += `<tr><td class="p-2 font-semibold">${ano}</td>`;
-            meses.forEach(mesData => {
-                const roi = mesData.investido > 0 ? (mesData.lucro / mesData.investido) * 100 : 0;
-                let bgColor = 'bg-slate-700/50';
-                let textColor = 'text-slate-400';
-                
-                if (mesData.investido > 0) {
-                    if (roi > 10) {
-                        bgColor = 'bg-green-500/50';
-                        textColor = 'text-green-300';
-                    } else if (roi > 0) {
-                        bgColor = 'bg-green-500/30';
-                        textColor = 'text-green-400';
-                    } else if (roi > -10) {
-                        bgColor = 'bg-yellow-500/30';
-                        textColor = 'text-yellow-400';
-                    } else {
-                        bgColor = 'bg-red-500/30';
-                        textColor = 'text-red-400';
-                    }
-                }
-                
-                heatmapHtml += `<td class="p-1">
-                    <div class="heatmap-cell ${bgColor} ${textColor}" 
-                         title="ROI: ${roi.toFixed(1)}% | Lucro: ${formatarMoeda(mesData.lucro)}">
-                        ${mesData.investido > 0 ? roi.toFixed(0) + '%' : '-'}
-                    </div>
-                </td>`;
-            });
-            heatmapHtml += '</tr>';
-        });
-        
-        heatmapHtml += '</tbody></table>';
-        heatmapContainer.innerHTML = heatmapHtml;
+        console.log('Torneios atualizados');
+    } catch (error) {
+        console.error('Erro ao atualizar torneios:', error);
     }
-    
-    console.log('Gráficos de padrões criados');
 }
 
-// =====================================================
-// INICIALIZAÇÃO
-// =====================================================
-document.addEventListener('DOMContentLoaded', () => {
-    try {
-        console.log('Inicializando BetTracker Dashboard Enhanced...');
+function criarGraficosTorneios() {
+    // Gráfico Performance por Torneio
+    const canvasPerformance = document.getElementById('chart-torneios-performance');
+    if (canvasPerformance && typeof Chart !== 'undefined') {
+        const ctx = canvasPerformance.getContext('2d');
         
-        if (window.lucide) {
-            lucide.createIcons();
-        }
-
-        try {
-            if (window.supabase) {
-                supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
-                console.log('Supabase inicializado');
-            } else {
-                console.warn('Supabase não disponível');
-            }
-        } catch (error) {
-            console.error('Erro ao inicializar Supabase:', error);
+        if (charts.torneiosPerformance) {
+            charts.torneiosPerformance.destroy();
         }
         
-        configurarAbas();
-        
-        const hoje = new Date().toISOString().split('T')[0];
-        const endDateInput = document.getElementById('filter-date-end');
-        if (endDateInput) {
-            endDateInput.value = hoje;
-        }
-        
-        const refreshBtn = document.getElementById('refresh-data');
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', () => {
-                carregarApostas();
-                setTimeout(() => {
-                    const abaAtiva = document.querySelector('.tab-button.active').getAttribute('data-tab');
-                    carregarConteudoAba(abaAtiva);
-                }, 500);
+        const dadosPorTorneio = {};
+        apostasFiltradas.forEach(aposta => {
+            const categorias = String(aposta.categoria || 'Não especificado')
+                .split(/[,;]+/)
+                .map(c => c.trim())
+                .filter(Boolean);
+            
+            categorias.forEach(torneio => {
+                if (!dadosPorTorneio[torneio]) {
+                    dadosPorTorneio[torneio] = { investido: 0, lucro: 0, total: 0 };
+                }
+                dadosPorTorneio[torneio].total++;
+                dadosPorTorneio[torneio].investido += parseFloat(aposta.valor_apostado) || 0;
+                if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu') {
+                    dadosPorTorneio[torneio].lucro += parseFloat(aposta.valor_final) || 0;
+                }
             });
+        });
+        
+        // Pegar top 10 torneios com mais apostas
+        const top10Torneios = Object.entries(dadosPorTorneio)
+            .filter(([, dados]) => dados.total >= 3)
+            .sort(([,a], [,b]) => b.total - a.total)
+            .slice(0, 10);
+        
+        const labels = top10Torneios.map(([torneio]) => torneio);
+        const lucros = top10Torneios.map(([, dados]) => dados.lucro);
+        const rois = top10Torneios.map(([, dados]) => 
+            dados.investido > 0 ? (dados.lucro / dados.investido) * 100 : 0
+        );
+        
+        charts.torneiosPerformance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Lucro',
+                    data: lucros,
+                    backgroundColor: lucros.map(l => l >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)'),
+                    borderColor: lucros.map(l => l >= 0 ? '#10b981' : '#ef4444'),
+                    borderWidth: 2,
+                    yAxisID: 'y'
+                }, {
+                    label: 'ROI (%)',
+                    data: rois,
+                    type: 'line',
+                    borderColor: '#8b5cf6',
+                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    yAxisID: 'y1'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: { color: '#9ca3af' }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { 
+                            color: '#6b7280',
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        grid: { color: 'rgba(148, 163, 184, 0.1)' },
+                        ticks: {
+                            color: '#6b7280',
+                            callback: function(value) {
+                                return formatarMoeda(value);
+                            }
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        grid: { drawOnChartArea: false },
+                        ticks: {
+                            color: '#6b7280',
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Gráfico Distribuição de Apostas por Torneio
+    const canvasDistribuicao = document.getElementById('chart-torneios-distribuicao');
+    if (canvasDistribuicao && typeof Chart !== 'undefined') {
+        const ctx = canvasDistribuicao.getContext('2d');
+        
+        if (charts.torneiosDistribuicao) {
+            charts.torneiosDistribuicao.destroy();
         }
         
-        configurarFiltrosData();
-        configurarBotaoLimparFiltros();
-        carregarApostas();
+        const dadosPorTorneio = {};
+        apostasFiltradas.forEach(aposta => {
+            const categorias = String(aposta.categoria || 'Não especificado')
+                .split(/[,;]+/)
+                .map(c => c.trim())
+                .filter(Boolean);
+            
+            categorias.forEach(torneio => {
+                if (!dadosPorTorneio[torneio]) {
+                    dadosPorTorneio[torneio] = 0;
+                }
+                dadosPorTorneio[torneio]++;
+            });
+        });
         
-        console.log('Dashboard Enhanced inicializado com sucesso!');
-    } catch (error) {
-        console.error('Erro na inicialização:', error);
+        // Pegar top 8 torneios
+        const top8Torneios = Object.entries(dadosPorTorneio)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 8);
+        
+        charts.torneiosDistribuicao = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: top8Torneios.map(([torneio]) => torneio),
+                datasets: [{
+                    data: top8Torneios.map(([, count]) => count),
+                    backgroundColor: [
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(99, 102, 241, 0.8)',
+                        'rgba(139, 92, 246, 0.8)',
+                        'rgba(168, 85, 247, 0.8)',
+                        'rgba(217, 70, 239, 0.8)',
+                        'rgba(236, 72, 153, 0.8)',
+                        'rgba(251, 146, 60, 0.8)',
+                        'rgba(250, 204, 21, 0.8)'
+                    ],
+                    borderColor: [
+                        '#3b82f6',
+                        '#6366f1',
+                        '#8b5cf6',
+                        '#a855f7',
+                        '#d946ef',
+                        '#ec4899',
+                        '#fb923c',
+                        '#facc15'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#9ca3af' }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const value = context.parsed;
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${context.label}: ${value} apostas (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
     }
-});
+    
+    // Gráfico Evolução Temporal por Torneio
+    const canvasEvolucao = document.getElementById('chart-torneios-evolucao');
+    if (canvasEvolucao && typeof Chart !== 'undefined') {
+        const ctx = canvasEvolucao.getContext('2d');
+        
+        if (charts.torneiosEvolucao) {
+            charts.torneiosEvolucao.destroy();
+        }
+        
+        // Agrupar por mês e torneio
+        const dadosPorMesTorneio = {};
+        const torneiosTop = new Set();
+        
+        apostasFiltradas.forEach(aposta => {
+            const mes = aposta.data.substring(0, 7);
+            const categorias = String(aposta.categoria || 'Outros')
+                .split(/[,;]+/)
+                .map(c => c.trim())
+                .filter(Boolean);
+            
+            categorias.forEach(torneio => {
+                if (!dadosPorMesTorneio[mes]) {
+                    dadosPorMesTorneio[mes] = {};
+                }
+                if (!dadosPorMesTorneio[mes][torneio]) {
+                    dadosPorMesTorneio[mes][torneio] = { lucro: 0, count: 0 };
+                }
+                dadosPorMesTorneio[mes][torneio].count++;
+                if (aposta.resultado === 'Ganhou' || aposta.resultado === 'Perdeu') {
+                    dadosPorMesTorneio[mes][torneio].lucro += parseFloat(aposta.valor_final) || 0;
+                }
+                torneiosTop.add(torneio);
+            });
+        });
+        
+        // Pegar apenas top 5 torneios
+        const top5Torneios = Array.from(torneiosTop)
+            .map(torneio => {
+                const total = Object.values(dadosPorMesTorneio).reduce((sum, mes) => 
+                    sum + (mes[torneio]?.count || 0), 0
+                );
+                return { torneio, total };
+            })
+            .sort((a, b) => b.total - a.total)
+            .slice(0, 5)
+            .map(item => item.torneio);
+        
+        const meses = Object.keys(dadosPorMesTorneio).sort();
+        const cores = [
+            '#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'
+        ];
+        
+        const datasets = top5Torneios.map((torneio, index) => ({
+            label: torneio,
+            data: meses.map(mes => dadosPorMesTorneio[mes][torneio]?.lucro || 0),
+            borderColor: cores[index],
+            backgroundColor: cores[index] + '20',
+            tension: 0.4,
+            borderWidth: 2
+        }));
+        
+        charts.torneiosEvolucao = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: meses.map(m => {
+                    const [ano, mes] = m.split('-');
+                    return `${mes}/${ano}`;
+                }),
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: { color: '#9ca3af' }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(148, 163, 184, 0.1)' },
+                        ticks: { color: '#6b7280' }
+                    },
+                    y: {
+                        grid: { color: 'rgba(148, 163, 184, 0.1)' },
+                        ticks: {
+                            color: '#6b7280',
+                            callback: function(value) {
+                                return formatarMoeda(value);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    console.log('Gráficos de torneios criados');
+}
+// =====================

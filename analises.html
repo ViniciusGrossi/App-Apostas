@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -372,7 +373,7 @@
         </div>
 
         <nav class="px-6 pb-6 space-y-2">
-            <a href="teste.html" class="nav-item flex items-center space-x-4 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
+            <a href="home.html" class="nav-item flex items-center space-x-4 px-6 py-4 rounded-2xl text-slate-300 hover:text-white transition-all">
                 <i data-lucide="home" class="w-5 h-5"></i>
                 <span class="font-medium">Início</span>
             </a>
@@ -437,6 +438,10 @@
                 <button class="tab-button px-8 py-4 rounded-2xl font-semibold transition-all duration-300" data-tab="casas">
                     <i data-lucide="building" class="w-5 h-5 mr-3 inline"></i>
                     Casas de Apostas
+                </button>
+                <button class="tab-button px-8 py-4 rounded-2xl font-semibold transition-all duration-300" data-tab="torneios">
+                    <i data-lucide="trophy" class="w-5 h-5 mr-3 inline"></i>
+                    Torneios
                 </button>
                 <button class="tab-button px-8 py-4 rounded-2xl font-semibold transition-all duration-300" data-tab="odds">
                     <i data-lucide="percent" class="w-5 h-5 mr-3 inline"></i>
@@ -605,15 +610,15 @@
                             <div class="metric-icon p-2 rounded-xl mr-3">
                                 <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
                             </div>
-                            Evolução do Lucro Diário
-                            <div class="tooltip" data-tooltip="Lucro Diário|Resultado financeiro de cada dia. Barras verdes = lucro, vermelhas = prejuízo">
+                            Evolução do Lucro Mensal
+                            <div class="tooltip" data-tooltip="Lucro Mensal|Resultado financeiro consolidado por mês">
                                 <div class="info-icon">
                                     <i data-lucide="info" class="w-3 h-3"></i>
                                 </div>
                             </div>
                         </h3>
                         <div class="h-80 flex items-center justify-center">
-                            <canvas id="chart-lucro-diario" width="400" height="300"></canvas>
+                            <canvas id="chart-lucro-mensal" width="400" height="300"></canvas>
                         </div>
                     </div>
                 </div>
@@ -789,7 +794,7 @@
                             <div class="metric-icon p-4 rounded-2xl text-purple-400">
                                 <i data-lucide="target" class="w-8 h-8"></i>
                             </div>
-                            <div class="tooltip" data-tooltip="Strike Rate|Taxa de sucesso em apostas de odds altas (acima de 2.5)">
+                            <div class="tooltip" data-tooltip="Strike Rate|Taxa de sucesso em apostas de odds altas (acima de 2.0)">
                                 <div class="info-icon">
                                     <i data-lucide="info" class="w-3 h-3"></i>
                                 </div>
@@ -832,15 +837,18 @@
                     </div>
                     <div class="chart-container rounded-3xl p-8">
                         <h3 class="text-2xl font-bold mb-6 flex items-center">
-                            Performance por Casa
-                            <div class="tooltip" data-tooltip="Performance por Casa|Comparação de desempenho entre diferentes casas de apostas">
+                            <div class="metric-icon p-2 rounded-xl mr-3">
+                                <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+                            </div>
+                            Evolução do Lucro Diário
+                            <div class="tooltip" data-tooltip="Lucro Diário|Resultado financeiro de cada dia. Barras verdes = lucro, vermelhas = prejuízo">
                                 <div class="info-icon">
                                     <i data-lucide="info" class="w-3 h-3"></i>
                                 </div>
                             </div>
                         </h3>
                         <div class="h-80 flex items-center justify-center">
-                            <canvas id="chart-performance-casa" width="400" height="300"></canvas>
+                            <canvas id="chart-lucro-diario" width="400" height="300"></canvas>
                         </div>
                     </div>
                 </div>
@@ -990,15 +998,31 @@
                 <!-- Gráficos de Casas -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div class="chart-container rounded-3xl p-8">
+                        <h3 class="text-2xl font-bold mb-6">Performance por Casa</h3>
+                        <div class="h-80 flex items-center justify-center">
+                            <canvas id="chart-performance-casa" width="400" height="300"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container rounded-3xl p-8">
                         <h3 class="text-2xl font-bold mb-6">ROI por Casa</h3>
                         <div class="h-80 flex items-center justify-center">
                             <canvas id="chart-roi-casa" width="400" height="300"></canvas>
                         </div>
                     </div>
+                </div>
+
+                <!-- Nova seção de métricas -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div class="chart-container rounded-3xl p-8">
                         <h3 class="text-2xl font-bold mb-6">Volume vs Performance</h3>
                         <div class="h-80 flex items-center justify-center">
                             <canvas id="chart-volume-performance" width="400" height="300"></canvas>
+                        </div>
+                    </div>
+                    <div class="glass-card rounded-3xl p-8">
+                        <h3 class="text-2xl font-bold mb-6">Top Casas - Métricas</h3>
+                        <div id="top-casas-metricas" class="space-y-4">
+                            <!-- Será preenchido dinamicamente -->
                         </div>
                     </div>
                 </div>
@@ -1008,6 +1032,109 @@
                     <h3 class="text-2xl font-bold mb-6">Melhores Mercados por Casa</h3>
                     <div id="mercados-casa-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div class="text-center text-slate-500">Carregando análise de mercados...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nova Aba Torneios -->
+            <div id="tab-torneios" class="tab-content space-y-8">
+                <!-- Métricas de Torneios -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="metric-card rounded-3xl p-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="metric-icon p-4 rounded-2xl text-yellow-400">
+                                <i data-lucide="trophy" class="w-8 h-8"></i>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold mb-2" id="torneio-mais-lucrativo">-</p>
+                        <p class="text-slate-400 font-medium">Torneio Mais Lucrativo</p>
+                    </div>
+
+                    <div class="metric-card rounded-3xl p-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="metric-icon p-4 rounded-2xl text-green-400">
+                                <i data-lucide="percent" class="w-8 h-8"></i>
+                            </div>
+                        </div>
+                        <p class="text-4xl font-bold mb-2" id="torneio-melhor-taxa">0%</p>
+                        <p class="text-slate-400 font-medium">Melhor Taxa de Acerto</p>
+                    </div>
+
+                    <div class="metric-card rounded-3xl p-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="metric-icon p-4 rounded-2xl text-blue-400">
+                                <i data-lucide="trending-up" class="w-8 h-8"></i>
+                            </div>
+                        </div>
+                        <p class="text-4xl font-bold mb-2" id="torneio-melhor-roi">0%</p>
+                        <p class="text-slate-400 font-medium">Melhor ROI</p>
+                    </div>
+
+                    <div class="metric-card rounded-3xl p-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="metric-icon p-4 rounded-2xl text-purple-400">
+                                <i data-lucide="award" class="w-8 h-8"></i>
+                            </div>
+                        </div>
+                        <p class="text-4xl font-bold mb-2" id="torneios-ativos">0</p>
+                        <p class="text-slate-400 font-medium">Torneios Ativos</p>
+                    </div>
+                </div>
+
+                <!-- Tabela de Torneios -->
+                <div class="glass-card rounded-3xl p-8">
+                    <h3 class="text-2xl font-bold mb-6">Análise de Torneios</h3>
+                    <div class="data-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Torneio/Liga</th>
+                                    <th>Total Apostas</th>
+                                    <th>Taxa Acerto</th>
+                                    <th>ROI</th>
+                                    <th>Lucro Total</th>
+                                    <th>Odd Média</th>
+                                    <th>Tendência</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-torneios">
+                                <tr>
+                                    <td colspan="7" class="text-center text-slate-500 py-8">Carregando dados...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Gráficos de Torneios -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="chart-container rounded-3xl p-8">
+                        <h3 class="text-2xl font-bold mb-6">Performance por Torneio</h3>
+                        <div class="h-80 flex items-center justify-center">
+                            <canvas id="chart-torneios-performance" width="400" height="300"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container rounded-3xl p-8">
+                        <h3 class="text-2xl font-bold mb-6">Distribuição de Apostas</h3>
+                        <div class="h-80 flex items-center justify-center">
+                            <canvas id="chart-torneios-distribuicao" width="400" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Análise de Esportes -->
+                <div class="glass-card rounded-3xl p-8">
+                    <h3 class="text-2xl font-bold mb-6">Análise por Esporte</h3>
+                    <div id="analise-esportes" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Será preenchido dinamicamente -->
+                    </div>
+                </div>
+
+                <!-- Histórico de Torneios -->
+                <div class="chart-container rounded-3xl p-8">
+                    <h3 class="text-2xl font-bold mb-6">Evolução Temporal por Torneio</h3>
+                    <div class="h-80 flex items-center justify-center">
+                        <canvas id="chart-torneios-evolucao" width="400" height="300"></canvas>
                     </div>
                 </div>
             </div>
