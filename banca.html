@@ -578,6 +578,7 @@
                                 <div class="w-full bg-slate-700 rounded-full h-2">
                                     <div id="dailyGoalBar" class="h-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transition-all duration-500" style="width: 0%"></div>
                                 </div>
+                                <div class="mt-1 text-xs text-slate-400" id="dailyProgress">Progresso: R$ 0,00</div>
                             </div>
                             <div>
                                 <div class="flex justify-between mb-1">
@@ -587,6 +588,7 @@
                                 <div class="w-full bg-slate-700 rounded-full h-2">
                                     <div id="lossLimitBar" class="h-2 bg-gradient-to-r from-red-500 to-red-600 rounded-full transition-all duration-500" style="width: 0%"></div>
                                 </div>
+                                <div class="mt-1 text-xs text-slate-400" id="lossProgress">Perdas hoje: R$ 0,00</div>
                             </div>
                             <div>
                                 <div class="flex justify-between mb-1">
@@ -596,6 +598,7 @@
                                 <div class="w-full bg-slate-700 rounded-full h-2">
                                     <div id="monthlyGoalBar" class="h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500" style="width: 0%"></div>
                                 </div>
+                                <div class="mt-1 text-xs text-slate-400" id="monthlyProgress">Progresso mensal: R$ 0,00</div>
                             </div>
                         </div>
                     </div>
@@ -634,7 +637,7 @@
                             </div>
                             Últimas Transações
                         </h3>
-                        <button onclick="loadTransactionHistory()" class="text-sm text-indigo-400 hover:text-indigo-300">
+                        <button onclick="loadAllTransactions()" class="text-sm text-indigo-400 hover:text-indigo-300">
                             Ver todas
                         </button>
                     </div>
@@ -761,19 +764,19 @@
             
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Meta Diária</label>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Meta Diária (R$)</label>
                     <input type="number" id="dailyGoal" placeholder="100.00" step="0.01"
-                           class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-3 text-white">
+                           class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Limite de Perda Diário</label>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Limite de Perda Diário (R$)</label>
                     <input type="number" id="lossLimit" placeholder="200.00" step="0.01"
-                           class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-3 text-white">
+                           class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Meta Mensal</label>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Meta Mensal (R$)</label>
                     <input type="number" id="monthlyGoal" placeholder="2000.00" step="0.01"
-                           class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-3 text-white">
+                           class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                 </div>
                 <button onclick="saveGoals()" class="w-full py-3 action-button text-white rounded-xl font-medium">
                     Salvar Metas
@@ -882,7 +885,7 @@
             }).format(value || 0);
         }
 
-        // Função para calcular métricas avançadas
+        // Função para calcular métricas avançadas baseadas nos dados reais
         async function calculateAdvancedMetrics() {
             try {
                 // Buscar apostas para calcular métricas reais
@@ -892,23 +895,6 @@
                     .order('data', { ascending: false });
                 
                 bets = betsData || [];
-
-                // Calcular métricas
-                const totalBets = bets.length;
-                const wonBets = bets.filter(b => b.resultado === 'Ganhou').length;
-                const lostBets = bets.filter(b => b.resultado === 'Perdeu').length;
-                const winRate = totalBets > 0 ? ((wonBets / totalBets) * 100).toFixed(1) : 0;
-
-                // Calcular lucro/prejuízo
-                const totalInvested = bets.reduce((sum, bet) => sum + (bet.valor_apostado || 0), 0);
-                const totalReturns = bets.reduce((sum, bet) => {
-                    if (bet.resultado === 'Ganhou') {
-                        return sum + (bet.valor_apostado * bet.odds);
-                    }
-                    return sum;
-                }, 0);
-                const profit = totalReturns - totalInvested;
-                const roi = totalInvested > 0 ? ((profit / totalInvested) * 100).toFixed(1) : 0;
 
                 // Calcular sequência atual
                 let currentStreak = 0;
@@ -925,14 +911,14 @@
                     streakType = lastResult === 'Ganhou' ? 'Vitórias' : lastResult === 'Perdeu' ? 'Derrotas' : 'Neutro';
                 }
 
-                // Maior ganho e perda
+                // Maior ganho e perda baseado em apostas reais
                 let biggestWin = 0;
                 let biggestLoss = 0;
                 let biggestWinDate = '-';
                 let biggestLossDate = '-';
 
                 bets.forEach(bet => {
-                    const value = bet.valor_apostado * (bet.resultado === 'Ganhou' ? bet.odds - 1 : -1);
+                    const value = bet.valor_apostado * (bet.resultado === 'Ganhou' ? bet.odds - 1 : bet.resultado === 'Perdeu' ? -1 : 0);
                     if (value > biggestWin) {
                         biggestWin = value;
                         biggestWinDate = new Date(bet.data).toLocaleDateString('pt-BR');
@@ -944,27 +930,9 @@
                 });
 
                 // Atualizar UI
-                document.getElementById('winRate').textContent = `${winRate}%`;
-                document.getElementById('totalBets').textContent = `${totalBets} apostas`;
-                document.getElementById('roiValue').textContent = `${roi}%`;
-                document.getElementById('roiValue').className = `text-2xl font-bold ${roi >= 0 ? 'text-green-400' : 'text-red-400'}`;
-                document.getElementById('profitValue').textContent = formatCurrency(profit);
-                document.getElementById('profitValue').className = `text-2xl font-bold ${profit >= 0 ? 'text-green-400' : 'text-red-400'}`;
-                
-                // Atualizar barra de lucro
-                const profitBar = document.getElementById('profitBar');
-                if (profit >= 0) {
-                    profitBar.className = 'h-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transition-all duration-500';
-                    profitBar.style.width = Math.min((profit / 1000) * 100, 100) + '%';
-                } else {
-                    profitBar.className = 'h-2 bg-gradient-to-r from-red-500 to-red-600 rounded-full transition-all duration-500';
-                    profitBar.style.width = Math.min((Math.abs(profit) / 1000) * 100, 100) + '%';
-                }
-
-                // Atualizar sequência
                 document.getElementById('currentStreak').textContent = currentStreak;
                 document.getElementById('streakType').textContent = streakType;
-                document.getElementById('streakType').className = `text-slate-400 ${streakType === 'Vitórias' ? 'text-green-400' : streakType === 'Derrotas' ? 'text-red-400' : ''}`;
+                document.getElementById('streakType').className = `text-xs ${streakType === 'Vitórias' ? 'text-green-400' : streakType === 'Derrotas' ? 'text-red-400' : 'text-slate-400'}`;
 
                 // Atualizar maiores ganhos/perdas
                 document.getElementById('biggestWin').textContent = formatCurrency(biggestWin);
@@ -972,25 +940,46 @@
                 document.getElementById('biggestLoss').textContent = formatCurrency(Math.abs(biggestLoss));
                 document.getElementById('biggestLossDate').textContent = biggestLossDate;
 
-                // Atualizar casas ativas
-                const activeBrokies = bookies.filter(b => b.balance > 0).length;
-                document.getElementById('activeBrokies').textContent = activeBrokies;
-
-                // Atualizar metas
-                updateGoalsProgress();
+                // Calcular mudança da banca
+                await calculateBankrollChange();
 
             } catch (error) {
                 console.error('Erro ao calcular métricas:', error);
             }
         }
 
-        // Função para mostrar alertas de gestão
+        // Função para calcular mudança percentual da banca
+        async function calculateBankrollChange() {
+            try {
+                const today = new Date();
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+
+                const todayTotalChange = transactions
+                    .filter(t => new Date(t.created_at).toDateString() === today.toDateString())
+                    .reduce((sum, t) => sum + (t.type === 'deposit' ? t.amount : -t.amount), 0);
+
+                const totalBankroll = bookies.reduce((sum, b) => sum + b.balance, 0);
+                const yesterdayBankroll = totalBankroll - todayTotalChange;
+                
+                const changePercent = yesterdayBankroll > 0 ? ((todayTotalChange / yesterdayBankroll) * 100).toFixed(1) : 0;
+
+                document.getElementById('bankrollChange').textContent = `${changePercent >= 0 ? '+' : ''}${changePercent}% hoje`;
+                document.getElementById('bankrollChange').className = `text-xs ${changePercent >= 0 ? 'text-green-400' : 'text-red-400'}`;
+            } catch (error) {
+                console.error('Erro ao calcular mudança da banca:', error);
+                document.getElementById('bankrollChange').textContent = '0% hoje';
+            }
+        }
+
+        // Função para mostrar alertas de gestão baseados em dados reais
         function showManagementAlerts() {
             const alertsContainer = document.getElementById('riskAlerts');
             alertsContainer.innerHTML = '';
 
             const totalBankroll = bookies.reduce((sum, b) => sum + b.balance, 0);
 
+            // Alerta de banca baixa
             if (totalBankroll < 100) {
                 alertsContainer.innerHTML += `
                     <div class="warning-card p-4 rounded-xl flex items-start space-x-3">
@@ -1003,23 +992,118 @@
                 `;
             }
 
+            // Verificar se meta diária foi batida
+            const today = new Date().toDateString();
+            const todayProfit = transactions
+                .filter(t => new Date(t.created_at).toDateString() === today && t.type === 'deposit')
+                .reduce((sum, t) => sum + t.amount, 0) -
+                transactions
+                .filter(t => new Date(t.created_at).toDateString() === today && t.type === 'withdraw')
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            if (todayProfit >= goals.daily) {
+                alertsContainer.innerHTML += `
+                    <div class="success-card p-4 rounded-xl flex items-start space-x-3">
+                        <i data-lucide="check-circle" class="w-5 h-5 text-green-400 mt-1"></i>
+                        <div class="flex-1">
+                            <p class="font-medium text-green-400">Meta Diária Atingida!</p>
+                            <p class="text-sm text-slate-400 mt-1">Parabéns! Você bateu sua meta de ${formatCurrency(goals.daily)} hoje.</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Alerta de limite de perda
+            const todayLosses = Math.abs(transactions
+                .filter(t => new Date(t.created_at).toDateString() === today && t.type === 'withdraw')
+                .reduce((sum, t) => sum + t.amount, 0));
+
+            if (todayLosses >= goals.lossLimit * 0.8) {
+                const severity = todayLosses >= goals.lossLimit ? 'danger' : 'warning';
+                alertsContainer.innerHTML += `
+                    <div class="warning-card p-4 rounded-xl flex items-start space-x-3">
+                        <i data-lucide="alert-triangle" class="w-5 h-5 text-${severity === 'danger' ? 'red' : 'yellow'}-400 mt-1"></i>
+                        <div class="flex-1">
+                            <p class="font-medium text-${severity === 'danger' ? 'red' : 'yellow'}-400">
+                                ${severity === 'danger' ? 'Limite de Perda Excedido!' : 'Próximo ao Limite de Perda'}
+                            </p>
+                            <p class="text-sm text-slate-400 mt-1">
+                                Perdas hoje: ${formatCurrency(todayLosses)} / ${formatCurrency(goals.lossLimit)}
+                            </p>
+                        </div>
+                    </div>
+                `;
+            }
+
             lucide.createIcons();
         }
 
-        // Função para atualizar progresso das metas
-        function updateGoalsProgress() {
-            // Implementar lógica para calcular progresso das metas
-            const dailyProgress = Math.random() * 100; // Substituir com cálculo real
-            const lossProgress = Math.random() * 100;
-            const monthlyProgress = Math.random() * 100;
+        // Função para atualizar progresso das metas com dados reais
+        async function updateGoalsProgress() {
+            try {
+                // Carregar metas do banco
+                await loadGoalsFromDB();
 
-            document.getElementById('dailyGoalBar').style.width = `${Math.min(dailyProgress, 100)}%`;
-            document.getElementById('lossLimitBar').style.width = `${Math.min(lossProgress, 100)}%`;
-            document.getElementById('monthlyGoalBar').style.width = `${Math.min(monthlyProgress, 100)}%`;
+                const today = new Date();
+                const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                const todayStr = today.toDateString();
 
-            document.getElementById('dailyGoalValue').textContent = formatCurrency(goals.daily);
-            document.getElementById('lossLimitValue').textContent = formatCurrency(goals.lossLimit);
-            document.getElementById('monthlyGoalValue').textContent = formatCurrency(goals.monthly);
+                // Calcular lucro/perda do dia
+                const todayTransactions = transactions.filter(t => 
+                    new Date(t.created_at).toDateString() === todayStr
+                );
+                const dailyProfit = todayTransactions
+                    .filter(t => t.type === 'deposit')
+                    .reduce((sum, t) => sum + t.amount, 0) -
+                    todayTransactions
+                    .filter(t => t.type === 'withdraw')
+                    .reduce((sum, t) => sum + t.amount, 0);
+
+                // Calcular perdas do dia
+                const dailyLosses = Math.abs(todayTransactions
+                    .filter(t => t.type === 'withdraw')
+                    .reduce((sum, t) => sum + t.amount, 0));
+
+                // Calcular lucro/perda do mês
+                const monthlyTransactions = transactions.filter(t => 
+                    new Date(t.created_at) >= startOfMonth
+                );
+                const monthlyProfit = monthlyTransactions
+                    .filter(t => t.type === 'deposit')
+                    .reduce((sum, t) => sum + t.amount, 0) -
+                    monthlyTransactions
+                    .filter(t => t.type === 'withdraw')
+                    .reduce((sum, t) => sum + t.amount, 0);
+
+                // Atualizar barras de progresso
+                const dailyProgress = Math.min((dailyProfit / goals.daily) * 100, 100);
+                const lossProgress = Math.min((dailyLosses / goals.lossLimit) * 100, 100);
+                const monthlyProgress = Math.min((monthlyProfit / goals.monthly) * 100, 100);
+
+                document.getElementById('dailyGoalBar').style.width = `${Math.max(dailyProgress, 0)}%`;
+                document.getElementById('lossLimitBar').style.width = `${lossProgress}%`;
+                document.getElementById('monthlyGoalBar').style.width = `${Math.max(monthlyProgress, 0)}%`;
+
+                // Atualizar textos
+                document.getElementById('dailyGoalValue').textContent = formatCurrency(goals.daily);
+                document.getElementById('lossLimitValue').textContent = formatCurrency(goals.lossLimit);
+                document.getElementById('monthlyGoalValue').textContent = formatCurrency(goals.monthly);
+
+                document.getElementById('dailyProgress').textContent = `Progresso: ${formatCurrency(dailyProfit)}`;
+                document.getElementById('lossProgress').textContent = `Perdas hoje: ${formatCurrency(dailyLosses)}`;
+                document.getElementById('monthlyProgress').textContent = `Progresso mensal: ${formatCurrency(monthlyProfit)}`;
+
+                // Alterar cores baseado no progresso
+                if (dailyProfit >= goals.daily) {
+                    document.getElementById('dailyGoalBar').className = 'h-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transition-all duration-500';
+                }
+                if (dailyLosses >= goals.lossLimit) {
+                    document.getElementById('lossLimitBar').className = 'h-2 bg-gradient-to-r from-red-600 to-red-700 rounded-full transition-all duration-500';
+                }
+
+            } catch (error) {
+                console.error('Erro ao atualizar progresso das metas:', error);
+            }
         }
 
         function updateBankrollInfo() {
@@ -1031,11 +1115,6 @@
             document.getElementById('halfUnit').textContent = formatCurrency(unitValue * 0.5);
             document.getElementById('threeQuarterUnit').textContent = formatCurrency(unitValue * 0.75);
             document.getElementById('fullUnit').textContent = formatCurrency(unitValue);
-
-            // Calcular mudança percentual
-            const changePercent = 0; // Implementar cálculo real
-            document.getElementById('bankrollChange').textContent = `${changePercent >= 0 ? '+' : ''}${changePercent}% hoje`;
-            document.getElementById('bankrollChange').className = `${changePercent >= 0 ? 'text-green-400' : 'text-red-400'}`;
         }
 
         function sortBookies() {
@@ -1046,8 +1125,7 @@
                     bookies.sort((a, b) => a.name.localeCompare(b.name));
                     break;
                 case 'profit':
-                    // Implementar ordenação por lucro
-                    bookies.sort((a, b) => b.balance - a.balance);
+                    bookies.sort((a, b) => (b.profit || 0) - (a.profit || 0));
                     break;
                 case 'balance':
                 default:
@@ -1111,7 +1189,7 @@
                             <div class="pt-4 border-t border-slate-700">
                                 <div class="flex justify-between items-center">
                                     <span class="text-xs text-slate-400">Lucro/Prejuízo</span>
-                                    <span class="text-sm font-medium ${bookie.profit >= 0 ? 'text-green-400' : 'text-red-400'}">
+                                    <span class="text-sm font-medium ${(bookie.profit || 0) >= 0 ? 'text-green-400' : 'text-red-400'}">
                                         ${formatCurrency(bookie.profit || 0)}
                                     </span>
                                 </div>
@@ -1136,6 +1214,7 @@
             
             // Aplicar filtro e recarregar dados
             loadBookies();
+            loadTransactionHistory();
         }
 
         // Funções de modais
@@ -1156,22 +1235,21 @@
             document.getElementById('transactionModal').classList.remove('hidden');
             document.getElementById('transactionAmount').value = '';
             document.getElementById('transactionDescription').value = '';
+            currentTransactionType = null;
+            document.getElementById('depositButton').classList.remove('active-deposit');
+            document.getElementById('withdrawButton').classList.remove('active-withdraw');
+            document.getElementById('transactionTypeMessage').classList.add('hidden');
         }
 
         function closeTransactionModal() {
             currentBookieId = null;
             currentTransactionType = null;
             document.getElementById('transactionModal').classList.add('hidden');
-            document.getElementById('transactionTypeMessage').classList.add('hidden');
-            document.getElementById('depositButton').classList.remove('active-deposit');
-            document.getElementById('withdrawButton').classList.remove('active-withdraw');
         }
 
         function showGoalsModal() {
             document.getElementById('goalsModal').classList.remove('hidden');
-            document.getElementById('dailyGoal').value = goals.daily;
-            document.getElementById('lossLimit').value = goals.lossLimit;
-            document.getElementById('monthlyGoal').value = goals.monthly;
+            loadCurrentGoals();
         }
 
         function closeGoalsModal() {
@@ -1206,127 +1284,253 @@
             document.getElementById('transactionAmount').focus();
         }
 
-        // Função para carregar análise avançada
+        // Função para carregar metas do banco de dados
+        async function loadGoalsFromDB() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('goals')
+                    .select('*')
+                    .single();
+
+                if (error && error.code !== 'PGRST116') {
+                    console.log('Erro ao carregar metas:', error);
+                    return;
+                }
+
+                if (data) {
+                    goals = {
+                        daily: data.daily_goal || 100,
+                        lossLimit: data.loss_limit || 200,
+                        monthly: data.monthly_goal || 2000
+                    };
+                }
+            } catch (error) {
+                console.error('Erro ao carregar metas:', error);
+            }
+        }
+
+        // Função para carregar metas nos campos do modal
+        function loadCurrentGoals() {
+            document.getElementById('dailyGoal').value = goals.daily;
+            document.getElementById('lossLimit').value = goals.lossLimit;
+            document.getElementById('monthlyGoal').value = goals.monthly;
+        }
+
+        // Função para salvar metas no banco de dados
+        async function saveGoals() {
+            const newGoals = {
+                daily: parseFloat(document.getElementById('dailyGoal').value) || 100,
+                lossLimit: parseFloat(document.getElementById('lossLimit').value) || 200,
+                monthly: parseFloat(document.getElementById('monthlyGoal').value) || 2000
+            };
+
+            showLoading();
+            try {
+                const { error } = await supabaseClient
+                    .from('goals')
+                    .upsert({
+                        id: 1,
+                        daily_goal: newGoals.daily,
+                        loss_limit: newGoals.lossLimit,
+                        monthly_goal: newGoals.monthly,
+                        updated_at: new Date().toISOString()
+                    });
+
+                if (error) throw error;
+
+                goals = newGoals;
+                updateGoalsProgress();
+                closeGoalsModal();
+                
+            } catch (error) {
+                console.error('Erro ao salvar metas:', error);
+                alert('Erro ao salvar metas. Certifique-se de que a tabela goals existe no banco.');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Função para carregar análise avançada com dados reais da banca
         async function loadAnalytics() {
             const content = document.getElementById('analyticsContent');
             content.innerHTML = '<div class="loading-spinner mx-auto"></div>';
             
-            // Simular carregamento e exibir análises
-            setTimeout(() => {
+            try {
+                // Aguardar um momento para mostrar loading
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                // Calcular análises baseadas nos dados reais
+                const totalBankroll = bookies.reduce((sum, b) => sum + b.balance, 0);
+                
+                // Análise de distribuição de saldo por casa
+                const balanceAnalysis = bookies.map(b => ({
+                    name: b.name,
+                    balance: b.balance,
+                    percentage: totalBankroll > 0 ? ((b.balance / totalBankroll) * 100).toFixed(1) : 0
+                })).sort((a, b) => b.balance - a.balance);
+
+                // Análise de transações por período
+                const last30Days = transactions.filter(t => {
+                    const transactionDate = new Date(t.created_at);
+                    const thirtyDaysAgo = new Date();
+                    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                    return transactionDate >= thirtyDaysAgo;
+                });
+
+                const depositsLast30 = last30Days.filter(t => t.type === 'deposit').reduce((sum, t) => sum + t.amount, 0);
+                const withdrawalsLast30 = last30Days.filter(t => t.type === 'withdraw').reduce((sum, t) => sum + t.amount, 0);
+                const netLast30 = depositsLast30 - withdrawalsLast30;
+
+                // Análise de padrões de transação
+                const depositTransactions = last30Days.filter(t => t.type === 'deposit');
+                const withdrawalTransactions = last30Days.filter(t => t.type === 'withdraw');
+                
+                const transactionPatterns = {
+                    avgDeposit: depositTransactions.length > 0 ? (depositsLast30 / depositTransactions.length) : 0,
+                    avgWithdrawal: withdrawalTransactions.length > 0 ? (withdrawalsLast30 / withdrawalTransactions.length) : 0,
+                    frequency: last30Days.length / 30
+                };
+
                 content.innerHTML = `
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="glass-card p-4 rounded-xl">
-                            <h4 class="font-medium mb-2">Taxa de Acerto por Casa</h4>
-                            <div class="space-y-2">
-                                ${bookies.map(b => `
-                                    <div class="flex justify-between">
-                                        <span class="text-sm">${b.name}</span>
-                                        <span class="text-sm font-medium">${(Math.random() * 100).toFixed(1)}%</span>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="glass-card p-6 rounded-xl">
+                            <h4 class="font-bold mb-4 flex items-center">
+                                <i data-lucide="pie-chart" class="w-5 h-5 mr-2"></i>
+                                Distribuição de Saldo por Casa
+                            </h4>
+                            <div class="space-y-3">
+                                ${balanceAnalysis.length > 0 ? balanceAnalysis.map(b => `
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm font-medium">${b.name}</span>
+                                        <div class="flex items-center space-x-2">
+                                            <span class="text-sm ${b.balance >= 0 ? 'text-green-400' : 'text-red-400'}">${formatCurrency(b.balance)}</span>
+                                            <span class="text-xs text-slate-400">(${b.percentage}%)</span>
+                                        </div>
                                     </div>
-                                `).join('')}
+                                `).join('') : '<p class="text-slate-400 text-center">Nenhuma casa cadastrada</p>'}
                             </div>
                         </div>
-                        <div class="glass-card p-4 rounded-xl">
-                            <h4 class="font-medium mb-2">Performance por Categoria</h4>
-                            <div class="space-y-2">
+
+                        <div class="glass-card p-6 rounded-xl">
+                            <h4 class="font-bold mb-4 flex items-center">
+                                <i data-lucide="trending-up" class="w-5 h-5 mr-2"></i>
+                                Performance dos Últimos 30 Dias
+                            </h4>
+                            <div class="space-y-4">
                                 <div class="flex justify-between">
-                                    <span class="text-sm">Futebol</span>
-                                    <span class="text-sm font-medium text-green-400">+R$ 350</span>
+                                    <span class="text-sm text-slate-400">Total Depositado</span>
+                                    <span class="text-sm font-medium text-green-400">${formatCurrency(depositsLast30)}</span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-sm">Basquete</span>
-                                    <span class="text-sm font-medium text-red-400">-R$ 120</span>
+                                    <span class="text-sm text-slate-400">Total Sacado</span>
+                                    <span class="text-sm font-medium text-red-400">${formatCurrency(withdrawalsLast30)}</span>
                                 </div>
-                                <div class="flex justify-between">
-                                    <span class="text-sm">Tênis</span>
-                                    <span class="text-sm font-medium text-green-400">+R$ 85</span>
+                                <div class="flex justify-between border-t border-slate-600 pt-2">
+                                    <span class="text-sm font-medium">Resultado Líquido</span>
+                                    <span class="text-sm font-bold ${netLast30 >= 0 ? 'text-green-400' : 'text-red-400'}">${formatCurrency(netLast30)}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <div class="glass-card p-6 rounded-xl">
+                        <h4 class="font-bold mb-4 flex items-center">
+                            <i data-lucide="activity" class="w-5 h-5 mr-2"></i>
+                            Padrões de Transação
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="text-center p-4 bg-slate-800/50 rounded-lg">
+                                <p class="text-2xl font-bold text-blue-400">${formatCurrency(transactionPatterns.avgDeposit)}</p>
+                                <p class="text-sm text-slate-400">Depósito Médio</p>
+                            </div>
+                            <div class="text-center p-4 bg-slate-800/50 rounded-lg">
+                                <p class="text-2xl font-bold text-yellow-400">${formatCurrency(transactionPatterns.avgWithdrawal)}</p>
+                                <p class="text-sm text-slate-400">Saque Médio</p>
+                            </div>
+                            <div class="text-center p-4 bg-slate-800/50 rounded-lg">
+                                <p class="text-2xl font-bold text-purple-400">${transactionPatterns.frequency.toFixed(1)}</p>
+                                <p class="text-sm text-slate-400">Transações/Dia</p>
+                            </div>
+                        </div>
+                    </div>
                     
-                    <div class="glass-card p-4 rounded-xl">
-                        <h4 class="font-medium mb-4">Recomendações Baseadas em IA</h4>
-                        <div class="space-y-3">
+                    <div class="glass-card p-6 rounded-xl">
+                        <h4 class="font-bold mb-4 flex items-center">
+                            <i data-lucide="lightbulb" class="w-5 h-5 mr-2"></i>
+                            Recomendações de Gestão de Banca
+                        </h4>
+                        <div class="space-y-4">
+                            ${totalBankroll < 500 ? `
+                                <div class="flex items-start space-x-3">
+                                    <i data-lucide="trending-up" class="w-5 h-5 text-yellow-400 mt-1"></i>
+                                    <div>
+                                        <p class="font-medium">Aumentar Capital Inicial</p>
+                                        <p class="text-sm text-slate-400">Considere aumentar sua banca para pelo menos R$ 500 para maior segurança</p>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            
+                            ${bookies.length < 3 ? `
+                                <div class="flex items-start space-x-3">
+                                    <i data-lucide="users" class="w-5 h-5 text-blue-400 mt-1"></i>
+                                    <div>
+                                        <p class="font-medium">Diversificar Casas de Apostas</p>
+                                        <p class="text-sm text-slate-400">Adicione mais casas para diversificar riscos e aproveitar melhores odds</p>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            
                             <div class="flex items-start space-x-3">
-                                <i data-lucide="trending-down" class="w-5 h-5 text-yellow-400 mt-1"></i>
+                                <i data-lucide="shield-check" class="w-5 h-5 text-green-400 mt-1"></i>
                                 <div>
-                                    <p class="font-medium">Reduzir apostas em mercados de gols</p>
-                                    <p class="text-sm text-slate-400">Taxa de acerto 32% abaixo da média</p>
+                                    <p class="font-medium">Manter Disciplina de Unidade</p>
+                                    <p class="text-sm text-slate-400">Nunca aposte mais de 1-2% da banca total em uma única aposta</p>
                                 </div>
                             </div>
-                            <div class="flex items-start space-x-3">
-                                <i data-lucide="trending-up" class="w-5 h-5 text-green-400 mt-1"></i>
-                                <div>
-                                    <p class="font-medium">Aumentar foco em handicap asiático</p>
-                                    <p class="text-sm text-slate-400">ROI positivo de 18% nos últimos 30 dias</p>
+                            
+                            ${netLast30 < 0 ? `
+                                <div class="flex items-start space-x-3">
+                                    <i data-lucide="alert-circle" class="w-5 h-5 text-red-400 mt-1"></i>
+                                    <div>
+                                        <p class="font-medium">Revisar Estratégia</p>
+                                        <p class="text-sm text-slate-400">Resultado negativo nos últimos 30 dias. Considere revisar sua estratégia de apostas</p>
+                                    </div>
                                 </div>
-                            </div>
+                            ` : `
+                                <div class="flex items-start space-x-3">
+                                    <i data-lucide="check-circle" class="w-5 h-5 text-green-400 mt-1"></i>
+                                    <div>
+                                        <p class="font-medium">Manter Consistência</p>
+                                        <p class="text-sm text-slate-400">Bom desempenho nos últimos 30 dias. Continue com sua estratégia atual</p>
+                                    </div>
+                                </div>
+                            `}
                         </div>
                     </div>
                 `;
+                
                 lucide.createIcons();
-            }, 1000);
+            } catch (error) {
+                console.error('Erro ao carregar análises:', error);
+                content.innerHTML = '<p class="text-center text-red-400">Erro ao carregar análises</p>';
+            }
         }
 
-        // Função para salvar metas
-        function saveGoals() {
-            goals.daily = parseFloat(document.getElementById('dailyGoal').value) || 100;
-            goals.lossLimit = parseFloat(document.getElementById('lossLimit').value) || 200;
-            goals.monthly = parseFloat(document.getElementById('monthlyGoal').value) || 2000;
-            
-            // Salvar no localStorage
-            localStorage.setItem('bettingGoals', JSON.stringify(goals));
-            
-            updateGoalsProgress();
-            closeGoalsModal();
-        }
-
-        // Função para carregar histórico de transações
+        // Função para carregar histórico de transações do banco
         async function loadTransactionHistory() {
             const historyContainer = document.getElementById('transactionHistory');
             
-            // Simular carregamento de transações
-            historyContainer.innerHTML = `
-                <div class="space-y-2">
-                    <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
-                        <div class="flex items-center space-x-3">
-                            <div class="p-2 rounded-lg bg-green-500/20">
-                                <i data-lucide="plus" class="w-4 h-4 text-green-400"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium">Depósito - Bet365</p>
-                                <p class="text-xs text-slate-400">Hoje, 14:30</p>
-                            </div>
-                        </div>
-                        <span class="text-green-400 font-medium">+R$ 500,00</span>
-                    </div>
-                    
-                    <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
-                        <div class="flex items-center space-x-3">
-                            <div class="p-2 rounded-lg bg-red-500/20">
-                                <i data-lucide="minus" class="w-4 h-4 text-red-400"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium">Saque - Sportingbet</p>
-                                <p class="text-xs text-slate-400">Ontem, 18:45</p>
-                            </div>
-                        </div>
-                        <span class="text-red-400 font-medium">-R$ 200,00</span>
-                    </div>
-                </div>
-            `;
-            
-            lucide.createIcons();
-        }
-
-        // Função para carregar as casas de apostas do Supabase
-        async function loadBookies() {
-            showLoading();
             try {
-                let query = supabaseClient.from('bookies').select('*');
-                
-                // Aplicar filtros de data se necessário
+                let query = supabaseClient
+                    .from('transactions')
+                    .select(`
+                        *,
+                        bookies (name)
+                    `)
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+
+                // Aplicar filtros de data
                 if (currentFilter !== 'all') {
                     const now = new Date();
                     let startDate;
@@ -1344,15 +1548,79 @@
                     }
                     
                     if (startDate) {
-                        query = query.gte('last_update', startDate.toISOString());
+                        query = query.gte('created_at', startDate.toISOString());
                     }
                 }
+
+                const { data: transactionsData, error } = await query;
+
+                if (error) {
+                    console.error('Erro ao carregar transações:', error);
+                    historyContainer.innerHTML = '<p class="text-center text-slate-400">Tabela de transações não existe ainda</p>';
+                    transactions = [];
+                    return;
+                }
+
+                transactions = transactionsData || [];
+
+                if (transactions.length === 0) {
+                    historyContainer.innerHTML = `
+                        <div class="text-center p-6">
+                            <i data-lucide="history" class="w-12 h-12 text-slate-400 mx-auto mb-2"></i>
+                            <p class="text-slate-400">Nenhuma transação encontrada</p>
+                        </div>
+                    `;
+                } else {
+                    historyContainer.innerHTML = transactions.map(transaction => {
+                        const date = new Date(transaction.created_at);
+                        const isToday = date.toDateString() === new Date().toDateString();
+                        const timeStr = isToday ? date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : date.toLocaleDateString('pt-BR');
+                        
+                        return `
+                            <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="p-2 rounded-lg ${transaction.type === 'deposit' ? 'bg-green-500/20' : 'bg-red-500/20'}">
+                                        <i data-lucide="${transaction.type === 'deposit' ? 'plus' : 'minus'}" class="w-4 h-4 ${transaction.type === 'deposit' ? 'text-green-400' : 'text-red-400'}"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium">${transaction.type === 'deposit' ? 'Depósito' : 'Saque'} - ${transaction.bookies?.name || 'Casa removida'}</p>
+                                        <p class="text-xs text-slate-400">${isToday ? 'Hoje, ' + timeStr : timeStr}</p>
+                                        ${transaction.description ? `<p class="text-xs text-slate-500">${transaction.description}</p>` : ''}
+                                    </div>
+                                </div>
+                                <span class="${transaction.type === 'deposit' ? 'text-green-400' : 'text-red-400'} font-medium">
+                                    ${transaction.type === 'deposit' ? '+' : '-'}${formatCurrency(transaction.amount)}
+                                </span>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                lucide.createIcons();
+                
+            } catch (error) {
+                console.error('Erro ao carregar histórico:', error);
+                historyContainer.innerHTML = '<p class="text-center text-red-400">Erro ao carregar histórico</p>';
+                transactions = [];
+            }
+        }
+
+        // Função para mostrar todas as transações
+        async function loadAllTransactions() {
+            alert('Funcionalidade de visualizar todas as transações em desenvolvimento');
+        }
+
+        // Função para carregar as casas de apostas do Supabase
+        async function loadBookies() {
+            showLoading();
+            try {
+                let query = supabaseClient.from('bookies').select('*');
                 
                 const { data, error } = await query.order('balance', { ascending: false });
 
                 if (error) throw error;
                 
-                // Mapeia os dados do banco para o formato usado pela interface
+                // Mapear os dados do banco para o formato usado pela interface
                 bookies = data.map(item => ({
                     id: item.id,
                     name: item.name,
@@ -1360,27 +1628,49 @@
                     lastDeposit: item.last_deposit,
                     lastWithdraw: item.last_withdraw,
                     lastUpdate: item.last_update,
-                    profit: 0 // Calcular baseado em transações
+                    profit: 0 // Será calculado individualmente
                 }));
+
+                // Calcular lucro para cada casa
+                for (let i = 0; i < bookies.length; i++) {
+                    bookies[i].profit = await calculateBookieProfit(bookies[i].id);
+                }
                 
                 updateBankrollInfo();
                 renderBookies();
                 await calculateAdvancedMetrics();
                 showManagementAlerts();
                 
-                // Criar gráfico na primeira carga
-                if (!window.chartCreated) {
-                    createBankrollChart();
-                    window.chartCreated = true;
-                }
-                
-                // Carregar histórico
-                loadTransactionHistory();
-                
             } catch (error) {
                 console.error('Erro ao carregar casas de apostas:', error);
             } finally {
                 hideLoading();
+            }
+        }
+
+        // Função para calcular lucro de uma casa específica baseado em transações
+        async function calculateBookieProfit(bookieId) {
+            try {
+                const { data: bookieTransactions } = await supabaseClient
+                    .from('transactions')
+                    .select('*')
+                    .eq('bookie_id', bookieId);
+
+                if (!bookieTransactions || bookieTransactions.length === 0) return 0;
+
+                const deposits = bookieTransactions.filter(t => t.type === 'deposit').reduce((sum, t) => sum + t.amount, 0);
+                const withdrawals = bookieTransactions.filter(t => t.type === 'withdraw').reduce((sum, t) => sum + t.amount, 0);
+                
+                // O lucro é calculado como: saldo atual - depósitos totais
+                const bookie = bookies.find(b => b.id === bookieId);
+                if (bookie) {
+                    return bookie.balance - deposits + withdrawals;
+                }
+                
+                return 0;
+            } catch (error) {
+                console.error('Erro ao calcular lucro da casa:', error);
+                return 0;
             }
         }
 
@@ -1402,14 +1692,32 @@
                     .insert([{
                         name,
                         balance,
-                        last_deposit: now,
+                        last_deposit: balance > 0 ? now : null,
                         last_update: now
                     }])
                     .select();
 
                 if (error) throw error;
 
+                // Se houve saldo inicial, criar transação de depósito
+                if (balance > 0) {
+                    try {
+                        await supabaseClient
+                            .from('transactions')
+                            .insert([{
+                                bookie_id: data[0].id,
+                                type: 'deposit',
+                                amount: balance,
+                                description: 'Saldo inicial',
+                                created_at: now
+                            }]);
+                    } catch (transError) {
+                        console.log('Tabela transactions não existe ainda:', transError);
+                    }
+                }
+
                 await loadBookies();
+                await loadTransactionHistory();
                 closeAddBookieModal();
             } catch (error) {
                 console.error('Erro ao adicionar casa de apostas:', error);
@@ -1427,7 +1735,7 @@
             }
 
             const amount = parseFloat(document.getElementById('transactionAmount').value);
-            const description = document.getElementById('transactionDescription').value;
+            const description = document.getElementById('transactionDescription').value.trim();
 
             if (isNaN(amount) || amount <= 0) {
                 alert('Por favor, insira um valor válido.');
@@ -1462,18 +1770,26 @@
 
                 if (updateError) throw updateError;
 
-                // Registrar transação (criar tabela de transações se necessário)
-                // const { error: transactionError } = await supabaseClient
-                //     .from('transactions')
-                //     .insert([{
-                //         bookie_id: currentBookieId,
-                //         type: currentTransactionType,
-                //         amount,
-                //         description,
-                //         created_at: now
-                //     }]);
+                // Registrar transação (se tabela existir)
+                try {
+                    const { error: transactionError } = await supabaseClient
+                        .from('transactions')
+                        .insert([{
+                            bookie_id: currentBookieId,
+                            type: currentTransactionType,
+                            amount,
+                            description: description || null,
+                            created_at: now
+                        }]);
+
+                    if (transactionError) throw transactionError;
+                } catch (transError) {
+                    console.log('Tabela transactions não existe ainda:', transError);
+                }
 
                 await loadBookies();
+                await loadTransactionHistory();
+                await updateGoalsProgress();
                 closeTransactionModal();
             } catch (error) {
                 console.error('Erro ao processar transação:', error);
@@ -1485,10 +1801,21 @@
 
         // Função para deletar casa de apostas
         async function deleteBookie(bookieId) {
-            if (!confirm('Tem certeza que deseja excluir esta casa de apostas? Esta ação não pode ser desfeita.')) return;
+            if (!confirm('Tem certeza que deseja excluir esta casa de apostas? Todas as transações relacionadas também serão removidas. Esta ação não pode ser desfeita.')) return;
             
             showLoading();
             try {
+                // Primeiro tentar deletar transações relacionadas (se tabela existir)
+                try {
+                    await supabaseClient
+                        .from('transactions')
+                        .delete()
+                        .eq('bookie_id', bookieId);
+                } catch (transError) {
+                    console.log('Tabela transactions não existe ainda:', transError);
+                }
+
+                // Depois deletar a casa
                 const { error } = await supabaseClient
                     .from('bookies')
                     .delete()
@@ -1497,6 +1824,7 @@
                 if (error) throw error;
 
                 await loadBookies();
+                await loadTransactionHistory();
             } catch (error) {
                 console.error('Erro ao deletar casa de apostas:', error);
                 alert('Erro ao deletar casa de apostas');
@@ -1505,11 +1833,17 @@
             }
         }
 
-        // Carregar metas do localStorage
-        function loadGoals() {
-            const savedGoals = localStorage.getItem('bettingGoals');
-            if (savedGoals) {
-                goals = JSON.parse(savedGoals);
+        // Função de inicialização
+        async function initializeApp() {
+            try {
+                // Carregar dados básicos
+                await loadGoalsFromDB();
+                await loadBookies();
+                await loadTransactionHistory();
+                await updateGoalsProgress();
+                
+            } catch (error) {
+                console.error('Erro na inicialização:', error);
             }
         }
 
@@ -1517,8 +1851,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             setupResponsiveNavigation();
-            loadGoals();
-            loadBookies();
+            initializeApp();
         });
     </script>
 </body>
