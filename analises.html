@@ -439,9 +439,9 @@
                     <i data-lucide="building" class="w-5 h-5 mr-3 inline"></i>
                     Casas de Apostas
                 </button>
-                <button class="tab-button px-8 py-4 rounded-2xl font-semibold transition-all duration-300" data-tab="torneios">
+                <button class="tab-button px-8 py-4 rounded-2xl font-semibold transition-all duration-300" data-tab="categorias">
                     <i data-lucide="trophy" class="w-5 h-5 mr-3 inline"></i>
-                    Torneios
+                    Categorias
                 </button>
                 <button class="tab-button px-8 py-4 rounded-2xl font-semibold transition-all duration-300" data-tab="odds">
                     <i data-lucide="percent" class="w-5 h-5 mr-3 inline"></i>
@@ -1036,9 +1036,9 @@
                 </div>
             </div>
 
-            <!-- Nova Aba Torneios -->
-            <div id="tab-torneios" class="tab-content space-y-8">
-                <!-- Métricas de Torneios -->
+            <!-- Nova Aba Categorias -->
+            <div id="tab-categorias" class="tab-content space-y-8">
+                <!-- Métricas de Categorias -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div class="metric-card rounded-3xl p-8">
                         <div class="flex items-center justify-between mb-6">
@@ -1046,8 +1046,8 @@
                                 <i data-lucide="trophy" class="w-8 h-8"></i>
                             </div>
                         </div>
-                        <p class="text-2xl font-bold mb-2" id="torneio-mais-lucrativo">-</p>
-                        <p class="text-slate-400 font-medium">Torneio Mais Lucrativo</p>
+                        <p class="text-2xl font-bold mb-2" id="categoria-mais-lucrativo">-</p>
+                        <p class="text-slate-400 font-medium">Categoria Mais Lucrativo</p>
                     </div>
 
                     <div class="metric-card rounded-3xl p-8">
@@ -1056,7 +1056,7 @@
                                 <i data-lucide="percent" class="w-8 h-8"></i>
                             </div>
                         </div>
-                        <p class="text-4xl font-bold mb-2" id="torneio-melhor-taxa">0%</p>
+                        <p class="text-4xl font-bold mb-2" id="categoria-melhor-taxa">0%</p>
                         <p class="text-slate-400 font-medium">Melhor Taxa de Acerto</p>
                     </div>
 
@@ -1066,7 +1066,7 @@
                                 <i data-lucide="trending-up" class="w-8 h-8"></i>
                             </div>
                         </div>
-                        <p class="text-4xl font-bold mb-2" id="torneio-melhor-roi">0%</p>
+                        <p class="text-4xl font-bold mb-2" id="categoria-melhor-roi">0%</p>
                         <p class="text-slate-400 font-medium">Melhor ROI</p>
                     </div>
 
@@ -1076,19 +1076,19 @@
                                 <i data-lucide="award" class="w-8 h-8"></i>
                             </div>
                         </div>
-                        <p class="text-4xl font-bold mb-2" id="torneios-ativos">0</p>
-                        <p class="text-slate-400 font-medium">Torneios Ativos</p>
+                        <p class="text-4xl font-bold mb-2" id="categoria-ativos">0</p>
+                        <p class="text-slate-400 font-medium">Categorias Ativas</p>
                     </div>
                 </div>
 
-                <!-- Tabela de Torneios -->
+                <!-- Tabela de Categorias -->
                 <div class="glass-card rounded-3xl p-8">
-                    <h3 class="text-2xl font-bold mb-6">Análise de Torneios</h3>
+                    <h3 class="text-2xl font-bold mb-6">Análise de Categorias</h3>
                     <div class="data-table">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Torneio/Liga</th>
+                                    <th>Categoria</th>
                                     <th>Total Apostas</th>
                                     <th>Taxa Acerto</th>
                                     <th>ROI</th>
@@ -1139,9 +1139,9 @@
                 </div>
             </div>
 
-            <!-- Aba Análise de Odds -->
+            <!-- Aba Análise de Odds CORRIGIDA -->
             <div id="tab-odds" class="tab-content space-y-8">
-                <!-- Métricas de Odds -->
+                <!-- Métricas de Odds ORIGINAIS -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div class="metric-card rounded-3xl p-8">
                         <div class="flex items-center justify-between mb-6">
@@ -1204,7 +1204,7 @@
                     </div>
                 </div>
 
-                <!-- Gráficos de Odds -->
+                <!-- Gráficos ORIGINAIS -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div class="chart-container rounded-3xl p-8">
                         <h3 class="text-2xl font-bold mb-6">Relação Odd vs Performance</h3>
@@ -1220,7 +1220,88 @@
                     </div>
                 </div>
 
-                <!-- Eficiência por Faixa de Odd -->
+                <!-- NOVAS ANÁLISES AVANÇADAS - ESTRUTURA CORRETA -->
+                <div class="glass-card rounded-3xl p-8">
+                    <h3 class="text-2xl font-bold mb-6 flex items-center">
+                        <div class="metric-icon p-2 rounded-xl mr-3">
+                            <i data-lucide="target" class="w-5 h-5"></i>
+                        </div>
+                        Análises Avançadas de Odds
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="text-center p-6 bg-slate-800/50 rounded-2xl">
+                            <div class="flex items-center justify-center mb-4">
+                                <div class="metric-icon p-3 rounded-xl text-emerald-400">
+                                    <i data-lucide="crosshair" class="w-6 h-6"></i>
+                                </div>
+                            </div>
+                            <p class="text-sm text-slate-400 mb-2">Sweet Spot de Odds</p>
+                            <p class="text-2xl font-bold text-emerald-400" id="odds-sweet-spot-display">-</p>
+                            <p class="text-xs text-slate-500 mt-2">Faixa mais lucrativa</p>
+                        </div>
+                        
+                        <div class="text-center p-6 bg-slate-800/50 rounded-2xl">
+                            <div class="flex items-center justify-center mb-4">
+                                <div class="metric-icon p-3 rounded-xl text-blue-400">
+                                    <i data-lucide="trending-up" class="w-6 h-6"></i>
+                                </div>
+                            </div>
+                            <p class="text-sm text-slate-400 mb-2">Movimento de Odds</p>
+                            <p class="text-lg font-bold text-blue-400" id="odds-movimento-display">-</p>
+                            <p class="text-xs text-slate-500 mt-2">Performance por movimento</p>
+                        </div>
+                        
+                        <div class="text-center p-6 bg-slate-800/50 rounded-2xl">
+                            <div class="flex items-center justify-center mb-4">
+                                <div class="metric-icon p-3 rounded-xl text-purple-400">
+                                    <i data-lucide="clock" class="w-6 h-6"></i>
+                                </div>
+                            </div>
+                            <p class="text-sm text-slate-400 mb-2">Timing Insight</p>
+                            <p class="text-sm font-bold text-purple-400" id="odds-timing-display">-</p>
+                            <p class="text-xs text-slate-500 mt-2">Recomendação de timing</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NOVOS GRÁFICOS AVANÇADOS -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="chart-container rounded-3xl p-8">
+                        <h3 class="text-2xl font-bold mb-6 flex items-center">
+                            <div class="metric-icon p-2 rounded-xl mr-3">
+                                <i data-lucide="target" class="w-5 h-5"></i>
+                            </div>
+                            Sweet Spot Analysis
+                            <div class="tooltip" data-tooltip="Sweet Spot Analysis|Identifica as faixas de odds mais lucrativas baseado no ROI histórico">
+                                <div class="info-icon">
+                                    <i data-lucide="info" class="w-3 h-3"></i>
+                                </div>
+                            </div>
+                        </h3>
+                        <div class="h-80 flex items-center justify-center">
+                            <canvas id="chart-sweet-spot-odds" width="400" height="300"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container rounded-3xl p-8">
+                        <h3 class="text-2xl font-bold mb-6 flex items-center">
+                            <div class="metric-icon p-2 rounded-xl mr-3">
+                                <i data-lucide="activity" class="w-5 h-5"></i>
+                            </div>
+                            Movimento de Odds
+                            <div class="tooltip" data-tooltip="Movimento de Odds|Analisa como a variação das odds impacta sua performance">
+                                <div class="info-icon">
+                                    <i data-lucide="info" class="w-3 h-3"></i>
+                                </div>
+                            </div>
+                        </h3>
+                        <div class="h-80 flex items-center justify-center">
+                            <canvas id="chart-movimento-odds" width="400" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Eficiência por Faixa de Odd ORIGINAL -->
                 <div class="glass-card rounded-3xl p-8">
                     <h3 class="text-2xl font-bold mb-6">Eficiência por Faixa de Odd</h3>
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
